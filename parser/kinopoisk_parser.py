@@ -17,6 +17,9 @@ import requests
 class KinopoiskParser:
     """Парсер для извлечения данных о фильмах с Кинопоиска"""
     
+    # Константы для настройки задержек (можно переопределить в config.py)
+    DELAY_BEFORE_REQUEST = 2     # Пауза перед запросом (секунды)
+    
     def __init__(self, html_file_path: str = None):
         """
         Инициализация парсера
@@ -92,7 +95,7 @@ class KinopoiskParser:
             
             # Делаем запрос с задержкой
             import time
-            time.sleep(2)
+            time.sleep(self.DELAY_BEFORE_REQUEST)
             
             response = session.get(url, timeout=30)
             response.raise_for_status()
@@ -158,6 +161,7 @@ class KinopoiskParser:
                 soup = approach()
                 if soup and 'SmartCaptcha' not in str(soup):
                     print("✓ Защита обойдена!")
+                    self.soup = soup  # Сохраняем в self.soup
                     return soup
             except Exception as e:
                 print(f"❌ Попытка {i} не удалась: {e}")

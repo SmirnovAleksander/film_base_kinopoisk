@@ -17,6 +17,9 @@ import requests
 class ActorPageParser:
     """Парсер для страницы актера"""
     
+    # Константы для настройки задержек
+    DELAY_BEFORE_REQUEST = 2     # Пауза перед запросом (секунды)
+    
     def __init__(self, html_file_path: str = None):
         """
         Инициализация парсера
@@ -91,7 +94,7 @@ class ActorPageParser:
             self._load_cookies(session)
             
             # Делаем запрос с задержкой
-            time.sleep(2)
+            time.sleep(self.DELAY_BEFORE_REQUEST)
             
             response = session.get(url, timeout=30)
             response.raise_for_status()
@@ -157,6 +160,7 @@ class ActorPageParser:
                 soup = approach()
                 if soup and 'SmartCaptcha' not in str(soup):
                     print("✓ Защита обойдена!")
+                    self.soup = soup  # Сохраняем в self.soup
                     return soup
             except Exception as e:
                 print(f"❌ Попытка {i} не удалась: {e}")
@@ -364,21 +368,14 @@ class ActorPageParser:
     
     def save_to_json(self, actor_data: Dict, output_file: str = 'output/actor_details.json'):
         """
-        Сохраняет данные об актере в JSON файл
+        Сохраняет данные об актере в JSON файл (ОТКЛЮЧЕНО)
         
         Args:
             actor_data: Данные об актере для сохранения
             output_file: Путь к выходному файлу
         """
-        try:
-            # Создаем папку output если её нет
-            os.makedirs(os.path.dirname(output_file), exist_ok=True)
-            
-            with open(output_file, 'w', encoding='utf-8') as file:
-                json.dump(actor_data, file, ensure_ascii=False, indent=2)
-            print(f"Данные сохранены в файл: {output_file}")
-        except Exception as e:
-            print(f"Ошибка при сохранении файла: {e}")
+        # JSON вывод отключен - данные идут напрямую в БД
+        return None
     
     def print_actor_details(self, actor_data: Dict):
         """
