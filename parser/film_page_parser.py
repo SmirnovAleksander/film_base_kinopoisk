@@ -196,7 +196,7 @@ class FilmPageParser:
     
     def extract_film_details(self) -> Dict:
         """
-        Извлекает детальную информацию о фильме
+        Извлекает детальную информацию о фильме из HTML элементов
         
         Returns:
             Словарь с детальной информацией о фильме
@@ -205,11 +205,6 @@ class FilmPageParser:
             raise ValueError("HTML не загружен. Сначала вызовите load_html_from_file() или load_html_from_url()")
         
         film_data = {}
-        
-        # Извлекаем данные из JSON
-        json_data = self._extract_from_json()
-        if json_data:
-            film_data.update(json_data)
         
         # Извлекаем данные из HTML элементов
         html_data = self._extract_from_html()
@@ -223,405 +218,212 @@ class FilmPageParser:
         
         return film_data
     
-    def _extract_from_json(self) -> Dict:
-        """Извлекает данные из JSON в script тегах"""
-        film_data = {}
-        
-        # Поиск script тегов с JSON данными
-        script_tags = self.soup.find_all('script', type='application/json')
-        
-        for script in script_tags:
-            try:
-                json_data = json.loads(script.string)
-                film_info = self._find_film_in_json(json_data)
-                if film_info:
-                    film_data.update(film_info)
-            except (json.JSONDecodeError, AttributeError):
-                continue
-        
-        return film_data
-    
-    def _find_film_in_json(self, data: Dict, path: str = "") -> Dict:
-        """Рекурсивно ищет данные о фильме в JSON структуре"""
-        film_info = {}
-        
-        if isinstance(data, dict):
-            # Проверяем, является ли текущий объект фильмом
-            if self._is_film_object(data):
-                film_info = self._extract_film_data(data)
-            
-            # Рекурсивно ищем в значениях словаря
-            for key, value in data.items():
-                if isinstance(value, (dict, list)):
-                    result = self._find_film_in_json(value, f"{path}.{key}" if path else key)
-                    if result:
-                        film_info.update(result)
-                        
-        elif isinstance(data, list):
-            # Рекурсивно ищем в элементах списка
-            for i, item in enumerate(data):
-                if isinstance(item, (dict, list)):
-                    result = self._find_film_in_json(item, f"{path}[{i}]" if path else f"[{i}]")
-                    if result:
-                        film_info.update(result)
-        
-        return film_info
-    
-    def _is_film_object(self, obj: Dict) -> bool:
-        """Проверяет, является ли объект данными о фильме"""
-        film_indicators = [
-            'name', 'title', 'ruName', 'enName', 'originalName',
-            'year', 'rating', 'imdbRating', 'kpRating', 'kinopoisk',
-            'genre', 'genres', 'country', 'countries',
-            'director', 'actors', 'description', 'poster',
-            'duration', 'id', 'filmId', 'kinopoiskId'
-        ]
-        
-        found_indicators = sum(1 for indicator in film_indicators if indicator in obj)
-        has_typename = '__typename' in obj and obj['__typename'] in ['Film', 'Movie', 'Title']
-        
-        return found_indicators >= 3 or has_typename
-    
-    def _extract_film_data(self, film_obj: Dict) -> Dict:
-        """Извлекает структурированные данные о фильме"""
-        film_data = {
-            'title': self._extract_title(film_obj),
-            'original_title': self._extract_original_title(film_obj),
-            'year': self._extract_year(film_obj),
-            'rating': self._extract_rating(film_obj),
-            'imdb_rating': self._extract_imdb_rating(film_obj),
-            'genres': self._extract_genres(film_obj),
-            'countries': self._extract_countries(film_obj),
-            'director': self._extract_director(film_obj),
-            'actors': self._extract_actors(film_obj),
-            'description': self._extract_description(film_obj),
-            'poster': self._extract_poster(film_obj),
-            'duration': self._extract_duration(film_obj),
-            'age_rating': self._extract_age_rating(film_obj),
-            'id': self._extract_id(film_obj),
-            'budget': self._extract_budget(film_obj),
-            'box_office': self._extract_box_office(film_obj),
-            'premiere': self._extract_premiere(film_obj),
-            'studio': self._extract_studio(film_obj)
-        }
-        
-        # Очищаем пустые значения
-        return {k: v for k, v in film_data.items() if v is not None and v != ''}
-    
-    def _extract_title(self, film_obj: Dict) -> Optional[str]:
-        """Извлекает название фильма"""
-        title_fields = ['name', 'title', 'ruName', 'enName', 'originalName']
-        
-        for field in title_fields:
-            if field in film_obj:
-                title_data = film_obj[field]
-                
-                if isinstance(title_data, str):
-                    return title_data
-                
-                if isinstance(title_data, dict):
-                    if 'russian' in title_data and title_data['russian']:
-                        return title_data['russian']
-                    elif 'original' in title_data and title_data['original']:
-                        return title_data['original']
-                    elif 'name' in title_data and title_data['name']:
-                        return title_data['name']
-        
-        return None
-    
-    def _extract_original_title(self, film_obj: Dict) -> Optional[str]:
-        """Извлекает оригинальное название"""
-        title_fields = ['originalName', 'enName', 'original']
-        
-        for field in title_fields:
-            if field in film_obj:
-                title_data = film_obj[field]
-                
-                if isinstance(title_data, str):
-                    return title_data
-                
-                if isinstance(title_data, dict):
-                    if 'original' in title_data and title_data['original']:
-                        return title_data['original']
-                    elif 'english' in title_data and title_data['english']:
-                        return title_data['english']
-        
-        return None
-    
-    def _extract_year(self, film_obj: Dict) -> Optional[str]:
-        """Извлекает год выпуска"""
-        year_fields = ['year', 'releaseYear', 'productionYear']
-        
-        for field in year_fields:
-            if field in film_obj and film_obj[field]:
-                year = str(film_obj[field])
-                if year.isdigit() and 1900 <= int(year) <= 2030:
-                    return year
-        
-        return None
-    
-    def _extract_rating(self, film_obj: Dict) -> Optional[str]:
-        """Извлекает рейтинг Кинопоиска"""
-        rating_fields = ['rating', 'kpRating', 'kinopoisk']
-        
-        for field in rating_fields:
-            if field in film_obj and film_obj[field]:
-                rating_data = film_obj[field]
-                
-                if isinstance(rating_data, (int, float)):
-                    return str(rating_data)
-                
-                if isinstance(rating_data, str):
-                    match = re.search(r'\d+\.?\d*', rating_data)
-                    if match:
-                        return match.group()
-                
-                if isinstance(rating_data, dict) and 'value' in rating_data:
-                    return str(rating_data['value'])
-        
-        return None
-    
-    def _extract_imdb_rating(self, film_obj: Dict) -> Optional[str]:
-        """Извлекает рейтинг IMDB"""
-        imdb_fields = ['imdbRating', 'imdb']
-        
-        for field in imdb_fields:
-            if field in film_obj and film_obj[field]:
-                rating_data = film_obj[field]
-                
-                if isinstance(rating_data, (int, float)):
-                    return str(rating_data)
-                
-                if isinstance(rating_data, str):
-                    match = re.search(r'\d+\.?\d*', rating_data)
-                    if match:
-                        return match.group()
-                
-                if isinstance(rating_data, dict) and 'value' in rating_data:
-                    return str(rating_data['value'])
-        
-        return None
-    
-    def _extract_genres(self, film_obj: Dict) -> Optional[List[str]]:
-        """Извлекает жанры фильма"""
-        genre_fields = ['genre', 'genres', 'genreNames']
-        
-        for field in genre_fields:
-            if field in film_obj and film_obj[field]:
-                genres_data = film_obj[field]
-                
-                if isinstance(genres_data, list):
-                    genres = []
-                    for item in genres_data:
-                        if isinstance(item, str):
-                            genres.append(item)
-                        elif isinstance(item, dict):
-                            name = item.get('name') or item.get('title') or item.get('russian')
-                            if name:
-                                genres.append(name)
-                    if genres:
-                        return genres
-        
-        return None
-    
-    def _extract_countries(self, film_obj: Dict) -> Optional[List[str]]:
-        """Извлекает страны производства"""
-        country_fields = ['country', 'countries', 'countryNames']
-        
-        for field in country_fields:
-            if field in film_obj and film_obj[field]:
-                countries_data = film_obj[field]
-                
-                if isinstance(countries_data, list):
-                    countries = []
-                    for item in countries_data:
-                        if isinstance(item, str):
-                            countries.append(item)
-                        elif isinstance(item, dict):
-                            name = item.get('name') or item.get('title') or item.get('russian')
-                            if name:
-                                countries.append(name)
-                    if countries:
-                        return countries
-        
-        return None
-    
-    def _extract_director(self, film_obj: Dict) -> Optional[str]:
-        """Извлекает режиссера"""
-        director_fields = ['director', 'directors']
-        
-        for field in director_fields:
-            if field in film_obj and film_obj[field]:
-                director_data = film_obj[field]
-                
-                if isinstance(director_data, str):
-                    return director_data
-                
-                if isinstance(director_data, list) and director_data:
-                    return director_data[0]
-                
-                if isinstance(director_data, dict):
-                    name = director_data.get('name') or director_data.get('title')
-                    if name:
-                        return name
-        
-        return None
-    
-    def _extract_actors(self, film_obj: Dict) -> Optional[List[str]]:
-        """Извлекает актеров"""
-        actor_fields = ['actors', 'cast', 'stars']
-        
-        for field in actor_fields:
-            if field in film_obj and film_obj[field]:
-                actors_data = film_obj[field]
-                
-                if isinstance(actors_data, list):
-                    actors = []
-                    for item in actors_data:
-                        if isinstance(item, str):
-                            actors.append(item)
-                        elif isinstance(item, dict):
-                            name = item.get('name') or item.get('title')
-                            if name:
-                                actors.append(name)
-                    if actors:
-                        return actors
-        
-        return None
-    
-    def _extract_description(self, film_obj: Dict) -> Optional[str]:
-        """Извлекает описание фильма"""
-        desc_fields = ['description', 'plot', 'synopsis', 'storyline']
-        
-        for field in desc_fields:
-            if field in film_obj and film_obj[field]:
-                return str(film_obj[field])
-        
-        return None
-    
-    def _extract_poster(self, film_obj: Dict) -> Optional[str]:
-        """Извлекает постер"""
-        poster_fields = ['poster', 'posterUrl', 'image', 'cover']
-        
-        for field in poster_fields:
-            if field in film_obj and film_obj[field]:
-                return str(film_obj[field])
-        
-        return None
-    
-    def _extract_duration(self, film_obj: Dict) -> Optional[str]:
-        """Извлекает продолжительность"""
-        duration_fields = ['duration', 'runtime', 'length']
-        
-        for field in duration_fields:
-            if field in film_obj and film_obj[field]:
-                return str(film_obj[field])
-        
-        return None
-    
-    def _extract_age_rating(self, film_obj: Dict) -> Optional[str]:
-        """Извлекает возрастной рейтинг"""
-        age_fields = ['ageRating', 'mpaaRating', 'certification', 'age']
-        
-        for field in age_fields:
-            if field in film_obj and film_obj[field]:
-                return str(film_obj[field])
-        
-        return None
-    
-    def _extract_id(self, film_obj: Dict) -> Optional[str]:
-        """Извлекает ID фильма"""
-        id_fields = ['id', 'filmId', 'kinopoiskId', 'kpId']
-        
-        for field in id_fields:
-            if field in film_obj and film_obj[field]:
-                return str(film_obj[field])
-        
-        return None
-    
-    def _extract_budget(self, film_obj: Dict) -> Optional[str]:
-        """Извлекает бюджет"""
-        budget_fields = ['budget', 'productionBudget']
-        
-        for field in budget_fields:
-            if field in film_obj and film_obj[field]:
-                return str(film_obj[field])
-        
-        return None
-    
-    def _extract_box_office(self, film_obj: Dict) -> Optional[str]:
-        """Извлекает кассовые сборы"""
-        box_fields = ['boxOffice', 'worldwideGross', 'gross']
-        
-        for field in box_fields:
-            if field in film_obj and film_obj[field]:
-                return str(film_obj[field])
-        
-        return None
-    
-    def _extract_premiere(self, film_obj: Dict) -> Optional[str]:
-        """Извлекает дату премьеры"""
-        premiere_fields = ['premiere', 'releaseDate', 'premiereDate']
-        
-        for field in premiere_fields:
-            if field in film_obj and film_obj[field]:
-                return str(film_obj[field])
-        
-        return None
-    
-    def _extract_studio(self, film_obj: Dict) -> Optional[str]:
-        """Извлекает студию"""
-        studio_fields = ['studio', 'productionCompany', 'company']
-        
-        for field in studio_fields:
-            if field in film_obj and film_obj[field]:
-                return str(film_obj[field])
-        
-        return None
-    
     def _extract_from_html(self) -> Dict:
         """Извлекает данные из HTML элементов"""
         film_data = {}
         
-        # Извлекаем название из title
-        title_tag = self.soup.find('title')
-        if title_tag:
-            title_text = title_tag.get_text()
-            # Парсим название из title
-            match = re.search(r'«([^»]+)»', title_text)
-            if match:
-                film_data['title'] = match.group(1)
+        # Извлекаем название фильма (data-tid="75209b22")
+        title_elem = self.soup.find('span', {'data-tid': '75209b22'})
+        if title_elem:
+            film_data['title'] = title_elem.get_text(strip=True)
         
-        # Извлекаем описание из meta description
-        desc_meta = self.soup.find('meta', attrs={'name': 'description'})
-        if desc_meta and desc_meta.get('content'):
-            film_data['description'] = desc_meta.get('content')
+        # Извлекаем оригинальное название (data-tid="eb6be89")
+        original_title_elem = self.soup.find('span', {'data-tid': 'eb6be89'})
+        if original_title_elem:
+            film_data['original_title'] = original_title_elem.get_text(strip=True)
         
-        # Извлекаем постер из og:image
-        poster_meta = self.soup.find('meta', attrs={'property': 'og:image'})
-        if poster_meta and poster_meta.get('content'):
-            film_data['poster'] = poster_meta.get('content')
+        # Извлекаем описание (data-tid="bfd38da2")
+        description_elem = self.soup.find('p', {'data-tid': 'bfd38da2'})
+        if description_elem:
+            film_data['description'] = description_elem.get_text(strip=True)
+        
+        # Извлекаем полное описание (data-tid="bbb11238")
+        full_description_elem = self.soup.find('p', {'data-tid': 'bbb11238'})
+        if full_description_elem:
+            film_data['full_description'] = full_description_elem.get_text(strip=True)
+        
+        # Извлекаем постер (data-tid="d813cf42")
+        poster_elem = self.soup.find('img', {'data-tid': 'd813cf42'})
+        if poster_elem and poster_elem.get('src'):
+            film_data['poster'] = poster_elem.get('src')
+        
+        # Извлекаем год производства (data-test-id="year")
+        year_elem = self.soup.find('div', {'data-test-id': 'year'})
+        if year_elem:
+            year_link = year_elem.find('a')
+            if year_link:
+                film_data['year'] = year_link.get_text(strip=True)
+        
+        # Извлекаем страны (data-test-id="countries")
+        countries_elem = self.soup.find('div', {'data-test-id': 'countries'})
+        if countries_elem:
+            country_links = countries_elem.find_all('a')
+            countries = [link.get_text(strip=True) for link in country_links]
+            if countries:
+                film_data['countries'] = countries
+        
+        # Извлекаем жанры (data-test-id="genres")
+        genres_elem = self.soup.find('div', {'data-test-id': 'genres'})
+        if genres_elem:
+            genre_links = genres_elem.find_all('a')
+            genres = [link.get_text(strip=True) for link in genre_links if link.get_text(strip=True) != 'слова']
+            if genres:
+                film_data['genres'] = genres
+        
+        # Извлекаем слоган (data-test-id="tagline")
+        tagline_elem = self.soup.find('div', {'data-test-id': 'tagline'})
+        if tagline_elem:
+            tagline_div = tagline_elem.find('div', {'data-tid': 'e1e37c21'})
+            if tagline_div:
+                film_data['tagline'] = tagline_div.get_text(strip=True)
+        
+        # Извлекаем режиссеров (data-test-id="directors")
+        directors_elem = self.soup.find('div', {'data-test-id': 'directors'})
+        if directors_elem:
+            director_links = directors_elem.find_all('a')
+            directors = []
+            for link in director_links:
+                if link.get('href') and '/name/' in link.get('href'):
+                    name = link.get_text(strip=True)
+                    person_id = link.get('href').split('/name/')[1].rstrip('/')
+                    directors.append({'name': name, 'id': person_id})
+            if directors:
+                film_data['directors'] = directors
+        
+        # Извлекаем сценаристов (data-test-id="writers")
+        writers_elem = self.soup.find('div', {'data-test-id': 'writers'})
+        if writers_elem:
+            writer_links = writers_elem.find_all('a')
+            writers = []
+            for link in writer_links:
+                if link.get('href') and '/name/' in link.get('href'):
+                    name = link.get_text(strip=True)
+                    person_id = link.get('href').split('/name/')[1].rstrip('/')
+                    writers.append({'name': name, 'id': person_id})
+            if writers:
+                film_data['writers'] = writers
+        
+        # Извлекаем продюсеров (data-test-id="producers")
+        producers_elem = self.soup.find('div', {'data-test-id': 'producers'})
+        if producers_elem:
+            producer_links = producers_elem.find_all('a')
+            producers = []
+            for link in producer_links:
+                if link.get('href') and '/name/' in link.get('href'):
+                    name = link.get_text(strip=True)
+                    person_id = link.get('href').split('/name/')[1].rstrip('/')
+                    producers.append({'name': name, 'id': person_id})
+            if producers:
+                film_data['producers'] = producers
+        
+        # Извлекаем операторов (data-test-id="operators")
+        operators_elem = self.soup.find('div', {'data-test-id': 'operators'})
+        if operators_elem:
+            operator_links = operators_elem.find_all('a')
+            operators = []
+            for link in operator_links:
+                if link.get('href') and '/name/' in link.get('href'):
+                    name = link.get_text(strip=True)
+                    person_id = link.get('href').split('/name/')[1].rstrip('/')
+                    operators.append({'name': name, 'id': person_id})
+            if operators:
+                film_data['operators'] = operators
+        
+        # Извлекаем композиторов (data-test-id="composers")
+        composers_elem = self.soup.find('div', {'data-test-id': 'composers'})
+        if composers_elem:
+            composer_links = composers_elem.find_all('a')
+            composers = []
+            for link in composer_links:
+                if link.get('href') and '/name/' in link.get('href'):
+                    name = link.get_text(strip=True)
+                    person_id = link.get('href').split('/name/')[1].rstrip('/')
+                    composers.append({'name': name, 'id': person_id})
+            if composers:
+                film_data['composers'] = composers
+        
+        # Извлекаем художников (data-test-id="designers")
+        designers_elem = self.soup.find('div', {'data-test-id': 'designers'})
+        if designers_elem:
+            designer_links = designers_elem.find_all('a')
+            designers = []
+            for link in designer_links:
+                if link.get('href') and '/name/' in link.get('href'):
+                    name = link.get_text(strip=True)
+                    person_id = link.get('href').split('/name/')[1].rstrip('/')
+                    designers.append({'name': name, 'id': person_id})
+            if designers:
+                film_data['designers'] = designers
+        
+        # Извлекаем монтажеров (data-test-id="filmEditors")
+        editors_elem = self.soup.find('div', {'data-test-id': 'filmEditors'})
+        if editors_elem:
+            editor_links = editors_elem.find_all('a')
+            editors = []
+            for link in editor_links:
+                if link.get('href') and '/name/' in link.get('href'):
+                    name = link.get_text(strip=True)
+                    person_id = link.get('href').split('/name/')[1].rstrip('/')
+                    editors.append({'name': name, 'id': person_id})
+            if editors:
+                film_data['editors'] = editors
+        
+        # Извлекаем премьеру в России (data-test-id="ruPremiere")
+        ru_premiere_elem = self.soup.find('div', {'data-test-id': 'ruPremiere'})
+        if ru_premiere_elem:
+            premiere_link = ru_premiere_elem.find('a')
+            if premiere_link:
+                film_data['ru_premiere'] = premiere_link.get_text(strip=True)
+        
+        # Извлекаем премьеру в мире (data-test-id="worldPremieres")
+        world_premiere_elem = self.soup.find('div', {'data-test-id': 'worldPremieres'})
+        if world_premiere_elem:
+            premiere_link = world_premiere_elem.find('a')
+            if premiere_link:
+                film_data['world_premiere'] = premiere_link.get_text(strip=True)
+        
+        # Извлекаем возрастной рейтинг (data-test-id="ageRestriction")
+        age_elem = self.soup.find('div', {'data-test-id': 'ageRestriction'})
+        if age_elem:
+            age_span = age_elem.find('span', {'data-tid': '5c1ffa33'})
+            if age_span:
+                film_data['age_rating'] = age_span.get_text(strip=True)
+        
+        # Извлекаем продолжительность (data-test-id="duration")
+        duration_elem = self.soup.find('div', {'data-test-id': 'duration'})
+        if duration_elem:
+            duration_div = duration_elem.find('div', {'data-tid': 'e1e37c21'})
+            if duration_div:
+                film_data['duration'] = duration_div.get_text(strip=True)
+        
+        # Извлекаем похожие фильмы (data-tid="36b81cbf")
+        similar_films_elem = self.soup.find('div', {'data-tid': '36b81cbf'})
+        if similar_films_elem:
+            similar_films = []
+            # Находим все элементы карусели
+            carousel_items = similar_films_elem.find_all('div', {'role': 'listitem'})
+            for item in carousel_items:
+                # Извлекаем ссылку на фильм
+                film_link = item.find('a', {'data-test-id': 'next-link'})
+                if film_link and film_link.get('href'):
+                    # Извлекаем ID из URL /film/935672/ -> 935672
+                    film_id = film_link.get('href').split('/film/')[1].rstrip('/')
+                    
+                    # Извлекаем название фильма
+                    title_span = item.find('span', {'data-tid': 'ecca3393'})
+                    if title_span:
+                        title = title_span.get_text(strip=True)
+                        similar_films.append({'title': title, 'id': film_id})
+            
+            if similar_films:
+                film_data['similar_films'] = similar_films
         
         return film_data
     
     def _extract_from_meta(self) -> Dict:
         """Извлекает данные из meta тегов"""
-        film_data = {}
-        
-        # Извлекаем различные данные из meta тегов
-        meta_tags = {
-            'og:title': 'title',
-            'og:description': 'description',
-            'og:image': 'poster',
-            'og:url': 'url'
-        }
-        
-        for meta_prop, field_name in meta_tags.items():
-            meta_tag = self.soup.find('meta', attrs={'property': meta_prop})
-            if meta_tag and meta_tag.get('content'):
-                film_data[field_name] = meta_tag.get('content')
-        
-        return film_data
+        # TODO: Добавить парсинг meta тегов
+        return {}
     
     def save_to_json(self, film_data: Dict, output_file: str = 'output/film_details.json'):
         """
