@@ -207,8 +207,36 @@ class KinopoiskParser:
         if not self.soup:
             raise ValueError("HTML не загружен. Сначала вызовите load_html_from_file() или load_html_from_url()")
         
-        # TODO: Добавить парсинг HTML элементов
-        return []
+        films = []
+        
+        # Извлекаем ID фильмов из ссылок (data-tid="23a2a59")
+        film_links = self.soup.find_all('a', {'data-tid': '23a2a59'})
+        for link in film_links:
+            if link.get('href') and '/film/' in link.get('href'):
+                # Извлекаем ID из URL /film/535341/ -> 535341
+                film_id = link.get('href').split('/film/')[1].rstrip('/')
+                
+                # Ищем название фильма в том же контейнере или рядом
+                film_name = None
+                # Сначала ищем внутри ссылки
+                title_span = link.find('span', {'data-tid': '4502216a'})
+                if title_span:
+                    film_name = title_span.get_text(strip=True)
+                else:
+                    # Если не найдено внутри, ищем в родительском элементе
+                    parent = link.parent
+                    if parent:
+                        title_span = parent.find('span', {'data-tid': '4502216a'})
+                        if title_span:
+                            film_name = title_span.get_text(strip=True)
+                
+                film_data = {'id': film_id}
+                if film_name:
+                    film_data['name'] = film_name
+                
+                films.append(film_data)
+        
+        return films
     
     def save_to_json(self, films: List[Dict], output_file: str = 'output/films_data.json'):
         """
