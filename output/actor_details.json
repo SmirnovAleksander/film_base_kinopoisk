@@ -1,10 +1,30 @@
 {
-  "id": "41644",
-  "name": "Омар Си (Omar Sy): фильмы, биография, семья, фильмография — Кинопоиск",
-  "birth_date": "1978-01-20",
-  "birth_place": "Трап, Ивелин, Франция",
-  "height": "190",
-  "description": "Омар Си. Дата рождения: 20 января, 1978. Актер, Продюсер, Сценарист. Лучшие фильмы: 1+1, Люпен, Зов предков, Короче, 2+1.",
-  "photo": "https://avatars.mds.yandex.net/get-kinopoisk-image/6201401/d716a4b5-d262-49a9-bde9-6ab18bef2bc6/1200x630",
-  "url": "https://www.kinopoisk.ru/name/41644/"
+  "name": "Омар Си",
+  "english_name": "Omar Sy",
+  "career": [
+    "Актер",
+    "Продюсер",
+    "Сценарист"
+  ],
+  "height": "1.9 м",
+  "birthday": "20 января,1978•Козерог•47 лет",
+  "birthday_day_month": "20 января",
+  "birthday_year": "1978",
+  "zodiac": "Козерог",
+  "age": "47",
+  "birthplace": [
+    "Трап",
+    "Ивелин",
+    "Франция"
+  ],
+  "birthplace_full": "Трап, Ивелин, Франция",
+  "spouse": "Элен Си",
+  "children": "четверо детей",
+  "total_films": 105,
+  "career_years": {
+    "start": "2000",
+    "end": "2025"
+  },
+  "career_duration": 25,
+  "photo": "//avatars.mds.yandex.net/get-kinopoisk-image/1777765/6ff214c8-e427-4dc2-b447-a1a51743c3ff/280x420"
 }

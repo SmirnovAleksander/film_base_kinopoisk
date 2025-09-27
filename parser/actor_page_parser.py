@@ -220,8 +220,142 @@ class ActorPageParser:
     
     def _extract_from_html(self) -> Dict:
         """Извлекает данные из HTML элементов"""
-        # TODO: Добавить парсинг HTML элементов
-        return {}
+        actor_data = {}
+        
+        # Извлекаем основное имя актера (data-tid="f22e0093")
+        name_elem = self.soup.find('h1', {'data-tid': 'f22e0093'})
+        if name_elem:
+            actor_data['name'] = name_elem.get_text(strip=True)
+        
+        # Извлекаем английское имя актера (data-tid="7cdbd36a")
+        english_name_elem = self.soup.find('div', {'data-tid': '7cdbd36a'})
+        if english_name_elem:
+            actor_data['english_name'] = english_name_elem.get_text(strip=True)
+        
+        # Извлекаем карьеру/роли (data-test-id="career")
+        career_elem = self.soup.find('div', {'data-test-id': 'career'})
+        if career_elem:
+            # Находим все кнопки с ролями (data-tid="e150c550")
+            role_buttons = career_elem.find_all('button', {'data-tid': 'e150c550'})
+            roles = []
+            for button in role_buttons:
+                role_text = button.get_text(strip=True)
+                if role_text:
+                    roles.append(role_text)
+            
+            if roles:
+                actor_data['career'] = roles
+        
+        # Извлекаем рост (data-test-id="height")
+        height_elem = self.soup.find('div', {'data-test-id': 'height'})
+        if height_elem:
+            height_div = height_elem.find('div', {'data-tid': 'e1e37c21'})
+            if height_div:
+                actor_data['height'] = height_div.get_text(strip=True)
+        
+        # Извлекаем дату рождения (data-test-id="birthday")
+        birthday_elem = self.soup.find('div', {'data-test-id': 'birthday'})
+        if birthday_elem:
+            birthday_div = birthday_elem.find('div', {'data-tid': '71455188'})
+            if birthday_div:
+                # Извлекаем полную дату рождения
+                full_birthday = birthday_div.get_text(strip=True)
+                actor_data['birthday'] = full_birthday
+                
+                # Извлекаем отдельные компоненты
+                day_month_link = birthday_div.find('a', href=lambda x: x and 'birthday' in x and 'day' in x and 'month' in x)
+                if day_month_link:
+                    actor_data['birthday_day_month'] = day_month_link.get_text(strip=True)
+                
+                year_link = birthday_div.find('a', href=lambda x: x and 'birthday' in x and 'year' in x)
+                if year_link:
+                    actor_data['birthday_year'] = year_link.get_text(strip=True)
+                
+                zodiac_link = birthday_div.find('a', href=lambda x: x and 'zodiac' in x)
+                if zodiac_link:
+                    actor_data['zodiac'] = zodiac_link.get_text(strip=True)
+                
+                # Извлекаем возраст
+                age_span = birthday_div.find('span', class_='styles_valueDark__jsGKY')
+                if age_span:
+                    age_text = age_span.get_text(strip=True)
+                    # Извлекаем только число из "47 лет"
+                    import re
+                    age_match = re.search(r'(\d+)', age_text)
+                    if age_match:
+                        actor_data['age'] = age_match.group(1)
+        
+        # Извлекаем место рождения (data-test-id="placeOfBirthday")
+        birthplace_elem = self.soup.find('div', {'data-test-id': 'placeOfBirthday'})
+        if birthplace_elem:
+            birthplace_div = birthplace_elem.find('div', {'data-tid': '222c6c05'})
+            if birthplace_div:
+                # Извлекаем все ссылки с местами
+                location_links = birthplace_div.find_all('a', {'data-tid': '46e19321'})
+                locations = []
+                for link in location_links:
+                    location_text = link.get_text(strip=True)
+                    if location_text:
+                        locations.append(location_text)
+                
+                if locations:
+                    actor_data['birthplace'] = locations
+                    # Полное место рождения как строка
+                    actor_data['birthplace_full'] = ', '.join(locations)
+        
+        # Извлекаем семейную информацию (data-test-id="partner")
+        partner_elem = self.soup.find('div', {'data-test-id': 'partner'})
+        if partner_elem:
+            partner_ul = partner_elem.find('ul', {'data-tid': 'eb7e5e48'})
+            if partner_ul:
+                partner_li = partner_ul.find('li', {'data-tid': '4f89888f'})
+                if partner_li:
+                    # Извлекаем имя супруги
+                    partner_spans = partner_li.find_all('span', class_='styles_valueDark__jsGKY')
+                    if partner_spans:
+                        partner_name = partner_spans[0].get_text(strip=True)
+                        actor_data['spouse'] = partner_name
+                        
+                        # Извлекаем информацию о детях
+                        children_span = partner_li.find('span', class_='styles_childrenCount__L7a53')
+                        if children_span:
+                            children_text = children_span.get_text(strip=True)
+                            actor_data['children'] = children_text
+        
+        # Извлекаем статистику фильмографии (data-test-id="filmographyTotal")
+        filmography_elem = self.soup.find('div', {'data-test-id': 'filmographyTotal'})
+        if filmography_elem:
+            filmography_div = filmography_elem.find('div', {'data-tid': '16f1da45'})
+            if filmography_div:
+                # Извлекаем общее количество фильмов
+                total_span = filmography_div.find('span')
+                if total_span:
+                    total_text = total_span.get_text(strip=True)
+                    if total_text.isdigit():
+                        actor_data['total_films'] = int(total_text)
+                
+                # Извлекаем годы работы
+                year_buttons = filmography_div.find_all('button', {'data-tid': '10653ce8'})
+                if len(year_buttons) >= 2:
+                    start_year = year_buttons[0].get_text(strip=True)
+                    end_year = year_buttons[1].get_text(strip=True)
+                    actor_data['career_years'] = {
+                        'start': start_year,
+                        'end': end_year
+                    }
+                    # Вычисляем продолжительность карьеры
+                    try:
+                        career_duration = int(end_year) - int(start_year)
+                        actor_data['career_duration'] = career_duration
+                    except ValueError:
+                        pass
+        
+        # Извлекаем фото актера (data-tid="d813cf42")
+        photo_elem = self.soup.find('img', {'data-tid': 'd813cf42'})
+        if photo_elem and photo_elem.get('src'):
+            actor_data['photo'] = photo_elem.get('src')
+        
+        return actor_data
     
     def _extract_from_meta(self) -> Dict:
         """Извлекает данные из meta тегов"""
