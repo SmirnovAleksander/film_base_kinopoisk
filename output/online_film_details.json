@@ -1,0 +1,11 @@
+{
+  "title": "«1+1» (Intouchables, 2011)",
+  "duration": "112",
+  "id": "535341",
+  "original_title": "Intouchables",
+  "year": "2011",
+  "poster": "https://avatars.mds.yandex.net/get-kinopoisk-image/10853012/0c30ec66-4022-4094-8ee7-04c9c2c830bf/1200x630",
+  "description": "Аристократ на коляске нанимает в сиделки бывшего заключенного. Искрометная французская комедия с Омаром Си. Смотрите онлайн фильм 1+1 на Кинопоиске.",
+  "box_office": "{'__typename': 'BoxOffice', 'budget': {'__typename': 'MoneyAmount', 'amount': 9500000, 'currency': {'__typename': 'Currency', 'symbol': '€'}}, 'rusBox': {'__typename': 'MoneyAmount', 'amount': 1725813, 'currency': {'__typename': 'Currency', 'symbol': '$'}}, 'usaBox': {'__typename': 'MoneyAmount', 'amount': 10198820, 'currency': {'__typename': 'Currency', 'symbol': '$'}}, 'worldBox': {'__typename': 'MoneyAmount', 'amount': 426588510, 'currency': {'__typename': 'Currency', 'symbol': '$'}}, 'marketing': None}",
+  "url": "https://www.kinopoisk.ru/film/535341/"
+}
