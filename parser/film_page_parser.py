@@ -478,8 +478,15 @@ class FilmPageParser:
             film_data: Данные о фильме для сохранения
             output_file: Путь к выходному файлу
         """
-        # JSON вывод отключен - данные идут напрямую в БД
-        return None
+        try:
+            # Создаем папку output если её нет
+            os.makedirs(os.path.dirname(output_file), exist_ok=True)
+            
+            with open(output_file, 'w', encoding='utf-8') as file:
+                json.dump(film_data, file, ensure_ascii=False, indent=2)
+            print(f"Данные сохранены в файл: {output_file}")
+        except Exception as e:
+            print(f"Ошибка при сохранении файла: {e}")
     
     def print_film_details(self, film_data: Dict):
         """

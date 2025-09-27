@@ -262,10 +262,6 @@ class ActorPageParser:
         if birthday_elem:
             birthday_div = birthday_elem.find('div', {'data-tid': '71455188'})
             if birthday_div:
-                # Извлекаем полную дату рождения
-                full_birthday = birthday_div.get_text(strip=True)
-                actor_data['birthday'] = full_birthday
-                
                 # Извлекаем отдельные компоненты
                 day_month_link = birthday_div.find('a', href=lambda x: x and 'birthday' in x and 'day' in x and 'month' in x)
                 if day_month_link:
@@ -374,8 +370,15 @@ class ActorPageParser:
             actor_data: Данные об актере для сохранения
             output_file: Путь к выходному файлу
         """
-        # JSON вывод отключен - данные идут напрямую в БД
-        return None
+        try:
+            # Создаем папку output если её нет
+            os.makedirs(os.path.dirname(output_file), exist_ok=True)
+            
+            with open(output_file, 'w', encoding='utf-8') as file:
+                json.dump(actor_data, file, ensure_ascii=False, indent=2)
+            print(f"Данные сохранены в файл: {output_file}")
+        except Exception as e:
+            print(f"Ошибка при сохранении файла: {e}")
     
     def print_actor_details(self, actor_data: Dict):
         """
