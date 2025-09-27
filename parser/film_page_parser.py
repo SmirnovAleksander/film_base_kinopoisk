@@ -242,6 +242,32 @@ class FilmPageParser:
         if full_description_elem:
             film_data['full_description'] = full_description_elem.get_text(strip=True)
         
+        # Извлекаем рейтинг Кинопоиска (data-tid="939058a8")
+        kp_rating_elem = self.soup.find('span', {'data-tid': '939058a8'})
+        if kp_rating_elem:
+            film_data['rating_kp'] = kp_rating_elem.get_text(strip=True)
+        
+        # Извлекаем количество оценок Кинопоиска
+        kp_count_elem = self.soup.find('span', class_='styles_count__mJ4RS')
+        if kp_count_elem:
+            film_data['kp_votes_count'] = kp_count_elem.get_text(strip=True)
+        
+        # Извлекаем рейтинг IMDB (data-tid="3d4f49c8")
+        imdb_rating_elem = self.soup.find('div', {'data-tid': '3d4f49c8'})
+        if imdb_rating_elem:
+            imdb_span = imdb_rating_elem.find('span', class_='styles_valueSection__5NAWi')
+            if imdb_span:
+                imdb_text = imdb_span.get_text(strip=True)
+                # Извлекаем число из "IMDb: 8.50"
+                imdb_match = re.search(r'(\d+\.?\d*)', imdb_text)
+                if imdb_match:
+                    film_data['rating_imdb'] = imdb_match.group(1)
+        
+        # Извлекаем количество оценок IMDB
+        imdb_count_elem = self.soup.find('span', class_='styles_count__XJaJv')
+        if imdb_count_elem:
+            film_data['imdb_votes_count'] = imdb_count_elem.get_text(strip=True)
+        
         # Извлекаем постер (data-tid="d813cf42")
         poster_elem = self.soup.find('img', {'data-tid': 'd813cf42'})
         if poster_elem and poster_elem.get('src'):
@@ -418,6 +444,21 @@ class FilmPageParser:
             if similar_films:
                 film_data['similar_films'] = similar_films
         
+        # Извлекаем актеров в главных ролях (data-tid="38ecf27e")
+        actors_elem = self.soup.find('div', {'data-tid': '38ecf27e'})
+        if actors_elem:
+            actors = []
+            # Находим все ссылки на актеров
+            actor_links = actors_elem.find_all('a', {'data-test-id': 'next-link'})
+            for link in actor_links:
+                if link.get('href') and '/name/' in link.get('href'):
+                    name = link.get_text(strip=True)
+                    person_id = link.get('href').split('/name/')[1].rstrip('/')
+                    actors.append({'name': name, 'id': person_id})
+            
+            if actors:
+                film_data['actors'] = actors
+        
         return film_data
     
     def _extract_from_meta(self) -> Dict:
@@ -482,7 +523,8 @@ class FilmPageParser:
         
         if film_data.get('actors'):
             actors = film_data['actors'][:5]  # Показываем первых 5 актеров
-            print(f"👥 Актеры: {', '.join(actors)}")
+            actor_names = [actor['name'] for actor in actors if isinstance(actor, dict)]
+            print(f"👥 Актеры: {', '.join(actor_names)}")
             if len(film_data['actors']) > 5:
                 print(f"    ... и еще {len(film_data['actors']) - 5}")
         
