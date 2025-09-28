@@ -430,13 +430,13 @@ class FilmPageParser:
         similar_films_elem = self.soup.find('div', {'data-tid': '36b81cbf'})
         if similar_films_elem:
             similar_films = []
-            # Находим все элементы карусели
-            carousel_items = similar_films_elem.find_all('div', {'role': 'listitem'})
+            # Находим все элементы карусели по data-tid="67feb64f"
+            carousel_items = similar_films_elem.find_all('div', {'data-tid': '67feb64f'})
             for item in carousel_items:
                 # Извлекаем ссылку на фильм
                 film_link = item.find('a', {'data-test-id': 'next-link'})
                 if film_link and film_link.get('href'):
-                    # Извлекаем ID из URL /film/935672/ -> 935672
+                    # Извлекаем ID из URL /film/5919/ -> 5919
                     film_id = film_link.get('href').split('/film/')[1].rstrip('/')
                     
                     # Извлекаем название фильма

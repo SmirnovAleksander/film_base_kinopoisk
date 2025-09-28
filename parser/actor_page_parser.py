@@ -255,7 +255,19 @@ class ActorPageParser:
         if height_elem:
             height_div = height_elem.find('div', {'data-tid': 'e1e37c21'})
             if height_div:
-                actor_data['height'] = height_div.get_text(strip=True)
+                height_text = height_div.get_text(strip=True)
+                # Конвертируем метры в сантиметры
+                if 'м' in height_text:
+                    try:
+                        # Извлекаем число из строки типа "1.9 м"
+                        height_value = float(height_text.replace(' м', '').replace('м', ''))
+                        # Конвертируем в сантиметры
+                        height_cm = int(height_value * 100)
+                        actor_data['height'] = str(height_cm)
+                    except ValueError:
+                        actor_data['height'] = height_text
+                else:
+                    actor_data['height'] = height_text
         
         # Извлекаем дату рождения (data-test-id="birthday")
         birthday_elem = self.soup.find('div', {'data-test-id': 'birthday'})
@@ -300,8 +312,6 @@ class ActorPageParser:
                 
                 if locations:
                     actor_data['birthplace'] = locations
-                    # Полное место рождения как строка
-                    actor_data['birthplace_full'] = ', '.join(locations)
         
         # Извлекаем семейную информацию (data-test-id="partner")
         partner_elem = self.soup.find('div', {'data-test-id': 'partner'})
@@ -339,12 +349,12 @@ class ActorPageParser:
                 if len(year_buttons) >= 2:
                     start_year = year_buttons[0].get_text(strip=True)
                     end_year = year_buttons[1].get_text(strip=True)
-                    actor_data['career_years'] = {
-                        'start': start_year,
-                        'end': end_year
-                    }
-                    # Вычисляем продолжительность карьеры
+                    
+                    # Сохраняем отдельные поля для БД
                     try:
+                        actor_data['career_start_year'] = int(start_year)
+                        actor_data['career_end_year'] = int(end_year)
+                        # Вычисляем продолжительность карьеры
                         career_duration = int(end_year) - int(start_year)
                         actor_data['career_duration'] = career_duration
                     except ValueError:

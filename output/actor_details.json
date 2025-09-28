@@ -6,8 +6,7 @@
     "Продюсер",
     "Сценарист"
   ],
-  "height": "1.9 м",
-  "birthday": "20 января,1978•Козерог•47 лет",
+  "height": "190",
   "birthday_day_month": "20 января",
   "birthday_year": "1978",
   "zodiac": "Козерог",
@@ -17,14 +16,11 @@
     "Ивелин",
     "Франция"
   ],
-  "birthplace_full": "Трап, Ивелин, Франция",
   "spouse": "Элен Си",
   "children": "четверо детей",
   "total_films": 105,
-  "career_years": {
-    "start": "2000",
-    "end": "2025"
-  },
+  "career_start_year": 2000,
+  "career_end_year": 2025,
   "career_duration": 25,
   "photo": "//avatars.mds.yandex.net/get-kinopoisk-image/1777765/6ff214c8-e427-4dc2-b447-a1a51743c3ff/280x420"
 }

@@ -77,13 +77,11 @@ class MainParser:
                 english_name VARCHAR(200),
                 career TEXT[],
                 height VARCHAR(50),
-                birthday VARCHAR(100),
                 birthday_day_month VARCHAR(50),
                 birthday_year INTEGER,
                 zodiac VARCHAR(50),
                 age INTEGER,
                 birthplace TEXT[],
-                birthplace_full TEXT,
                 spouse VARCHAR(200),
                 children VARCHAR(100),
                 total_films INTEGER,
@@ -103,13 +101,6 @@ class MainParser:
             """,
             """
             CREATE TABLE IF NOT EXISTS countries (
-                id SERIAL PRIMARY KEY,
-                name VARCHAR(100) UNIQUE NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS careers (
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(100) UNIQUE NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -144,17 +135,9 @@ class MainParser:
             CREATE TABLE IF NOT EXISTS similar_films (
                 id SERIAL PRIMARY KEY,
                 film_id INTEGER REFERENCES films(id),
-                similar_film_id INTEGER REFERENCES films(id),
+                similar_film_id VARCHAR(20),
                 similar_film_title VARCHAR(500),
                 UNIQUE(film_id, similar_film_id)
-            )
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS birthplaces (
-                id SERIAL PRIMARY KEY,
-                person_id INTEGER REFERENCES people(id),
-                location VARCHAR(200),
-                UNIQUE(person_id, location)
             )
             """
         ]
@@ -388,23 +371,21 @@ class MainParser:
         try:
             # Вставляем участника
             insert_person = """
-            INSERT INTO people (kinopoisk_id, name, english_name, career, height, birthday, 
+            INSERT INTO people (kinopoisk_id, name, english_name, career, height, 
                                birthday_day_month, birthday_year, zodiac, age, birthplace, 
-                               birthplace_full, spouse, children, total_films, career_start_year, 
+                               spouse, children, total_films, career_start_year, 
                                career_end_year, career_duration, photo)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
                 name = EXCLUDED.name,
                 english_name = EXCLUDED.english_name,
                 career = EXCLUDED.career,
                 height = EXCLUDED.height,
-                birthday = EXCLUDED.birthday,
                 birthday_day_month = EXCLUDED.birthday_day_month,
                 birthday_year = EXCLUDED.birthday_year,
                 zodiac = EXCLUDED.zodiac,
                 age = EXCLUDED.age,
                 birthplace = EXCLUDED.birthplace,
-                birthplace_full = EXCLUDED.birthplace_full,
                 spouse = EXCLUDED.spouse,
                 children = EXCLUDED.children,
                 total_films = EXCLUDED.total_films,
@@ -421,13 +402,11 @@ class MainParser:
                 person_data.get('english_name'),
                 person_data.get('career'),
                 person_data.get('height'),
-                person_data.get('birthday'),
                 person_data.get('birthday_day_month'),
                 person_data.get('birthday_year'),
                 person_data.get('zodiac'),
                 person_data.get('age'),
                 person_data.get('birthplace'),
-                person_data.get('birthplace_full'),
                 person_data.get('spouse'),
                 person_data.get('children'),
                 person_data.get('total_films'),
@@ -438,9 +417,6 @@ class MainParser:
             ))
             
             person_db_id = cursor.fetchone()[0]
-            
-            # Сохраняем места рождения
-            self.save_person_birthplaces(person_db_id, person_data.get('birthplace', []))
             
             self.db_connection.commit()
             return person_db_id
@@ -537,24 +513,6 @@ class MainParser:
             )
         except Exception as e:
             print(f"❌ Ошибка создания связи похожих фильмов: {e}")
-        finally:
-            cursor.close()
-    
-    def save_person_birthplaces(self, person_db_id, birthplaces):
-        """Сохранение мест рождения участника"""
-        if not birthplaces:
-            return
-            
-        cursor = self.db_connection.cursor()
-        
-        try:
-            for birthplace in birthplaces:
-                cursor.execute(
-                    "INSERT INTO birthplaces (person_id, location) VALUES (%s, %s) ON CONFLICT DO NOTHING",
-                    (person_db_id, birthplace)
-                )
-        except Exception as e:
-            print(f"❌ Ошибка сохранения мест рождения: {e}")
         finally:
             cursor.close()
     
