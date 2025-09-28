@@ -229,7 +229,10 @@ class FilmPageParser:
         # Извлекаем название фильма (data-tid="75209b22")
         title_elem = self.soup.find('span', {'data-tid': '75209b22'})
         if title_elem:
-            film_data['title'] = title_elem.get_text(strip=True)
+            title_text = title_elem.get_text(strip=True)
+            # Убираем дату в скобках из названия (например, "1+1 (2011)" -> "1+1")
+            title_clean = re.sub(r'\s*\(\d{4}\)\s*$', '', title_text)
+            film_data['title'] = title_clean
         
         # Извлекаем оригинальное название (data-tid="eb6be89")
         original_title_elem = self.soup.find('span', {'data-tid': 'eb6be89'})
@@ -254,7 +257,13 @@ class FilmPageParser:
         # Извлекаем количество оценок Кинопоиска
         kp_count_elem = self.soup.find('span', class_='styles_count__mJ4RS')
         if kp_count_elem:
-            film_data['kp_votes_count'] = kp_count_elem.get_text(strip=True)
+            kp_count_text = kp_count_elem.get_text(strip=True)
+            # Извлекаем только число из "2 607 836 оценок"
+            kp_count_match = re.search(r'([\d\s]+)', kp_count_text)
+            if kp_count_match:
+                # Убираем пробелы и сохраняем как число
+                kp_count = kp_count_match.group(1).replace(' ', '')
+                film_data['kp_votes_count'] = kp_count
         
         # Извлекаем рейтинг IMDB (data-tid="3d4f49c8")
         imdb_rating_elem = self.soup.find('div', {'data-tid': '3d4f49c8'})
@@ -270,7 +279,13 @@ class FilmPageParser:
         # Извлекаем количество оценок IMDB
         imdb_count_elem = self.soup.find('span', class_='styles_count__XJaJv')
         if imdb_count_elem:
-            film_data['imdb_votes_count'] = imdb_count_elem.get_text(strip=True)
+            imdb_count_text = imdb_count_elem.get_text(strip=True)
+            # Извлекаем только число из "995 000 оценок"
+            imdb_count_match = re.search(r'([\d\s]+)', imdb_count_text)
+            if imdb_count_match:
+                # Убираем пробелы и сохраняем как число
+                imdb_count = imdb_count_match.group(1).replace(' ', '')
+                film_data['imdb_votes_count'] = imdb_count
         
         # Извлекаем постер (data-tid="d813cf42")
         poster_elem = self.soup.find('img', {'data-tid': 'd813cf42'})
