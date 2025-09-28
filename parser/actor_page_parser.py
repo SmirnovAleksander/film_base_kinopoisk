@@ -363,7 +363,13 @@ class ActorPageParser:
         # Извлекаем фото актера (data-tid="d813cf42")
         photo_elem = self.soup.find('img', {'data-tid': 'd813cf42'})
         if photo_elem and photo_elem.get('src'):
-            actor_data['photo'] = photo_elem.get('src')
+            photo_url = photo_elem.get('src')
+            # Нормализуем URL - добавляем https:// если нужно
+            if photo_url.startswith('//'):
+                photo_url = 'https:' + photo_url
+            elif not photo_url.startswith('http'):
+                photo_url = 'https://' + photo_url
+            actor_data['photo'] = photo_url
         
         return actor_data
     

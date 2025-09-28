@@ -290,7 +290,13 @@ class FilmPageParser:
         # Извлекаем постер (data-tid="d813cf42")
         poster_elem = self.soup.find('img', {'data-tid': 'd813cf42'})
         if poster_elem and poster_elem.get('src'):
-            film_data['poster'] = poster_elem.get('src')
+            poster_url = poster_elem.get('src')
+            # Нормализуем URL - добавляем https:// если нужно
+            if poster_url.startswith('//'):
+                poster_url = 'https:' + poster_url
+            elif not poster_url.startswith('http'):
+                poster_url = 'https://' + poster_url
+            film_data['poster'] = poster_url
         
         # Извлекаем год производства (data-test-id="year")
         year_elem = self.soup.find('div', {'data-test-id': 'year'})
