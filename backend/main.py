@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import auth, films, comments, ratings, users, persons
+from .routers import auth, films, comments, users, persons
 from .utils.db import get_conn
 
 
@@ -25,7 +25,6 @@ def health():
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(films.router, prefix="/films", tags=["films"])
 app.include_router(comments.router, prefix="/comments", tags=["comments"])
-app.include_router(ratings.router, prefix="/ratings", tags=["ratings"])
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(persons.router, prefix="/persons", tags=["persons"])
 

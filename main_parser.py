@@ -116,7 +116,6 @@ class MainParser:
                 film_id INTEGER NOT NULL REFERENCES films(id) ON DELETE CASCADE,
                 user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 content TEXT NOT NULL,
-                rating INTEGER NULL,
                 is_edited BOOLEAN DEFAULT FALSE,
                 edited_at TIMESTAMP NULL,
                 is_deleted BOOLEAN DEFAULT FALSE,

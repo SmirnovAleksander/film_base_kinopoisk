@@ -13,18 +13,17 @@ router = APIRouter()
 def list_comments(film_id: int, conn = Depends(get_conn)):
     cur = conn.cursor()
     try:
-        cur.execute("SELECT id, user_id, content, rating, is_edited, is_deleted, status, created_at FROM comments WHERE film_id=%s AND is_deleted=FALSE ORDER BY created_at DESC", (film_id,))
+        cur.execute("SELECT id, user_id, content, is_edited, is_deleted, status, created_at FROM comments WHERE film_id=%s AND is_deleted=FALSE ORDER BY created_at DESC", (film_id,))
         rows = cur.fetchall()
         return [
             {
                 "id": r[0],
                 "user_id": r[1],
                 "content": r[2],
-                "rating": r[3],
-                "is_edited": r[4],
-                "is_deleted": r[5],
-                "status": r[6],
-                "created_at": r[7].isoformat() if r[7] else None,
+                "is_edited": r[3],
+                "is_deleted": r[4],
+                "status": r[5],
+                "created_at": r[6].isoformat() if r[6] else None,
             } for r in rows
         ]
     finally:
@@ -32,13 +31,11 @@ def list_comments(film_id: int, conn = Depends(get_conn)):
 
 
 @router.post("/{film_id}")
-def add_comment(film_id: int, content: str, rating: int | None = None, user_id: int = Depends(get_current_user_id), conn = Depends(get_conn)):
+def add_comment(film_id: int, content: str, user_id: int = Depends(get_current_user_id), conn = Depends(get_conn)):
     cur = conn.cursor()
     try:
-        if rating is not None and (rating < 1 or rating > 10):
-            raise HTTPException(status_code=400, detail="Rating must be 1..10")
-        cur.execute("INSERT INTO comments (film_id, user_id, content, rating) VALUES (%s, %s, %s, %s) RETURNING id",
-                    (film_id, user_id, content, rating))
+        cur.execute("INSERT INTO comments (film_id, user_id, content) VALUES (%s, %s, %s) RETURNING id",
+                    (film_id, user_id, content))
         new_id = cur.fetchone()[0]
         conn.commit()
         return {"id": new_id}
