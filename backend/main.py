@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .routers import auth, films, comments, users, persons, bookmarks
-from .utils.db import get_conn
+from .utils.db import get_conn, init_connection_pool, close_connection_pool
 
 
 app = FastAPI(title="Film Base API", version="0.1.0")
@@ -31,8 +31,12 @@ app.include_router(bookmarks.router, prefix="/bookmarks", tags=["bookmarks"])
 
 
 @app.on_event("startup")
-def ensure_users_table():
-    """Создаём таблицу users при старте, если её нет."""
+def startup_event():
+    """Инициализация при старте приложения."""
+    # Инициализируем пул соединений
+    init_connection_pool()
+    
+    # Создаём таблицу users при старте, если её нет
     try:
         conn = get_conn()
         cur = conn.cursor()
@@ -57,5 +61,11 @@ def ensure_users_table():
     except Exception:
         # Если БД недоступна — сервер всё равно поднимется, но регистрация упадёт
         pass
+
+
+@app.on_event("shutdown")
+def shutdown_event():
+    """Очистка при остановке приложения."""
+    close_connection_pool()
 
 
