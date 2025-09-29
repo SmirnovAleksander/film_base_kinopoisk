@@ -52,6 +52,200 @@ def list_genres(conn = Depends(get_conn)):
     finally:
         cur.close()
 
+
+@router.get("/by-rating", summary="Фильмы по рейтингу (KP/IMDb)")
+def films_by_rating(
+    source: str = Query("kp", description="Источник рейтинга: 'kp' или 'imdb'"),
+    min_rating: Optional[float] = Query(None, description="Минимальный рейтинг включительно"),
+    max_rating: Optional[float] = Query(None, description="Максимальный рейтинг включительно"),
+    page: int = 1,
+    page_size: int = 20,
+    conn = Depends(get_conn),
+):
+    if page < 1 or page_size < 1 or page_size > 100:
+        raise HTTPException(status_code=400, detail="Invalid pagination")
+    if source not in ("kp", "imdb"):
+        raise HTTPException(status_code=400, detail="source must be 'kp' or 'imdb'")
+    if min_rating is None and max_rating is None:
+        raise HTTPException(status_code=400, detail="Specify 'min_rating' and/or 'max_rating'")
+
+    column = "rating_kp" if source == "kp" else "rating_imdb"
+    offset = (page - 1) * page_size
+
+    cur = conn.cursor()
+    try:
+        conditions = [f"{column} IS NOT NULL"]
+        params: list = []
+        if min_rating is not None:
+            conditions.append(f"CAST({column} AS NUMERIC) >= %s")
+            params.append(min_rating)
+        if max_rating is not None:
+            conditions.append(f"CAST({column} AS NUMERIC) <= %s")
+            params.append(max_rating)
+
+        where_clause = " AND ".join(conditions)
+        sql = f"""
+            SELECT id, kinopoisk_id, title, poster, {column}
+            FROM films
+            WHERE {where_clause}
+            ORDER BY id
+            LIMIT %s OFFSET %s
+        """
+        params.extend([page_size, offset])
+        cur.execute(sql, tuple(params))
+
+        rows = cur.fetchall()
+        items = [
+            {
+                "id": r[0],
+                "kinopoisk_id": r[1],
+                "title": r[2],
+                "poster": r[3],
+                ("rating_kp" if source == "kp" else "rating_imdb"): r[4],
+            }
+            for r in rows
+        ]
+        return {"items": items, "page": page, "page_size": page_size}
+    finally:
+        cur.close()
+
+@router.get("/by-genre/{genre_id}", summary="Фильмы по жанру")
+def films_by_genre(genre_id: int, page: int = 1, page_size: int = 20, conn = Depends(get_conn)):
+    if page < 1 or page_size < 1 or page_size > 100:
+        raise HTTPException(status_code=400, detail="Invalid pagination")
+    offset = (page - 1) * page_size
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT f.id, f.kinopoisk_id, f.title, f.poster, f.rating_kp
+            FROM film_genres fg
+            JOIN films f ON f.id = fg.film_id
+            WHERE fg.genre_id = %s
+            ORDER BY f.id
+            LIMIT %s OFFSET %s
+            """,
+            (genre_id, page_size, offset)
+        )
+        rows = cur.fetchall()
+        items = [
+            {
+                "id": r[0],
+                "kinopoisk_id": r[1],
+                "title": r[2],
+                "poster": r[3],
+                "rating_kp": r[4],
+            }
+            for r in rows
+        ]
+        return {"items": items, "page": page, "page_size": page_size}
+    finally:
+        cur.close()
+
+
+@router.get("/by-country/{country_id}", summary="Фильмы по стране")
+def films_by_country(country_id: int, page: int = 1, page_size: int = 20, conn = Depends(get_conn)):
+    if page < 1 or page_size < 1 or page_size > 100:
+        raise HTTPException(status_code=400, detail="Invalid pagination")
+    offset = (page - 1) * page_size
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT f.id, f.kinopoisk_id, f.title, f.poster, f.rating_kp
+            FROM film_countries fc
+            JOIN films f ON f.id = fc.film_id
+            WHERE fc.country_id = %s
+            ORDER BY f.id
+            LIMIT %s OFFSET %s
+            """,
+            (country_id, page_size, offset)
+        )
+        rows = cur.fetchall()
+        items = [
+            {
+                "id": r[0],
+                "kinopoisk_id": r[1],
+                "title": r[2],
+                "poster": r[3],
+                "rating_kp": r[4],
+            }
+            for r in rows
+        ]
+        return {"items": items, "page": page, "page_size": page_size}
+    finally:
+        cur.close()
+
+
+@router.get("/by-year", summary="Фильмы по году или диапазону лет")
+def films_by_year(
+    year: Optional[int] = Query(None, description="Конкретный год выпуска"),
+    start_year: Optional[int] = Query(None, description="Начальный год (включительно)"),
+    end_year: Optional[int] = Query(None, description="Конечный год (включительно)"),
+    page: int = 1,
+    page_size: int = 20,
+    conn = Depends(get_conn),
+):
+    if page < 1 or page_size < 1 or page_size > 100:
+        raise HTTPException(status_code=400, detail="Invalid pagination")
+
+    cur = conn.cursor()
+    offset = (page - 1) * page_size
+
+    try:
+        # Приоритет: конкретный год
+        if year is not None:
+            cur.execute(
+                """
+                SELECT id, kinopoisk_id, title, poster, rating_kp
+                FROM films
+                WHERE year = %s
+                ORDER BY id
+                LIMIT %s OFFSET %s
+                """,
+                (year, page_size, offset),
+            )
+        else:
+            # Диапазон
+            if start_year is None and end_year is None:
+                raise HTTPException(status_code=400, detail="Specify 'year' or 'start_year'/'end_year'")
+
+            # Подготовим условия
+            conditions = []
+            params: list = []
+            if start_year is not None:
+                conditions.append("year >= %s")
+                params.append(start_year)
+            if end_year is not None:
+                conditions.append("year <= %s")
+                params.append(end_year)
+
+            where_clause = " AND ".join(conditions) if conditions else "TRUE"
+            sql = f"""
+                SELECT id, kinopoisk_id, title, poster, rating_kp
+                FROM films
+                WHERE {where_clause}
+                ORDER BY id
+                LIMIT %s OFFSET %s
+            """
+            params.extend([page_size, offset])
+            cur.execute(sql, tuple(params))
+
+        rows = cur.fetchall()
+        items = [
+            {
+                "id": r[0],
+                "kinopoisk_id": r[1],
+                "title": r[2],
+                "poster": r[3],
+                "rating_kp": r[4],
+            }
+            for r in rows
+        ]
+        return {"items": items, "page": page, "page_size": page_size}
+    finally:
+        cur.close()
+
 @router.get("/{film_id}", summary="Детали фильма")
 def get_film(film_id: int, conn = Depends(get_conn)):
     cur = conn.cursor()
