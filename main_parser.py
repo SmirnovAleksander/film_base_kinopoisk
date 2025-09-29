@@ -80,14 +80,15 @@ class MainParser:
                 name VARCHAR(200),
                 english_name VARCHAR(200),
                 career TEXT[],
+                ganres TEXT[],
                 height VARCHAR(50),
                 birthday_day_month VARCHAR(50),
                 birthday_year INTEGER,
                 zodiac VARCHAR(50),
                 age INTEGER,
                 birthplace TEXT[],
-                spouse VARCHAR(200),
-                children VARCHAR(100),
+                spouse TEXT[],
+                children TEXT[],
                 total_films INTEGER,
                 career_start_year INTEGER,
                 career_end_year INTEGER,
@@ -397,15 +398,16 @@ class MainParser:
             
             # Вставляем участника
             insert_person = """
-            INSERT INTO person (kinopoisk_id, name, english_name, career, height, 
+            INSERT INTO person (kinopoisk_id, name, english_name, career, ganres, height, 
                                birthday_day_month, birthday_year, zodiac, age, birthplace, 
                                spouse, children, total_films, career_start_year, 
                                career_end_year, career_duration, photo)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
                 name = EXCLUDED.name,
                 english_name = EXCLUDED.english_name,
                 career = EXCLUDED.career,
+                ganres = EXCLUDED.ganres,
                 height = EXCLUDED.height,
                 birthday_day_month = EXCLUDED.birthday_day_month,
                 birthday_year = EXCLUDED.birthday_year,
@@ -427,6 +429,7 @@ class MainParser:
                 person_data.get('name'),
                 person_data.get('english_name'),
                 person_data.get('career'),
+                person_data.get('genres'),
                 person_data.get('height'),
                 person_data.get('birthday_day_month'),
                 person_data.get('birthday_year'),

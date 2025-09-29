@@ -250,6 +250,18 @@ class ActorPageParser:
             if roles:
                 actor_data['career'] = roles
         
+        # Извлекаем жанры (контейнер data-tid="e32f6be5", кнопки data-tid="9758b27c")
+        genres_container = self.soup.find('div', {'data-tid': 'e32f6be5'})
+        if genres_container:
+            genre_buttons = genres_container.find_all('button', {'data-tid': '9758b27c'})
+            genres = []
+            for btn in genre_buttons:
+                text = btn.get_text(strip=True)
+                if text:
+                    genres.append(text)
+            if genres:
+                actor_data['genres'] = genres
+        
         # Извлекаем рост (data-test-id="height")
         height_elem = self.soup.find('div', {'data-test-id': 'height'})
         if height_elem:
@@ -318,19 +330,29 @@ class ActorPageParser:
         if partner_elem:
             partner_ul = partner_elem.find('ul', {'data-tid': 'eb7e5e48'})
             if partner_ul:
-                partner_li = partner_ul.find('li', {'data-tid': '4f89888f'})
-                if partner_li:
-                    # Извлекаем имя супруги
-                    partner_spans = partner_li.find_all('span', class_='styles_valueDark__jsGKY')
-                    if partner_spans:
-                        partner_name = partner_spans[0].get_text(strip=True)
-                        actor_data['spouse'] = partner_name
-                        
-                        # Извлекаем информацию о детях
-                        children_span = partner_li.find('span', class_='styles_childrenCount__L7a53')
-                        if children_span:
-                            children_text = children_span.get_text(strip=True)
-                            actor_data['children'] = children_text
+                partner_lis = partner_ul.find_all('li', {'data-tid': '4f89888f'})
+                spouse_names = []
+                children_list = []
+                for li in partner_lis:
+                    # Имя(я) могут быть ссылкой <a> или <span>
+                    name_link = li.find('a', {'data-test-id': 'next-link'})
+                    name_text = ''
+                    if name_link:
+                        name_text = name_link.get_text(strip=True)
+                    else:
+                        name_span = li.find('span', class_='styles_valueDark__jsGKY')
+                        if name_span:
+                            name_text = name_span.get_text(strip=True)
+                    if name_text:
+                        spouse_names.append(name_text)
+                    # Количество детей
+                    children_span = li.find('span', class_='styles_childrenCount__L7a53')
+                    if children_span:
+                        children_list.append(children_span.get_text(strip=True))
+                if spouse_names:
+                    actor_data['spouse'] = spouse_names
+                if children_list:
+                    actor_data['children'] = children_list
         
         # Извлекаем статистику фильмографии (data-test-id="filmographyTotal")
         filmography_elem = self.soup.find('div', {'data-test-id': 'filmographyTotal'})
