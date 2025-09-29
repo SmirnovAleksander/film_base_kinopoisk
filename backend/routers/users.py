@@ -28,3 +28,13 @@ def get_me(user_id: int = Depends(get_current_user_id), conn = Depends(get_conn)
         cur.close()
 
 
+@router.get("/count", summary="Количество всех пользователей")
+def get_users_count(conn = Depends(get_conn)):
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT COUNT(*) FROM users")
+        count = cur.fetchone()[0]
+        return {"count": count}
+    finally:
+        cur.close()
+

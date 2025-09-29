@@ -125,6 +125,15 @@ class MainParser:
             )
             """,
             """
+            CREATE TABLE IF NOT EXISTS bookmarks (
+                id SERIAL PRIMARY KEY,
+                film_id INTEGER NOT NULL REFERENCES films(id) ON DELETE CASCADE,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(film_id, user_id)
+            )
+            """,
+            """
             CREATE TABLE IF NOT EXISTS genres (
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(100) UNIQUE NOT NULL,
