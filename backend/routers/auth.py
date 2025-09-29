@@ -9,7 +9,7 @@ from passlib.context import CryptContext
 
 from ..utils.db import get_connection
 from ..utils.auth import decode_token, get_current_user_id
-from ..utils.mailer import send_email
+from ..utils.mailer import send_email, send_verification_email, send_password_reset_email
 
 
 router = APIRouter()
@@ -163,12 +163,12 @@ async def request_email_verify(user_id: int):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            # Получим email пользователя
-            cur.execute("SELECT email FROM users WHERE id=%s", (user_id,))
+            # Получим email и username пользователя
+            cur.execute("SELECT email, username FROM users WHERE id=%s", (user_id,))
             row = cur.fetchone()
             if not row:
                 raise HTTPException(status_code=404, detail="User not found")
-            email = row[0]
+            email, username = row
 
             # Генерируем токен (упрощённо)
             token = create_access_token({"sub": str(user_id)}, expires_delta=timedelta(hours=24))
@@ -182,10 +182,8 @@ async def request_email_verify(user_id: int):
                 (user_id, token)
             )
             conn.commit()
-            # Отправим письмо
-            verify_url = f"http://localhost:3000/verify-email?token={token}"
-            html = f"<p>Подтвердите email: <a href='{verify_url}'>Перейти по ссылке</a></p>"
-            sent = await send_email("Подтверждение email", [email], html)
+            # Отправим красивое письмо подтверждения
+            sent = await send_verification_email(email, token, username)
             return {"status": "sent" if sent else "queued"}
         finally:
             cur.close()
@@ -236,9 +234,8 @@ async def request_password_reset(email: str):
                 (user_id, token)
             )
             conn.commit()
-            reset_url = f"http://localhost:3000/reset-password?token={token}"
-            html = f"<p>Сброс пароля: <a href='{reset_url}'>Перейти по ссылке</a></p>"
-            sent = await send_email("Сброс пароля", [email], html)
+            # Отправим красивое письмо сброса пароля
+            sent = await send_password_reset_email(email, token)
             return {"status": "sent" if sent else "queued"}
         finally:
             cur.close()
