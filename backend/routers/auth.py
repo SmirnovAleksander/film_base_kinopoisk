@@ -8,7 +8,7 @@ from jose import jwt
 from passlib.context import CryptContext
 
 from ..utils.db import get_conn
-from ..utils.auth import decode_token
+from ..utils.auth import decode_token, get_current_user_id
 from ..utils.mailer import send_email
 
 
@@ -259,3 +259,46 @@ def reset_password(token: str, new_password: str, conn = Depends(get_conn)):
     finally:
         cur.close()
 
+
+@router.post("/logout")
+def logout(refresh_token: str, user_id: int = Depends(get_current_user_id), conn = Depends(get_conn)):
+    """Отзывает (revoke) переданный refresh-токен текущего пользователя.
+
+    Требует access-токен в Authorization header и сам refresh-токен в теле запроса.
+    """
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            UPDATE refresh_tokens
+            SET revoked_at = NOW()
+            WHERE user_id = %s AND token_hash = %s AND revoked_at IS NULL
+            RETURNING id
+            """,
+            (user_id, _hash_token(refresh_token))
+        )
+        revoked = cur.rowcount
+        conn.commit()
+        return {"revoked": revoked}
+    finally:
+        cur.close()
+
+
+@router.post("/logout-all")
+def logout_all(user_id: int = Depends(get_current_user_id), conn = Depends(get_conn)):
+    """Отзывает все активные refresh-токены текущего пользователя."""
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            UPDATE refresh_tokens
+            SET revoked_at = NOW()
+            WHERE user_id = %s AND revoked_at IS NULL
+            """,
+            (user_id,)
+        )
+        revoked = cur.rowcount
+        conn.commit()
+        return {"revoked": revoked}
+    finally:
+        cur.close()
