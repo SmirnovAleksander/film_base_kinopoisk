@@ -148,6 +148,40 @@ class MainParser:
             )
             """,
             """
+            CREATE TABLE IF NOT EXISTS refresh_tokens (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                token_hash VARCHAR(255) NOT NULL,
+                issued_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                expires_at TIMESTAMP NOT NULL,
+                revoked_at TIMESTAMP NULL,
+                user_agent VARCHAR(300) NULL,
+                ip VARCHAR(64) NULL
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS email_verification_tokens (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                token VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                expires_at TIMESTAMP NOT NULL,
+                consumed_at TIMESTAMP NULL,
+                UNIQUE(user_id)
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                token VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                expires_at TIMESTAMP NOT NULL,
+                consumed_at TIMESTAMP NULL,
+                UNIQUE(user_id)
+            )
+            """,
+            """
             CREATE TABLE IF NOT EXISTS film_genres (
                 id SERIAL PRIMARY KEY,
                 film_id INTEGER REFERENCES films(id),
