@@ -74,6 +74,19 @@ class MainParser:
             )
             """,
             """
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                email VARCHAR(320) UNIQUE NOT NULL,
+                username VARCHAR(100) UNIQUE,
+                password_hash VARCHAR(255) NOT NULL,
+                is_email_verified BOOLEAN DEFAULT FALSE,
+                role VARCHAR(20) DEFAULT 'user',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                last_login_at TIMESTAMP NULL
+            )
+            """,
+            """
             CREATE TABLE IF NOT EXISTS person (
                 id SERIAL PRIMARY KEY,
                 kinopoisk_id VARCHAR(20) UNIQUE NOT NULL,
@@ -95,6 +108,21 @@ class MainParser:
                 career_duration INTEGER,
                 photo VARCHAR(1000),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS comments (
+                id SERIAL PRIMARY KEY,
+                film_id INTEGER NOT NULL REFERENCES films(id) ON DELETE CASCADE,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                content TEXT NOT NULL,
+                rating INTEGER NULL,
+                is_edited BOOLEAN DEFAULT FALSE,
+                edited_at TIMESTAMP NULL,
+                is_deleted BOOLEAN DEFAULT FALSE,
+                status VARCHAR(20) DEFAULT 'published',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL
             )
             """,
             """
