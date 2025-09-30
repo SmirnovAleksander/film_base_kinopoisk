@@ -32,6 +32,50 @@ def list_films(page: int = 1, page_size: int = 20):
             cur.close()
 
 
+@router.get("/search", summary="Поиск фильмов по названию (ru|en)")
+def search_films(
+    query: str = Query(..., min_length=1, description="Строка поиска"),
+    lang: str = Query("ru", description="Язык названия: 'ru' (title) или 'en' (original_title)"),
+    page: int = 1,
+    page_size: int = 20,
+):
+    if page < 1 or page_size < 1 or page_size > 100:
+        raise HTTPException(status_code=400, detail="Invalid pagination")
+    if lang not in ("ru", "en"):
+        raise HTTPException(status_code=400, detail="lang must be 'ru' or 'en'")
+
+    column = "title" if lang == "ru" else "original_title"
+    offset = (page - 1) * page_size
+
+    # Подготовим паттерн для ILIKE
+    pattern = f"%{query}%"
+
+    with get_connection() as conn:
+        cur = conn.cursor()
+        try:
+            sql = f"""
+                SELECT id, kinopoisk_id, title, poster, rating_kp
+                FROM films
+                WHERE {column} ILIKE %s
+                ORDER BY id
+                LIMIT %s OFFSET %s
+            """
+            cur.execute(sql, (pattern, page_size, offset))
+            rows = cur.fetchall()
+            items = [
+                {
+                    "id": r[0],
+                    "kinopoisk_id": r[1],
+                    "title": r[2],
+                    "poster": r[3],
+                    "rating_kp": r[4],
+                }
+                for r in rows
+            ]
+            return {"items": items, "page": page, "page_size": page_size}
+        finally:
+            cur.close()
+
 @router.get("/countries", summary="Все страны (справочник)")
 def list_countries():
     with get_connection() as conn:
@@ -59,9 +103,10 @@ def list_genres():
 def films_filter(
     genre_id: Optional[int] = Query(None, description="ID жанра"),
     country_id: Optional[int] = Query(None, description="ID страны"),
-    year: Optional[int] = Query(None, description="Конкретный год выпуска"),
-    start_year: Optional[int] = Query(None, description="Начальный год (включительно)"),
+    start_year: Optional[int] = Query(None, description="Начальный год (или конкретный год, если end_year не задан)"),
     end_year: Optional[int] = Query(None, description="Конечный год (включительно)"),
+    title: Optional[str] = Query(None, min_length=1, description="Поисковая строка по названию"),
+    lang: str = Query("ru", description="Язык названия для поиска: 'ru' (title) или 'en' (original_title)"),
     source: str = Query("kp", description="Источник рейтинга: 'kp' или 'imdb'"),
     min_rating: Optional[float] = Query(None, description="Минимальный рейтинг включительно"),
     max_rating: Optional[float] = Query(None, description="Максимальный рейтинг включительно"),
@@ -72,9 +117,12 @@ def films_filter(
         raise HTTPException(status_code=400, detail="Invalid pagination")
     if source not in ("kp", "imdb"):
         raise HTTPException(status_code=400, detail="source must be 'kp' or 'imdb'")
+    if lang not in ("ru", "en"):
+        raise HTTPException(status_code=400, detail="lang must be 'ru' or 'en'")
 
-    # Если задан конкретный год, игнорируем диапазон (поведение как в /by-year)
-    use_range = year is None
+    # Логика по годам: если задан start_year и нет end_year -> точный год,
+    # если задан end_year -> диапазон [start_year, end_year]
+    effective_year = start_year
 
     offset = (page - 1) * page_size
 
@@ -95,16 +143,24 @@ def films_filter(
                 conditions.append("fc.country_id = %s")
                 params.append(country_id)
 
-            if year is not None:
+            # Фильтр по году/диапазону
+            if effective_year is not None and end_year is None:
+                # Точный год
                 conditions.append("f.year = %s")
-                params.append(year)
-            elif use_range and (start_year is not None or end_year is not None):
-                if start_year is not None:
+                params.append(effective_year)
+            elif end_year is not None:
+                # Диапазон: от effective_year (если задан) до end_year
+                if effective_year is not None:
                     conditions.append("f.year >= %s")
-                    params.append(start_year)
-                if end_year is not None:
-                    conditions.append("f.year <= %s")
-                    params.append(end_year)
+                    params.append(effective_year)
+                conditions.append("f.year <= %s")
+                params.append(end_year)
+
+            # Поиск по названию (опционально)
+            if title is not None and title.strip() != "":
+                column = "f.title" if lang == "ru" else "f.original_title"
+                conditions.append(f"{column} ILIKE %s")
+                params.append(f"%{title}%")
 
             # Фильтр по рейтингу (опционально)
             rating_column = "rating_kp" if source == "kp" else "rating_imdb"
