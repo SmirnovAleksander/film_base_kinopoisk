@@ -86,7 +86,7 @@ class MainParser:
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS person (
+            CREATE TABLE IF NOT EXISTS stuff (
                 id SERIAL PRIMARY KEY,
                 kinopoisk_id VARCHAR(20) UNIQUE NOT NULL,
                 name VARCHAR(200),
@@ -193,12 +193,12 @@ class MainParser:
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS film_person (
+            CREATE TABLE IF NOT EXISTS film_stuff (
                 id SERIAL PRIMARY KEY,
                 film_id INTEGER REFERENCES film(id),
-                person_id INTEGER REFERENCES person(id),
+                stuff_id INTEGER REFERENCES stuff(id),
                 role VARCHAR(100),
-                UNIQUE(film_id, person_id, role)
+                UNIQUE(film_id, stuff_id, role)
             )
             """,
             """
@@ -504,7 +504,7 @@ class MainParser:
             
             # Вставляем участника
             insert_person = """
-            INSERT INTO person (kinopoisk_id, name, english_name, career, ganres, height, 
+            INSERT INTO stuff (kinopoisk_id, name, english_name, career, ganres, height, 
                                birthday_day_month, birthday_year, zodiac, age, birthplace, 
                                spouse, children, total_films, career_start_year, 
                                career_end_year, photo)
@@ -627,7 +627,7 @@ class MainParser:
         
         try:
             cursor.execute(
-                "INSERT INTO film_person (film_id, person_id, role) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
+                "INSERT INTO film_stuff (film_id, stuff_id, role) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
                 (film_db_id, person_db_id, role)
             )
         except Exception as e:

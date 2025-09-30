@@ -7,7 +7,7 @@ router = APIRouter()
 
 
 @router.get("/")
-def list_persons(page: int = 1, page_size: int = 20):
+def list_stuff(page: int = 1, page_size: int = 20):
     if page < 1 or page_size < 1 or page_size > 100:
         raise HTTPException(status_code=400, detail="Invalid pagination")
     offset = (page - 1) * page_size
@@ -15,7 +15,7 @@ def list_persons(page: int = 1, page_size: int = 20):
         cur = conn.cursor()
         try:
             cur.execute(
-                "SELECT id, kinopoisk_id, name, english_name, photo FROM person ORDER BY id LIMIT %s OFFSET %s",
+                "SELECT id, kinopoisk_id, name, english_name, photo FROM stuff ORDER BY id LIMIT %s OFFSET %s",
                 (page_size, offset)
             )
             rows = cur.fetchall()
@@ -34,7 +34,7 @@ def list_persons(page: int = 1, page_size: int = 20):
 
 
 @router.get("/{person_id}")
-def get_person(person_id: int):
+def get_stuff(person_id: int):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
@@ -44,7 +44,7 @@ def get_person(person_id: int):
                        birthday_day_month, birthday_year, zodiac, age, birthplace,
                        spouse, children, total_films, career_start_year, career_end_year,
                        photo
-                FROM person WHERE id=%s
+                FROM stuff WHERE id=%s
                 """,
                 (person_id,)
             )

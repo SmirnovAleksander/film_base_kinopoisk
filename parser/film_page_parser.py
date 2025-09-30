@@ -341,83 +341,83 @@ class FilmPageParser:
             if directors:
                 film_data['directors'] = directors
         
-        # Извлекаем сценаристов (data-test-id="writers")
-        writers_elem = self.soup.find('div', {'data-test-id': 'writers'})
-        if writers_elem:
-            writer_links = writers_elem.find_all('a')
-            writers = []
-            for link in writer_links:
-                if link.get('href') and '/name/' in link.get('href'):
-                    name = link.get_text(strip=True)
-                    person_id = link.get('href').split('/name/')[1].rstrip('/')
-                    writers.append({'name': name, 'id': person_id})
-            if writers:
-                film_data['writers'] = writers
+        # # Извлекаем сценаристов (data-test-id="writers")
+        # writers_elem = self.soup.find('div', {'data-test-id': 'writers'})
+        # if writers_elem:
+        #     writer_links = writers_elem.find_all('a')
+        #     writers = []
+        #     for link in writer_links:
+        #         if link.get('href') and '/name/' in link.get('href'):
+        #             name = link.get_text(strip=True)
+        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
+        #             writers.append({'name': name, 'id': person_id})
+        #     if writers:
+        #         film_data['writers'] = writers
         
-        # Извлекаем продюсеров (data-test-id="producers")
-        producers_elem = self.soup.find('div', {'data-test-id': 'producers'})
-        if producers_elem:
-            producer_links = producers_elem.find_all('a')
-            producers = []
-            for link in producer_links:
-                if link.get('href') and '/name/' in link.get('href'):
-                    name = link.get_text(strip=True)
-                    person_id = link.get('href').split('/name/')[1].rstrip('/')
-                    producers.append({'name': name, 'id': person_id})
-            if producers:
-                film_data['producers'] = producers
+        # # Извлекаем продюсеров (data-test-id="producers")
+        # producers_elem = self.soup.find('div', {'data-test-id': 'producers'})
+        # if producers_elem:
+        #     producer_links = producers_elem.find_all('a')
+        #     producers = []
+        #     for link in producer_links:
+        #         if link.get('href') and '/name/' in link.get('href'):
+        #             name = link.get_text(strip=True)
+        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
+        #             producers.append({'name': name, 'id': person_id})
+        #     if producers:
+        #         film_data['producers'] = producers
         
-        # Извлекаем операторов (data-test-id="operators")
-        operators_elem = self.soup.find('div', {'data-test-id': 'operators'})
-        if operators_elem:
-            operator_links = operators_elem.find_all('a')
-            operators = []
-            for link in operator_links:
-                if link.get('href') and '/name/' in link.get('href'):
-                    name = link.get_text(strip=True)
-                    person_id = link.get('href').split('/name/')[1].rstrip('/')
-                    operators.append({'name': name, 'id': person_id})
-            if operators:
-                film_data['operators'] = operators
+        # # Извлекаем операторов (data-test-id="operators")
+        # operators_elem = self.soup.find('div', {'data-test-id': 'operators'})
+        # if operators_elem:
+        #     operator_links = operators_elem.find_all('a')
+        #     operators = []
+        #     for link in operator_links:
+        #         if link.get('href') and '/name/' in link.get('href'):
+        #             name = link.get_text(strip=True)
+        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
+        #             operators.append({'name': name, 'id': person_id})
+        #     if operators:
+        #         film_data['operators'] = operators
         
-        # Извлекаем композиторов (data-test-id="composers")
-        composers_elem = self.soup.find('div', {'data-test-id': 'composers'})
-        if composers_elem:
-            composer_links = composers_elem.find_all('a')
-            composers = []
-            for link in composer_links:
-                if link.get('href') and '/name/' in link.get('href'):
-                    name = link.get_text(strip=True)
-                    person_id = link.get('href').split('/name/')[1].rstrip('/')
-                    composers.append({'name': name, 'id': person_id})
-            if composers:
-                film_data['composers'] = composers
+        # # Извлекаем композиторов (data-test-id="composers")
+        # composers_elem = self.soup.find('div', {'data-test-id': 'composers'})
+        # if composers_elem:
+        #     composer_links = composers_elem.find_all('a')
+        #     composers = []
+        #     for link in composer_links:
+        #         if link.get('href') and '/name/' in link.get('href'):
+        #             name = link.get_text(strip=True)
+        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
+        #             composers.append({'name': name, 'id': person_id})
+        #     if composers:
+        #         film_data['composers'] = composers
         
-        # Извлекаем художников (data-test-id="designers")
-        designers_elem = self.soup.find('div', {'data-test-id': 'designers'})
-        if designers_elem:
-            designer_links = designers_elem.find_all('a')
-            designers = []
-            for link in designer_links:
-                if link.get('href') and '/name/' in link.get('href'):
-                    name = link.get_text(strip=True)
-                    person_id = link.get('href').split('/name/')[1].rstrip('/')
-                    designers.append({'name': name, 'id': person_id})
-            if designers:
-                film_data['designers'] = designers
+        # # Извлекаем художников (data-test-id="designers")
+        # designers_elem = self.soup.find('div', {'data-test-id': 'designers'})
+        # if designers_elem:
+        #     designer_links = designers_elem.find_all('a')
+        #     designers = []
+        #     for link in designer_links:
+        #         if link.get('href') and '/name/' in link.get('href'):
+        #             name = link.get_text(strip=True)
+        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
+        #             designers.append({'name': name, 'id': person_id})
+        #     if designers:
+        #         film_data['designers'] = designers
         
-        # Извлекаем монтажеров (data-test-id="filmEditors")
-        editors_elem = self.soup.find('div', {'data-test-id': 'filmEditors'})
-        if editors_elem:
-            editor_links = editors_elem.find_all('a')
-            editors = []
-            for link in editor_links:
-                if link.get('href') and '/name/' in link.get('href'):
-                    name = link.get_text(strip=True)
-                    person_id = link.get('href').split('/name/')[1].rstrip('/')
-                    editors.append({'name': name, 'id': person_id})
-            if editors:
-                film_data['editors'] = editors
+        # # Извлекаем монтажеров (data-test-id="filmEditors")
+        # editors_elem = self.soup.find('div', {'data-test-id': 'filmEditors'})
+        # if editors_elem:
+        #     editor_links = editors_elem.find_all('a')
+        #     editors = []
+        #     for link in editor_links:
+        #         if link.get('href') and '/name/' in link.get('href'):
+        #             name = link.get_text(strip=True)
+        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
+        #             editors.append({'name': name, 'id': person_id})
+        #     if editors:
+        #         film_data['editors'] = editors
         
         # Извлекаем премьеру в России (data-test-id="ruPremiere")
         ru_premiere_elem = self.soup.find('div', {'data-test-id': 'ruPremiere'})

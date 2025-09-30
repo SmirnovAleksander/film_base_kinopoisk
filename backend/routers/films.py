@@ -262,30 +262,30 @@ def get_similar_films(film_id: int):
             cur.close()
 
 
-@router.get("/{film_id}/persons", summary="Список персон, участвовавших в фильме")
-def get_film_persons(film_id: int, role: str = Query("all", description="Роль персоны (например: actor, director, writer). 'all' — без фильтра")):
+@router.get("/{film_id}/stuff", summary="Список участников (stuff), участвовавших в фильме")
+def get_film_stuff(film_id: int, role: str = Query("all", description="Роль участника (например: actor, director, writer). 'all' — без фильтра")):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
             if role and role.lower() != "all":
                 cur.execute(
                     """
-                    SELECT p.id, p.kinopoisk_id, p.name, p.english_name, p.photo, fp.role
-                    FROM film_person fp
-                    JOIN person p ON p.id = fp.person_id
-                    WHERE fp.film_id = %s AND fp.role = %s
-                    ORDER BY p.id
+                    SELECT s.id, s.kinopoisk_id, s.name, s.english_name, s.photo, fs.role
+                    FROM film_stuff fs
+                    JOIN stuff s ON s.id = fs.stuff_id
+                    WHERE fs.film_id = %s AND fs.role = %s
+                    ORDER BY s.id
                     """,
                     (film_id, role)
                 )
             else:
                 cur.execute(
                     """
-                    SELECT p.id, p.kinopoisk_id, p.name, p.english_name, p.photo, fp.role
-                    FROM film_person fp
-                    JOIN person p ON p.id = fp.person_id
-                    WHERE fp.film_id = %s
-                    ORDER BY p.id
+                    SELECT s.id, s.kinopoisk_id, s.name, s.english_name, s.photo, fs.role
+                    FROM film_stuff fs
+                    JOIN stuff s ON s.id = fs.stuff_id
+                    WHERE fs.film_id = %s
+                    ORDER BY s.id
                     """,
                     (film_id,)
                 )
