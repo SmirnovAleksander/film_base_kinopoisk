@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import auth, films, comments, users, persons, bookmarks
+from .routers import auth, films, comments, users, stuff, bookmarks
 from .utils.db import get_conn, init_connection_pool, close_connection_pool
 
 
@@ -26,7 +26,7 @@ app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(films.router, prefix="/films", tags=["films"])
 app.include_router(comments.router, prefix="/comments", tags=["comments"])
 app.include_router(users.router, prefix="/users", tags=["users"])
-app.include_router(persons.router, prefix="/persons", tags=["persons"])
+app.include_router(stuff.router, prefix="/stuff", tags=["stuff"])
 app.include_router(bookmarks.router, prefix="/bookmarks", tags=["bookmarks"])
 
 

@@ -6,7 +6,7 @@ from ..utils.db import get_connection
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("/", summary="List Stuff")
 def list_stuff(page: int = 1, page_size: int = 20):
     if page < 1 or page_size < 1 or page_size > 100:
         raise HTTPException(status_code=400, detail="Invalid pagination")
@@ -19,22 +19,22 @@ def list_stuff(page: int = 1, page_size: int = 20):
                 (page_size, offset)
             )
             rows = cur.fetchall()
-            persons = []
+            items = []
             for r in rows:
-                persons.append({
+                items.append({
                     "id": r[0],
                     "kinopoisk_id": r[1],
                     "name": r[2],
                     "english_name": r[3],
                     "photo": r[4],
                 })
-            return {"items": persons, "page": page, "page_size": page_size}
+            return {"items": items, "page": page, "page_size": page_size}
         finally:
             cur.close()
 
 
-@router.get("/{person_id}")
-def get_stuff(person_id: int):
+@router.get("/{stuff_id}", summary="Get Stuff")
+def get_stuff(stuff_id: int):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
@@ -46,11 +46,11 @@ def get_stuff(person_id: int):
                        photo
                 FROM stuff WHERE id=%s
                 """,
-                (person_id,)
+                (stuff_id,)
             )
             r = cur.fetchone()
             if not r:
-                raise HTTPException(status_code=404, detail="Person not found")
+                raise HTTPException(status_code=404, detail="Stuff not found")
             return {
                 "id": r[0],
                 "kinopoisk_id": r[1],
