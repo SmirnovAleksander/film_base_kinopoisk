@@ -483,6 +483,64 @@ class FilmPageParser:
             
             if actors:
                 film_data['actors'] = actors
+
+        # Извлекаем провайдеров для просмотра (сторонние источники)
+        def _normalize_url(url: str) -> str:
+            if not url:
+                return url
+            if url.startswith('//'):
+                return 'https:' + url
+            if not url.startswith('http'):
+                return 'https://' + url
+            return url
+
+        providers: List[Dict] = []
+
+        # Вариант 1: контейнер провайдеров data-tid="c456f2ce"
+        providers_container = self.soup.find('div', {'data-tid': 'c456f2ce'})
+        if providers_container:
+            provider_links = providers_container.find_all('a', {'data-tid': '5f829942'})
+            for a in provider_links:
+                href = a.get('href')
+                name_el = a.find('span', class_='styles_title__i15WC')
+                name = name_el.get_text(strip=True) if name_el else None
+                # Логотип внутри img с data-tid="d813cf42" или внутри .styles_logo__pS9vc
+                logo_img = a.find('img', {'data-tid': 'd813cf42'}) or a.find('span', class_='styles_logo__pS9vc')
+                logo_src = None
+                if logo_img and hasattr(logo_img, 'get'):
+                    logo_src = logo_img.get('src') if logo_img.name == 'img' else None
+                    if logo_src is None:
+                        inner_img = a.find('img')
+                        logo_src = inner_img.get('src') if inner_img and inner_img.get('src') else None
+                logo_url = _normalize_url(logo_src) if logo_src else None
+                if href and name:
+                    providers.append({'name': name, 'url': href, 'logo': logo_url})
+
+        # Вариант 2: если контейнер не найден, ищем все ссылки провайдеров по data-tid="5f829942" во всём документе
+        if not providers:
+            for a in self.soup.find_all('a', {'data-tid': '5f829942'}):
+                href = a.get('href')
+                name_el = a.find('span', class_='styles_title__i15WC')
+                name = name_el.get_text(strip=True) if name_el else None
+                logo_img = a.find('img', {'data-tid': 'd813cf42'}) or a.find('img')
+                logo_src = logo_img.get('src') if logo_img and logo_img.get('src') else None
+                logo_url = _normalize_url(logo_src) if logo_src else None
+                if href and name:
+                    providers.append({'name': name, 'url': href, 'logo': logo_url})
+
+        # Вариант 3: эвристика — ищем блоки с логотипом OTT (get-ott) и подписью названия
+        if not providers:
+            for a in self.soup.find_all('a', href=True):
+                name_el = a.find('span', class_='styles_title__i15WC')
+                img = a.find('img')
+                if name_el and img and img.get('src') and ('get-ott' in img.get('src') or 'ott' in img.get('src')):
+                    name = name_el.get_text(strip=True)
+                    href = a.get('href')
+                    logo_url = _normalize_url(img.get('src'))
+                    providers.append({'name': name, 'url': href, 'logo': logo_url})
+
+        if providers:
+            film_data['watch_providers'] = providers
         
         return film_data
     

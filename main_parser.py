@@ -215,6 +215,17 @@ class MainParser:
                 UNIQUE(film_id, similar_film_id)
             )
             """
+            ,
+            """
+            CREATE TABLE IF NOT EXISTS film_watch_providers (
+                id SERIAL PRIMARY KEY,
+                film_id INTEGER NOT NULL REFERENCES films(id) ON DELETE CASCADE,
+                name VARCHAR(200) NOT NULL,
+                url TEXT NOT NULL,
+                logo TEXT NULL,
+                UNIQUE(film_id, name)
+            )
+            """
         ]
         
         try:
@@ -439,6 +450,9 @@ class MainParser:
             
             # Сохраняем страны
             self.save_film_countries(film_db_id, film_data.get('countries', []))
+
+            # Сохраняем провайдеров просмотра
+            self.save_film_watch_providers(film_db_id, film_data.get('watch_providers', []))
             
             self.db_connection.commit()
             return film_db_id
@@ -447,6 +461,33 @@ class MainParser:
             print(f"❌ Ошибка сохранения фильма: {e}")
             self.db_connection.rollback()
             return None
+        finally:
+            cursor.close()
+
+    def save_film_watch_providers(self, film_db_id, providers):
+        """Сохранение провайдеров просмотра фильма"""
+        if not providers:
+            return
+        cursor = self.db_connection.cursor()
+        try:
+            for p in providers:
+                name = p.get('name')
+                url = p.get('url')
+                logo = p.get('logo')
+                if not name or not url:
+                    continue
+                cursor.execute(
+                    """
+                    INSERT INTO film_watch_providers (film_id, name, url, logo)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (film_id, name) DO UPDATE SET
+                        url = EXCLUDED.url,
+                        logo = EXCLUDED.logo
+                    """,
+                    (film_db_id, name, url, logo)
+                )
+        except Exception as e:
+            print(f"❌ Ошибка сохранения провайдеров: {e}")
         finally:
             cursor.close()
     

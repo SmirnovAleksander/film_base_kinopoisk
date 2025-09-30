@@ -228,6 +228,28 @@ def get_film(film_id: int):
             cur.close()
 
 
+@router.get("/{film_id}/watch-providers", summary="Где смотреть (провайдеры)")
+def get_watch_providers(film_id: int):
+    with get_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute(
+                """
+                SELECT name, url, logo
+                FROM film_watch_providers
+                WHERE film_id = %s
+                ORDER BY name
+                """,
+                (film_id,)
+            )
+            rows = cur.fetchall()
+            return [
+                {"name": r[0], "url": r[1], "logo": r[2]}
+                for r in rows
+            ]
+        finally:
+            cur.close()
+
 @router.get("/{film_id}/similar", summary="Похожие фильмы")
 def get_similar_films(film_id: int):
     with get_connection() as conn:
