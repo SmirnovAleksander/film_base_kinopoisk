@@ -545,9 +545,30 @@ class FilmPageParser:
         return film_data
     
     def _extract_from_meta(self) -> Dict:
-        """Извлекает данные из meta тегов"""
-        # TODO: Добавить парсинг meta тегов
-        return {}
+        """Минимально: берём timeRequired из JSON-LD и сохраняем как есть."""
+        result: Dict = {}
+        try:
+            for script in self.soup.find_all('script', type='application/ld+json'):
+                raw = script.string or script.get_text()
+                if not raw:
+                    continue
+                try:
+                    data = json.loads(raw)
+                except Exception:
+                    continue
+                nodes = data if isinstance(data, list) else [data]
+                for node in nodes:
+                    if not isinstance(node, dict):
+                        continue
+                    node_type = node.get('@type') or node.get('type')
+                    if node_type == 'Movie' or (isinstance(node_type, list) and 'Movie' in node_type):
+                        time_required = node.get('timeRequired') or node.get('duration')
+                        if time_required is not None:
+                            result['duration'] = str(time_required)
+                        return result
+        except Exception:
+            pass
+        return result
     
     def save_to_json(self, film_data: Dict, output_file: str = 'output/film_details.json'):
         """
