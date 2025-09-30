@@ -63,3 +63,27 @@ def delete_comment(comment_id: int, user_id: int = Depends(get_current_user_id))
             cur.close()
 
 
+
+@router.put("/{comment_id}")
+def edit_comment(comment_id: int, content: str, user_id: int = Depends(get_current_user_id)):
+    with get_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute("SELECT user_id, is_deleted FROM comments WHERE id=%s", (comment_id,))
+            row = cur.fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail="Comment not found")
+            if row[1]:
+                raise HTTPException(status_code=400, detail="Comment is deleted")
+            if row[0] != user_id:
+                raise HTTPException(status_code=403, detail="Forbidden")
+            cur.execute(
+                "UPDATE comments SET content=%s, is_edited=TRUE, edited_at=NOW() WHERE id=%s",
+                (content, comment_id),
+            )
+            conn.commit()
+            return {"status": "updated"}
+        finally:
+            cur.close()
+
+
