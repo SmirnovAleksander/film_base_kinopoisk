@@ -16,7 +16,7 @@ def list_films(page: int = 1, page_size: int = 20):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT id, kinopoisk_id, title, poster, rating_kp FROM films ORDER BY id LIMIT %s OFFSET %s", (page_size, offset))
+            cur.execute("SELECT id, kinopoisk_id, title, poster, rating_kp FROM film ORDER BY id LIMIT %s OFFSET %s", (page_size, offset))
             rows = cur.fetchall()
             films = []
             for r in rows:
@@ -55,7 +55,7 @@ def search_films(
         try:
             sql = f"""
                 SELECT id, kinopoisk_id, title, poster, rating_kp
-                FROM films
+                FROM film
                 WHERE {column} ILIKE %s
                 ORDER BY id
                 LIMIT %s OFFSET %s
@@ -81,7 +81,7 @@ def list_countries():
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT id, name FROM countries ORDER BY name")
+            cur.execute("SELECT id, name FROM country ORDER BY name")
             rows = cur.fetchall()
             return [{"id": r[0], "name": r[1]} for r in rows]
         finally:
@@ -93,7 +93,7 @@ def list_genres():
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT id, name FROM genres ORDER BY name")
+            cur.execute("SELECT id, name FROM genre ORDER BY name")
             rows = cur.fetchall()
             return [{"id": r[0], "name": r[1]} for r in rows]
         finally:
@@ -134,12 +134,12 @@ def films_filter(
             params: list = []
 
             if genre_id is not None:
-                joins.append("JOIN film_genres fg ON fg.film_id = f.id")
+                joins.append("JOIN film_genre fg ON fg.film_id = f.id")
                 conditions.append("fg.genre_id = %s")
                 params.append(genre_id)
 
             if country_id is not None:
-                joins.append("JOIN film_countries fc ON fc.film_id = f.id")
+                joins.append("JOIN film_country fc ON fc.film_id = f.id")
                 conditions.append("fc.country_id = %s")
                 params.append(country_id)
 
@@ -176,7 +176,7 @@ def films_filter(
 
             sql = f"""
                 SELECT f.id, f.kinopoisk_id, f.title, f.poster, f.rating_kp
-                FROM films f
+                FROM film f
                 {joins_sql}
                 {where_clause}
                 ORDER BY f.id
@@ -205,7 +205,7 @@ def get_film(film_id: int):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT id, kinopoisk_id, title, original_title, description, full_description, poster, year, duration, rating_kp, kp_votes_count, rating_imdb, imdb_votes_count FROM films WHERE id=%s", (film_id,))
+            cur.execute("SELECT id, kinopoisk_id, title, original_title, description, full_description, poster, year, duration, rating_kp, kp_votes_count, rating_imdb, imdb_votes_count FROM film WHERE id=%s", (film_id,))
             r = cur.fetchone()
             if not r:
                 raise HTTPException(status_code=404, detail="Film not found")
@@ -236,7 +236,7 @@ def get_watch_providers(film_id: int):
             cur.execute(
                 """
                 SELECT name, url, logo
-                FROM film_watch_providers
+                FROM film_watch_provider
                 WHERE film_id = %s
                 ORDER BY name
                 """,
@@ -255,7 +255,7 @@ def get_similar_films(film_id: int):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT similar_film_id, similar_film_title FROM similar_films WHERE film_id=%s", (film_id,))
+            cur.execute("SELECT similar_film_id, similar_film_title FROM similar_film WHERE film_id=%s", (film_id,))
             rows = cur.fetchall()
             return [{"kinopoisk_id": r[0], "title": r[1]} for r in rows]
         finally:

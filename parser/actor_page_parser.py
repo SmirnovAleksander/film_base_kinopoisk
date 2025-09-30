@@ -376,9 +376,7 @@ class ActorPageParser:
                     try:
                         actor_data['career_start_year'] = int(start_year)
                         actor_data['career_end_year'] = int(end_year)
-                        # Вычисляем продолжительность карьеры
-                        career_duration = int(end_year) - int(start_year)
-                        actor_data['career_duration'] = career_duration
+                        # Продолжительность больше не сохраняем
                     except ValueError:
                         pass
         

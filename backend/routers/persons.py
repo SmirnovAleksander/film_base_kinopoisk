@@ -43,7 +43,7 @@ def get_person(person_id: int):
                 SELECT id, kinopoisk_id, name, english_name, career, ganres, height,
                        birthday_day_month, birthday_year, zodiac, age, birthplace,
                        spouse, children, total_films, career_start_year, career_end_year,
-                       career_duration, photo
+                       photo
                 FROM person WHERE id=%s
                 """,
                 (person_id,)
@@ -69,8 +69,7 @@ def get_person(person_id: int):
                 "total_films": r[14],
                 "career_start_year": r[15],
                 "career_end_year": r[16],
-                "career_duration": r[17],
-                "photo": r[18],
+                "photo": r[17],
             }
         finally:
             cur.close()

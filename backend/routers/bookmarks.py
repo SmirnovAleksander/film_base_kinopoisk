@@ -25,8 +25,8 @@ def list_bookmarks(
             cur.execute(
                 """
                 SELECT f.id, f.kinopoisk_id, f.title, f.poster, f.rating_kp, b.created_at
-                FROM bookmarks b
-                JOIN films f ON f.id = b.film_id
+                FROM bookmark b
+                JOIN film f ON f.id = b.film_id
                 WHERE b.user_id = %s
                 ORDER BY b.created_at DESC
                 LIMIT %s OFFSET %s
@@ -56,14 +56,14 @@ def add_bookmark(film_id: int, user_id: int = Depends(get_current_user_id)):
         cur = conn.cursor()
         try:
             # Проверяем, что фильм существует
-            cur.execute("SELECT id FROM films WHERE id = %s", (film_id,))
+            cur.execute("SELECT id FROM film WHERE id = %s", (film_id,))
             if not cur.fetchone():
                 raise HTTPException(status_code=404, detail="Film not found")
             
             # Добавляем закладку (ON CONFLICT игнорируем дубликаты)
             cur.execute(
                 """
-                INSERT INTO bookmarks (film_id, user_id) 
+                INSERT INTO bookmark (film_id, user_id) 
                 VALUES (%s, %s) 
                 ON CONFLICT (film_id, user_id) DO NOTHING
                 RETURNING id
@@ -87,7 +87,7 @@ def remove_bookmark(film_id: int, user_id: int = Depends(get_current_user_id)):
         cur = conn.cursor()
         try:
             cur.execute(
-                "DELETE FROM bookmarks WHERE film_id = %s AND user_id = %s",
+                "DELETE FROM bookmark WHERE film_id = %s AND user_id = %s",
                 (film_id, user_id)
             )
             conn.commit()
@@ -106,7 +106,7 @@ def check_bookmark_status(film_id: int, user_id: int = Depends(get_current_user_
         cur = conn.cursor()
         try:
             cur.execute(
-                "SELECT id, created_at FROM bookmarks WHERE film_id = %s AND user_id = %s",
+                "SELECT id, created_at FROM bookmark WHERE film_id = %s AND user_id = %s",
                 (film_id, user_id)
             )
             result = cur.fetchone()

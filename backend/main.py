@@ -36,13 +36,13 @@ def startup_event():
     # Инициализируем пул соединений
     init_connection_pool()
     
-    # Создаём таблицу users при старте, если её нет
+    # Создаём таблицу app_user при старте, если её нет
     try:
         conn = get_conn()
         cur = conn.cursor()
         cur.execute(
             """
-            CREATE TABLE IF NOT EXISTS users (
+            CREATE TABLE IF NOT EXISTS app_user (
                 id SERIAL PRIMARY KEY,
                 email VARCHAR(320) UNIQUE NOT NULL,
                 username VARCHAR(100) UNIQUE,

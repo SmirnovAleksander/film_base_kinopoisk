@@ -52,7 +52,7 @@ class MainParser:
         # Создаем таблицы
         tables = [
             """
-            CREATE TABLE IF NOT EXISTS films (
+            CREATE TABLE IF NOT EXISTS film (
                 id SERIAL PRIMARY KEY,
                 kinopoisk_id VARCHAR(20) UNIQUE NOT NULL,
                 title VARCHAR(500),
@@ -69,12 +69,11 @@ class MainParser:
                 rating_kp DECIMAL(3,1),
                 kp_votes_count VARCHAR(50),
                 rating_imdb DECIMAL(3,1),
-                imdb_votes_count VARCHAR(50),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                imdb_votes_count VARCHAR(50)
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS users (
+            CREATE TABLE IF NOT EXISTS app_user (
                 id SERIAL PRIMARY KEY,
                 email VARCHAR(320) UNIQUE NOT NULL,
                 username VARCHAR(100) UNIQUE,
@@ -105,16 +104,14 @@ class MainParser:
                 total_films INTEGER,
                 career_start_year INTEGER,
                 career_end_year INTEGER,
-                career_duration INTEGER,
-                photo VARCHAR(1000),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                photo VARCHAR(1000)
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS comments (
+            CREATE TABLE IF NOT EXISTS comment (
                 id SERIAL PRIMARY KEY,
-                film_id INTEGER NOT NULL REFERENCES films(id) ON DELETE CASCADE,
-                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
+                user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
                 content TEXT NOT NULL,
                 is_edited BOOLEAN DEFAULT FALSE,
                 edited_at TIMESTAMP NULL,
@@ -125,32 +122,30 @@ class MainParser:
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS bookmarks (
+            CREATE TABLE IF NOT EXISTS bookmark (
                 id SERIAL PRIMARY KEY,
-                film_id INTEGER NOT NULL REFERENCES films(id) ON DELETE CASCADE,
-                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
+                user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(film_id, user_id)
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS genres (
+            CREATE TABLE IF NOT EXISTS genre (
                 id SERIAL PRIMARY KEY,
-                name VARCHAR(100) UNIQUE NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                name VARCHAR(100) UNIQUE NOT NULL
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS countries (
+            CREATE TABLE IF NOT EXISTS country (
                 id SERIAL PRIMARY KEY,
-                name VARCHAR(100) UNIQUE NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                name VARCHAR(100) UNIQUE NOT NULL
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS refresh_tokens (
+            CREATE TABLE IF NOT EXISTS refresh_token (
                 id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
                 token_hash VARCHAR(255) NOT NULL,
                 issued_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 expires_at TIMESTAMP NOT NULL,
@@ -160,9 +155,9 @@ class MainParser:
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS email_verification_tokens (
+            CREATE TABLE IF NOT EXISTS email_verification_token (
                 id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
                 token VARCHAR(255) NOT NULL,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 expires_at TIMESTAMP NOT NULL,
@@ -171,9 +166,9 @@ class MainParser:
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+            CREATE TABLE IF NOT EXISTS password_reset_token (
                 id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
                 token VARCHAR(255) NOT NULL,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 expires_at TIMESTAMP NOT NULL,
@@ -182,34 +177,34 @@ class MainParser:
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS film_genres (
+            CREATE TABLE IF NOT EXISTS film_genre (
                 id SERIAL PRIMARY KEY,
-                film_id INTEGER REFERENCES films(id),
-                genre_id INTEGER REFERENCES genres(id),
+                film_id INTEGER REFERENCES film(id),
+                genre_id INTEGER REFERENCES genre(id),
                 UNIQUE(film_id, genre_id)
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS film_countries (
+            CREATE TABLE IF NOT EXISTS film_country (
                 id SERIAL PRIMARY KEY,
-                film_id INTEGER REFERENCES films(id),
-                country_id INTEGER REFERENCES countries(id),
+                film_id INTEGER REFERENCES film(id),
+                country_id INTEGER REFERENCES country(id),
                 UNIQUE(film_id, country_id)
             )
             """,
             """
             CREATE TABLE IF NOT EXISTS film_person (
                 id SERIAL PRIMARY KEY,
-                film_id INTEGER REFERENCES films(id),
+                film_id INTEGER REFERENCES film(id),
                 person_id INTEGER REFERENCES person(id),
                 role VARCHAR(100),
                 UNIQUE(film_id, person_id, role)
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS similar_films (
+            CREATE TABLE IF NOT EXISTS similar_film (
                 id SERIAL PRIMARY KEY,
-                film_id INTEGER REFERENCES films(id),
+                film_id INTEGER REFERENCES film(id),
                 similar_film_id VARCHAR(20),
                 similar_film_title VARCHAR(500),
                 UNIQUE(film_id, similar_film_id)
@@ -217,9 +212,9 @@ class MainParser:
             """
             ,
             """
-            CREATE TABLE IF NOT EXISTS film_watch_providers (
+            CREATE TABLE IF NOT EXISTS film_watch_provider (
                 id SERIAL PRIMARY KEY,
-                film_id INTEGER NOT NULL REFERENCES films(id) ON DELETE CASCADE,
+                film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
                 name VARCHAR(200) NOT NULL,
                 url TEXT NOT NULL,
                 logo TEXT NULL,
@@ -401,7 +396,7 @@ class MainParser:
             
             # Вставляем фильм
             insert_film = """
-            INSERT INTO films (kinopoisk_id, title, original_title, description, full_description, 
+            INSERT INTO film (kinopoisk_id, title, original_title, description, full_description, 
                              poster, year, tagline, ru_premiere, world_premiere, age_rating, 
                              duration, rating_kp, kp_votes_count, rating_imdb, imdb_votes_count)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -478,7 +473,7 @@ class MainParser:
                     continue
                 cursor.execute(
                     """
-                    INSERT INTO film_watch_providers (film_id, name, url, logo)
+                    INSERT INTO film_watch_provider (film_id, name, url, logo)
                     VALUES (%s, %s, %s, %s)
                     ON CONFLICT (film_id, name) DO UPDATE SET
                         url = EXCLUDED.url,
@@ -512,8 +507,8 @@ class MainParser:
             INSERT INTO person (kinopoisk_id, name, english_name, career, ganres, height, 
                                birthday_day_month, birthday_year, zodiac, age, birthplace, 
                                spouse, children, total_films, career_start_year, 
-                               career_end_year, career_duration, photo)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                               career_end_year, photo)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
                 name = EXCLUDED.name,
                 english_name = EXCLUDED.english_name,
@@ -530,7 +525,6 @@ class MainParser:
                 total_films = EXCLUDED.total_films,
                 career_start_year = EXCLUDED.career_start_year,
                 career_end_year = EXCLUDED.career_end_year,
-                career_duration = EXCLUDED.career_duration,
                 photo = EXCLUDED.photo
             RETURNING id
             """
@@ -552,7 +546,6 @@ class MainParser:
                 person_data.get('total_films'),
                 person_data.get('career_start_year'),
                 person_data.get('career_end_year'),
-                person_data.get('career_duration'),
                 person_data.get('photo')
             ))
             
@@ -579,17 +572,17 @@ class MainParser:
             for genre_name in genres:
                 # Вставляем жанр
                 cursor.execute(
-                    "INSERT INTO genres (name) VALUES (%s) ON CONFLICT (name) DO NOTHING",
+                    "INSERT INTO genre (name) VALUES (%s) ON CONFLICT (name) DO NOTHING",
                     (genre_name,)
                 )
                 
                 # Получаем ID жанра
-                cursor.execute("SELECT id FROM genres WHERE name = %s", (genre_name,))
+                cursor.execute("SELECT id FROM genre WHERE name = %s", (genre_name,))
                 genre_id = cursor.fetchone()[0]
                 
                 # Создаем связь фильм-жанр
                 cursor.execute(
-                    "INSERT INTO film_genres (film_id, genre_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
+                    "INSERT INTO film_genre (film_id, genre_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
                     (film_db_id, genre_id)
                 )
                 
@@ -609,17 +602,17 @@ class MainParser:
             for country_name in countries:
                 # Вставляем страну
                 cursor.execute(
-                    "INSERT INTO countries (name) VALUES (%s) ON CONFLICT (name) DO NOTHING",
+                    "INSERT INTO country (name) VALUES (%s) ON CONFLICT (name) DO NOTHING",
                     (country_name,)
                 )
                 
                 # Получаем ID страны
-                cursor.execute("SELECT id FROM countries WHERE name = %s", (country_name,))
+                cursor.execute("SELECT id FROM country WHERE name = %s", (country_name,))
                 country_id = cursor.fetchone()[0]
                 
                 # Создаем связь фильм-страна
                 cursor.execute(
-                    "INSERT INTO film_countries (film_id, country_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
+                    "INSERT INTO film_country (film_id, country_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
                     (film_db_id, country_id)
                 )
                 
@@ -648,7 +641,7 @@ class MainParser:
         
         try:
             cursor.execute(
-                "INSERT INTO similar_films (film_id, similar_film_id, similar_film_title) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
+                "INSERT INTO similar_film (film_id, similar_film_id, similar_film_title) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
                 (film_db_id, similar_film_id, similar_film_title)
             )
         except Exception as e:

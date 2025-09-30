@@ -12,7 +12,7 @@ def get_me(user_id: int = Depends(get_current_user_id)):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT id, email, username, is_email_verified, role, created_at, last_login_at FROM users WHERE id=%s", (user_id,))
+            cur.execute("SELECT id, email, username, is_email_verified, role, created_at, last_login_at FROM app_user WHERE id=%s", (user_id,))
             r = cur.fetchone()
             if not r:
                 raise HTTPException(status_code=404, detail="User not found")
@@ -34,7 +34,7 @@ def get_users_count():
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT COUNT(*) FROM users")
+            cur.execute("SELECT COUNT(*) FROM app_user")
             count = cur.fetchone()[0]
             return {"count": count}
         finally:

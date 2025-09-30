@@ -14,7 +14,7 @@ def list_comments(film_id: int):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT id, user_id, content, is_edited, is_deleted, status, created_at FROM comments WHERE film_id=%s AND is_deleted=FALSE ORDER BY created_at DESC", (film_id,))
+            cur.execute("SELECT id, user_id, content, is_edited, is_deleted, status, created_at FROM comment WHERE film_id=%s AND is_deleted=FALSE ORDER BY created_at DESC", (film_id,))
             rows = cur.fetchall()
             return [
                 {
@@ -36,7 +36,7 @@ def add_comment(film_id: int, content: str, user_id: int = Depends(get_current_u
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("INSERT INTO comments (film_id, user_id, content) VALUES (%s, %s, %s) RETURNING id",
+            cur.execute("INSERT INTO comment (film_id, user_id, content) VALUES (%s, %s, %s) RETURNING id",
                         (film_id, user_id, content))
             new_id = cur.fetchone()[0]
             conn.commit()
@@ -50,13 +50,13 @@ def delete_comment(comment_id: int, user_id: int = Depends(get_current_user_id))
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT user_id FROM comments WHERE id=%s", (comment_id,))
+            cur.execute("SELECT user_id FROM comment WHERE id=%s", (comment_id,))
             row = cur.fetchone()
             if not row:
                 raise HTTPException(status_code=404, detail="Comment not found")
             if row[0] != user_id:
                 raise HTTPException(status_code=403, detail="Forbidden")
-            cur.execute("UPDATE comments SET is_deleted=TRUE WHERE id=%s", (comment_id,))
+            cur.execute("UPDATE comment SET is_deleted=TRUE WHERE id=%s", (comment_id,))
             conn.commit()
             return {"status": "deleted"}
         finally:
@@ -69,7 +69,7 @@ def edit_comment(comment_id: int, content: str, user_id: int = Depends(get_curre
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT user_id, is_deleted FROM comments WHERE id=%s", (comment_id,))
+            cur.execute("SELECT user_id, is_deleted FROM comment WHERE id=%s", (comment_id,))
             row = cur.fetchone()
             if not row:
                 raise HTTPException(status_code=404, detail="Comment not found")
@@ -78,7 +78,7 @@ def edit_comment(comment_id: int, content: str, user_id: int = Depends(get_curre
             if row[0] != user_id:
                 raise HTTPException(status_code=403, detail="Forbidden")
             cur.execute(
-                "UPDATE comments SET content=%s, is_edited=TRUE, edited_at=NOW() WHERE id=%s",
+                "UPDATE comment SET content=%s, is_edited=TRUE, edited_at=NOW() WHERE id=%s",
                 (content, comment_id),
             )
             conn.commit()

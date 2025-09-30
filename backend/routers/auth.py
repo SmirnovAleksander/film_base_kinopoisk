@@ -55,11 +55,11 @@ def register(email: str, password: str, username: Optional[str] = None):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT 1 FROM users WHERE email=%s OR username=%s", (email, username))
+            cur.execute("SELECT 1 FROM app_user WHERE email=%s OR username=%s", (email, username))
             if cur.fetchone():
                 raise HTTPException(status_code=400, detail="Email or username already exists")
             cur.execute(
-                "INSERT INTO users (email, username, password_hash) VALUES (%s, %s, %s) RETURNING id",
+                "INSERT INTO app_user (email, username, password_hash) VALUES (%s, %s, %s) RETURNING id",
                 (email, username, hash_password(password))
             )
             user_id = cur.fetchone()[0]
@@ -74,7 +74,7 @@ def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT id, password_hash, email, username FROM users WHERE email=%s OR username=%s",
+            cur.execute("SELECT id, password_hash, email, username FROM app_user WHERE email=%s OR username=%s",
                         (form_data.username, form_data.username))
             row = cur.fetchone()
             if not row:
@@ -90,7 +90,7 @@ def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
             ip = request.client.host if request.client else None
             cur.execute(
                 """
-                INSERT INTO refresh_tokens(user_id, token_hash, expires_at, user_agent, ip)
+                INSERT INTO refresh_token(user_id, token_hash, expires_at, user_agent, ip)
                 VALUES (%s, %s, NOW() + (%s)::interval, %s, %s)
                 """,
                 (user_id, _hash_token(refresh_token), f"{REFRESH_TTL_DAYS} days", ua, ip)
@@ -120,7 +120,7 @@ def refresh_token(refresh_token: str, request: Request):
             cur.execute(
                 """
                 SELECT id, expires_at, revoked_at
-                FROM refresh_tokens
+                FROM refresh_token
                 WHERE user_id=%s AND token_hash=%s
                 ORDER BY id DESC
                 LIMIT 1
@@ -137,7 +137,7 @@ def refresh_token(refresh_token: str, request: Request):
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh expired")
 
             # Ротация: помечаем старый как отозванный
-            cur.execute("UPDATE refresh_tokens SET revoked_at=NOW() WHERE id=%s", (rt_id,))
+            cur.execute("UPDATE refresh_token SET revoked_at=NOW() WHERE id=%s", (rt_id,))
 
             # Выдаём новые токены и сохраняем новый refresh
             new_access = create_access_token({"sub": str(user_id)})
@@ -146,7 +146,7 @@ def refresh_token(refresh_token: str, request: Request):
             ip = request.client.host if request.client else None
             cur.execute(
                 """
-                INSERT INTO refresh_tokens(user_id, token_hash, expires_at, user_agent, ip)
+                INSERT INTO refresh_token(user_id, token_hash, expires_at, user_agent, ip)
                 VALUES (%s, %s, NOW() + (%s)::interval, %s, %s)
                 """,
                 (int(user_id), _hash_token(new_refresh), f"{REFRESH_TTL_DAYS} days", ua, ip)
@@ -164,7 +164,7 @@ async def request_email_verify(user_id: int):
         cur = conn.cursor()
         try:
             # Получим email и username пользователя
-            cur.execute("SELECT email, username FROM users WHERE id=%s", (user_id,))
+            cur.execute("SELECT email, username FROM app_user WHERE id=%s", (user_id,))
             row = cur.fetchone()
             if not row:
                 raise HTTPException(status_code=404, detail="User not found")
@@ -175,7 +175,7 @@ async def request_email_verify(user_id: int):
             # Записываем/обновляем токен в таблице
             cur.execute(
                 """
-                INSERT INTO email_verification_tokens(user_id, token, expires_at)
+                INSERT INTO email_verification_token(user_id, token, expires_at)
                 VALUES(%s, %s, NOW() + INTERVAL '24 hours')
                 ON CONFLICT(user_id) DO UPDATE SET token=EXCLUDED.token, expires_at=EXCLUDED.expires_at, consumed_at=NULL
                 """,
@@ -194,7 +194,7 @@ def verify_email(token: str):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT user_id, expires_at, consumed_at FROM email_verification_tokens WHERE token=%s", (token,))
+            cur.execute("SELECT user_id, expires_at, consumed_at FROM email_verification_token WHERE token=%s", (token,))
             row = cur.fetchone()
             if not row:
                 raise HTTPException(status_code=400, detail="Invalid token")
@@ -205,8 +205,8 @@ def verify_email(token: str):
                 raise HTTPException(status_code=400, detail="Expired token")
 
             # Маркируем подтверждение почты
-            cur.execute("UPDATE users SET is_email_verified=TRUE WHERE id=%s", (user_id,))
-            cur.execute("UPDATE email_verification_tokens SET consumed_at=NOW() WHERE token=%s", (token,))
+            cur.execute("UPDATE app_user SET is_email_verified=TRUE WHERE id=%s", (user_id,))
+            cur.execute("UPDATE email_verification_token SET consumed_at=NOW() WHERE token=%s", (token,))
             conn.commit()
             return {"status": "verified"}
         finally:
@@ -218,7 +218,7 @@ async def request_password_reset(email: str):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT id FROM users WHERE email=%s", (email,))
+            cur.execute("SELECT id FROM app_user WHERE email=%s", (email,))
             row = cur.fetchone()
             if not row:
                 # Чтобы не раскрывать существование email, возвращаем 200
@@ -227,7 +227,7 @@ async def request_password_reset(email: str):
             token = create_access_token({"sub": str(user_id)}, expires_delta=timedelta(hours=1))
             cur.execute(
                 """
-                INSERT INTO password_reset_tokens(user_id, token, expires_at)
+                INSERT INTO password_reset_token(user_id, token, expires_at)
                 VALUES(%s, %s, NOW() + INTERVAL '1 hour')
                 ON CONFLICT(user_id) DO UPDATE SET token=EXCLUDED.token, expires_at=EXCLUDED.expires_at, consumed_at=NULL
                 """,
@@ -246,7 +246,7 @@ def reset_password(token: str, new_password: str):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT user_id, expires_at, consumed_at FROM password_reset_tokens WHERE token=%s", (token,))
+            cur.execute("SELECT user_id, expires_at, consumed_at FROM password_reset_token WHERE token=%s", (token,))
             row = cur.fetchone()
             if not row:
                 raise HTTPException(status_code=400, detail="Invalid token")
@@ -256,8 +256,8 @@ def reset_password(token: str, new_password: str):
             if expires_at and datetime.utcnow() > expires_at:
                 raise HTTPException(status_code=400, detail="Expired token")
 
-            cur.execute("UPDATE users SET password_hash=%s WHERE id=%s", (hash_password(new_password), user_id))
-            cur.execute("UPDATE password_reset_tokens SET consumed_at=NOW() WHERE token=%s", (token,))
+            cur.execute("UPDATE app_user SET password_hash=%s WHERE id=%s", (hash_password(new_password), user_id))
+            cur.execute("UPDATE password_reset_token SET consumed_at=NOW() WHERE token=%s", (token,))
             conn.commit()
             return {"status": "password_changed"}
         finally:
@@ -275,7 +275,7 @@ def logout(refresh_token: str, user_id: int = Depends(get_current_user_id)):
         try:
             cur.execute(
                 """
-                UPDATE refresh_tokens
+                UPDATE refresh_token
                 SET revoked_at = NOW()
                 WHERE user_id = %s AND token_hash = %s AND revoked_at IS NULL
                 RETURNING id
@@ -297,7 +297,7 @@ def logout_all(user_id: int = Depends(get_current_user_id)):
         try:
             cur.execute(
                 """
-                UPDATE refresh_tokens
+                UPDATE refresh_token
                 SET revoked_at = NOW()
                 WHERE user_id = %s AND revoked_at IS NULL
                 """,
