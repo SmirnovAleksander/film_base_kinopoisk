@@ -11,6 +11,11 @@ type AuthState = {
   register: (email: string, password: string, username?: string) => Promise<boolean>;
   fetchMe: () => Promise<void>;
   logout: () => Promise<void>;
+  logoutAll: () => Promise<void>;
+  requestEmailVerify: () => Promise<boolean>;
+  requestPasswordReset: (email: string) => Promise<boolean>;
+  verifyEmail: (token: string) => Promise<boolean>;
+  resetPassword: (token: string, newPassword: string) => Promise<boolean>;
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -70,6 +75,49 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     Cookies.remove("access_token");
     Cookies.remove("refresh_token");
     set({ user: null });
+  },
+  async logoutAll() {
+    try {
+      await api.post("/auth/logout-all");
+    } catch {}
+    Cookies.remove("access_token");
+    Cookies.remove("refresh_token");
+    set({ user: null });
+  },
+  async requestEmailVerify() {
+    try {
+      const u = get().user;
+      if (!u) return false;
+      const r = await api.post("/auth/request-email-verify", null, { params: { user_id: u.id } });
+      return r.status >= 200 && r.status < 300;
+    } catch {
+      return false;
+    }
+  },
+  async requestPasswordReset(email: string) {
+    try {
+      const r = await api.post("/auth/request-password-reset", null, { params: { email } });
+      return r.status >= 200 && r.status < 300;
+    } catch {
+      return false;
+    }
+  },
+  async verifyEmail(token: string) {
+    try {
+      const r = await api.post("/auth/verify-email", null, { params: { token } });
+      await get().fetchMe();
+      return r.status >= 200 && r.status < 300;
+    } catch {
+      return false;
+    }
+  },
+  async resetPassword(token: string, newPassword: string) {
+    try {
+      const r = await api.post("/auth/reset-password", null, { params: { token, new_password: newPassword } });
+      return r.status >= 200 && r.status < 300;
+    } catch {
+      return false;
+    }
   },
 }));
 

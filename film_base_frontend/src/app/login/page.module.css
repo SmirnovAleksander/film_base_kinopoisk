@@ -7,5 +7,6 @@
 .button { background: var(--primary); color: #fff; border: 0; border-radius: 10px; padding: 10px 12px; cursor: pointer; }
 .error { color: #ef4444; font-size: 14px; }
 .hint { color: var(--muted); font-size: 12px; }
+.link { color: var(--primary); text-decoration: none; }
 
 

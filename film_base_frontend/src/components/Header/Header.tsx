@@ -20,6 +20,8 @@ export default function Header() {
         </Link>
         <nav className={styles.nav}>
           <Link href="/films" className={styles.link}>Фильмы</Link>
+          <Link href="/stuff" className={styles.link}>Персоны</Link>
+          <Link href="/profile" className={styles.link}>Профиль</Link>
           <Link href="/login" className={styles.link}>Войти</Link>
           <Link href="/register" className={styles.link}>Регистрация</Link>
         </nav>

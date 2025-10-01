@@ -40,6 +40,9 @@ export default function LoginPage() {
           {loading || isSubmitting ? "Входим..." : "Войти"}
         </button>
       </form>
+      <div style={{ marginTop: 10 }}>
+        <a href="/forgot-password" className={styles.link}>Забыли пароль?</a>
+      </div>
     </div>
   );
 }
