@@ -8,7 +8,7 @@
 .meta { display: flex; gap: 12px; color: var(--muted); }
 .ratings { display: flex; gap: 8px; }
 .badge { background: var(--bg-elev); border: 1px solid var(--border); padding: 4px 8px; border-radius: 999px; }
-.tagline { color: var(--muted); fontStyle: italic; }
+.tagline { color: var(--muted); font-style: italic; }
 .desc { margin-top: 4px; line-height: 1.5; }
 .section { margin-top: 24px; }
 .h2 { font-size: 20px; margin-bottom: 10px; }

@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import api from "@/lib/api/client";
 import { FilmDetails, SimilarFilm, WatchProvider } from "@/lib/types";
-import Link from "next/link";
 import styles from "./page.module.css";
+import Link from "next/link";
 import { resolveMediaUrl } from "@/lib/utils/url";
 
 type FilmStuff = { id: number; kinopoisk_id: number | null; name: string; english_name: string | null; photo: string | null; role: string };
@@ -15,8 +15,8 @@ export default function FilmDetailsPage() {
   const [film, setFilm] = useState<FilmDetails | null>(null);
   const [providers, setProviders] = useState<WatchProvider[]>([]);
   const [similar, setSimilar] = useState<SimilarFilm[]>([]);
-  const [stuff, setStuff] = useState<FilmStuff[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stuff, setStuff] = useState<FilmStuff[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -95,17 +95,19 @@ export default function FilmDetailsPage() {
         <section className={styles.section}>
           <h2 className={styles.h2}>Участники</h2>
           <div className={styles.stuffGrid}>
-            {stuff.map((u) => (
-              <Link key={u.id} href={`/stuff/${u.id}`} className={styles.stuffCard}>
-                {u.photo ? (
-                  <img src={resolveMediaUrl(u.photo) || ""} alt={u.name} />
-                ) : (
-                  <div className={styles.stuffNoPhoto} />
-                )}
-                <div className={styles.stuffName}>{u.name}</div>
-                <div className={styles.stuffRole}>{u.role}</div>
-              </Link>
-            ))}
+            {stuff
+              .filter((u) => u.role === "actor" || u.role === "director")
+              .map((u) => (
+                <Link key={u.id} href={`/stuff/${u.id}`} className={styles.stuffCard}>
+                  {u.photo ? (
+                    <img src={resolveMediaUrl(u.photo) || ""} alt={u.name} />
+                  ) : (
+                    <div className={styles.stuffNoPhoto} />
+                  )}
+                  <div className={styles.stuffName}>{u.name}</div>
+                  <div className={styles.stuffRole}>{u.role}</div>
+                </Link>
+              ))}
           </div>
         </section>
       ) : null}

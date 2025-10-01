@@ -4,7 +4,7 @@
 .input { border: 1px solid var(--border); background: var(--bg-elev); color: var(--text); border-radius: 10px; padding: 10px 12px; flex: 1; }
 .button { background: var(--primary); color: #fff; border: 0; border-radius: 10px; padding: 10px 12px; cursor: pointer; }
 .grid { display: flex; flex-direction: column; gap: 12px; }
-.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: grid; grid-template-columns: 160px 1fr; gap: 12px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: grid; grid-template-columns: 160px 1fr; gap: 12px; text-decoration: none; color: var(--text); }
 .poster { width: 160px; height: 100%; max-height: 200px; object-fit: cover; display: block; background: #0f172a; }
 .noPoster { width: 160px; height: 200px; background: #0f172a; }
 .content { padding: 10px 12px; display: grid; gap: 6px; }
