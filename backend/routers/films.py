@@ -16,7 +16,24 @@ def list_films(page: int = 1, page_size: int = 20):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT id, kinopoisk_id, title, poster, rating_kp FROM film ORDER BY id LIMIT %s OFFSET %s", (page_size, offset))
+            cur.execute(
+                """
+                SELECT id,
+                       kinopoisk_id,
+                       title,
+                       original_title,
+                       full_description,
+                       poster,
+                       year,
+                       duration,
+                       rating_kp,
+                       rating_imdb
+                FROM film
+                ORDER BY id
+                LIMIT %s OFFSET %s
+                """,
+                (page_size, offset)
+            )
             rows = cur.fetchall()
             films = []
             for r in rows:
@@ -24,8 +41,13 @@ def list_films(page: int = 1, page_size: int = 20):
                     "id": r[0],
                     "kinopoisk_id": r[1],
                     "title": r[2],
-                    "poster": r[3],
-                    "rating_kp": r[4],
+                    "original_title": r[3],
+                    "full_description": r[4],
+                    "poster": r[5],
+                    "year": r[6],
+                    "duration": r[7],
+                    "rating_kp": r[8],
+                    "rating_imdb": r[9],
                 })
             return {"items": films, "page": page, "page_size": page_size}
         finally:
@@ -54,7 +76,16 @@ def search_films(
         cur = conn.cursor()
         try:
             sql = f"""
-                SELECT id, kinopoisk_id, title, poster, rating_kp
+                SELECT id,
+                       kinopoisk_id,
+                       title,
+                       original_title,
+                       full_description,
+                       poster,
+                       year,
+                       duration,
+                       rating_kp,
+                       rating_imdb
                 FROM film
                 WHERE {column} ILIKE %s
                 ORDER BY id
@@ -67,8 +98,13 @@ def search_films(
                     "id": r[0],
                     "kinopoisk_id": r[1],
                     "title": r[2],
-                    "poster": r[3],
-                    "rating_kp": r[4],
+                    "original_title": r[3],
+                    "full_description": r[4],
+                    "poster": r[5],
+                    "year": r[6],
+                    "duration": r[7],
+                    "rating_kp": r[8],
+                    "rating_imdb": r[9],
                 }
                 for r in rows
             ]
@@ -175,7 +211,16 @@ def films_filter(
             where_clause = ("WHERE " + " AND ".join(conditions)) if conditions else ""
 
             sql = f"""
-                SELECT f.id, f.kinopoisk_id, f.title, f.poster, f.rating_kp
+                SELECT f.id,
+                       f.kinopoisk_id,
+                       f.title,
+                       f.original_title,
+                       f.full_description,
+                       f.poster,
+                       f.year,
+                       f.duration,
+                       f.rating_kp,
+                       f.rating_imdb
                 FROM film f
                 {joins_sql}
                 {where_clause}
@@ -191,8 +236,13 @@ def films_filter(
                     "id": r[0],
                     "kinopoisk_id": r[1],
                     "title": r[2],
-                    "poster": r[3],
-                    "rating_kp": r[4],
+                    "original_title": r[3],
+                    "full_description": r[4],
+                    "poster": r[5],
+                    "year": r[6],
+                    "duration": r[7],
+                    "rating_kp": r[8],
+                    "rating_imdb": r[9],
                 }
                 for r in rows
             ]
@@ -205,7 +255,30 @@ def get_film(film_id: int):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT id, kinopoisk_id, title, original_title, description, full_description, poster, year, duration, rating_kp, kp_votes_count, rating_imdb, imdb_votes_count FROM film WHERE id=%s", (film_id,))
+            cur.execute(
+                """
+                SELECT id,
+                       kinopoisk_id,
+                       title,
+                       original_title,
+                       description,
+                       full_description,
+                       poster,
+                       year,
+                       tagline,
+                       ru_premiere,
+                       world_premiere,
+                       age_rating,
+                       duration,
+                       rating_kp,
+                       kp_votes_count,
+                       rating_imdb,
+                       imdb_votes_count
+                FROM film
+                WHERE id=%s
+                """,
+                (film_id,)
+            )
             r = cur.fetchone()
             if not r:
                 raise HTTPException(status_code=404, detail="Film not found")
@@ -218,11 +291,15 @@ def get_film(film_id: int):
                 "full_description": r[5],
                 "poster": r[6],
                 "year": r[7],
-                "duration": r[8],
-                "rating_kp": r[9],
-                "kp_votes_count": r[10],
-                "rating_imdb": r[11],
-                "imdb_votes_count": r[12],
+                "tagline": r[8],
+                "ru_premiere": r[9],
+                "world_premiere": r[10],
+                "age_rating": r[11],
+                "duration": r[12],
+                "rating_kp": r[13],
+                "kp_votes_count": r[14],
+                "rating_imdb": r[15],
+                "imdb_votes_count": r[16],
             }
         finally:
             cur.close()

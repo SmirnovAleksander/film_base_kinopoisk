@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useFilmsStore } from "@/store/films";
 import styles from "./page.module.css";
+import { resolveMediaUrl } from "@/lib/utils/url";
 
 export default function FilmsPage() {
   const { items, page, pageSize, loading, list, search } = useFilmsStore();
@@ -24,9 +25,34 @@ export default function FilmsPage() {
         <div className={styles.grid}>
           {items.map((f) => (
             <div key={f.id} className={styles.card}>
-              {f.poster ? <img className={styles.poster} src={f.poster} alt={f.title} /> : <div className={styles.noPoster} />}
-              <div className={styles.cardTitle}>{f.title}</div>
-              <div className={styles.meta}>KP: {f.rating_kp ?? "-"}</div>
+              {f.poster ? (
+                <img
+                  className={styles.poster}
+                  src={resolveMediaUrl(f.poster) || ""}
+                  alt={f.title}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                    const placeholder = document.createElement("div");
+                    placeholder.className = styles.noPoster;
+                    e.currentTarget.parentElement?.prepend(placeholder);
+                  }}
+                />
+              ) : (
+                <div className={styles.noPoster} />
+              )}
+              <div className={styles.content}>
+                <div className={styles.cardTitle}>{f.title}</div>
+                <div className={styles.sub}>{f.original_title || ""}</div>
+                <div className={styles.ratings}>
+                  <span>Год: {f.year ?? "-"}</span>
+                  <span>Длительность: {f.duration ?? "-"}</span>
+                  <span>KP: {f.rating_kp ?? "-"}</span>
+                  <span>IMDb: {f.rating_imdb ?? "-"}</span>
+                </div>
+                {f.full_description ? (
+                  <div className={styles.desc}>{f.full_description}</div>
+                ) : null}
+              </div>
             </div>
           ))}
         </div>

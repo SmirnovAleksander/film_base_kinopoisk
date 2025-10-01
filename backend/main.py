@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+import os
 
 from .routers import auth, films, comments, users, stuff, bookmarks
 from .utils.db import get_conn, init_connection_pool, close_connection_pool
@@ -28,6 +30,16 @@ app.include_router(comments.router, prefix="/comments", tags=["comments"])
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(stuff.router, prefix="/stuff", tags=["stuff"])
 app.include_router(bookmarks.router, prefix="/bookmarks", tags=["bookmarks"])
+
+# Static files for images (e.g., /images/films/film_*.jpg)
+try:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    IMAGES_DIR = os.path.normpath(os.path.join(BASE_DIR, "..", "images"))
+    if os.path.isdir(IMAGES_DIR):
+        app.mount("/images", StaticFiles(directory=IMAGES_DIR), name="images")
+except Exception:
+    # If mounting fails, continue without static images; endpoints will still work
+    pass
 
 
 @app.on_event("startup")
