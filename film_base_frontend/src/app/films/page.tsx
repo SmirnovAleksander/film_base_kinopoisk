@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useFilmsStore } from "@/store/films";
 import styles from "./page.module.css";
 import { resolveMediaUrl } from "@/lib/utils/url";
+import Link from "next/link";
 
 export default function FilmsPage() {
   const { items, page, pageSize, loading, list, search } = useFilmsStore();
@@ -24,7 +25,7 @@ export default function FilmsPage() {
       ) : (
         <div className={styles.grid}>
           {items.map((f) => (
-            <div key={f.id} className={styles.card}>
+            <Link key={f.id} href={`/films/${f.id}`} className={styles.card}>
               {f.poster ? (
                 <img
                   className={styles.poster}
@@ -53,7 +54,7 @@ export default function FilmsPage() {
                   <div className={styles.desc}>{f.full_description}</div>
                 ) : null}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

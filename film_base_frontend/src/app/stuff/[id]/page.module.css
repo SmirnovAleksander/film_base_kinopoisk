@@ -1,0 +1,10 @@
+.container { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
+.header { display: grid; grid-template-columns: 220px 1fr; gap: 16px; }
+.photo { width: 220px; height: 320px; object-fit: cover; background: #0f172a; border-radius: 12px; }
+.noPhoto { width: 220px; height: 320px; background: #0f172a; border-radius: 12px; }
+.info { display: grid; gap: 8px; }
+.title { font-size: 28px; font-weight: 800; }
+.sub { color: var(--muted); }
+.meta { display: flex; gap: 12px; color: var(--muted); flex-wrap: wrap; }
+
+
