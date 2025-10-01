@@ -1,7 +1,4 @@
-.header {
-  background: #0b1324;
-  color: #fff;
-}
+.header { background: var(--bg-elev); color: var(--text); border-bottom: 1px solid var(--border); }
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -10,34 +7,18 @@
   align-items: center;
   justify-content: space-between;
 }
-.logo {
-  font-weight: 700;
-  text-decoration: none;
-  color: #fff;
-}
+.logo { font-weight: 700; text-decoration: none; color: var(--text); }
 .nav {
   display: flex;
   gap: 12px;
 }
-.link {
-  color: #cbd5e1;
-  text-decoration: none;
-}
+.link { color: var(--muted); text-decoration: none; }
 .user {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.username {
-  color: #e2e8f0;
-}
-.button {
-  background: #1f2937;
-  color: #fff;
-  border: 0;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-}
+.username { color: var(--text); }
+.button { background: var(--primary); color: #fff; border: 0; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
 
 

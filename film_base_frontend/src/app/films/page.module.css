@@ -1,13 +1,13 @@
 .container { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
 .title { font-size: 24px; margin-bottom: 16px; }
 .searchRow { display: flex; gap: 8px; margin-bottom: 16px; }
-.input { border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; flex: 1; }
-.button { background: #0b1324; color: #fff; border: 0; border-radius: 8px; padding: 10px 12px; cursor: pointer; }
+.input { border: 1px solid var(--border); background: var(--bg-elev); color: var(--text); border-radius: 10px; padding: 10px 12px; flex: 1; }
+.button { background: var(--primary); color: #fff; border: 0; border-radius: 10px; padding: 10px 12px; cursor: pointer; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
-.card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
-.poster { width: 100%; height: 260px; object-fit: cover; display: block; background: #f1f5f9; }
-.noPoster { width: 100%; height: 260px; background: #f1f5f9; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.poster { width: 100%; height: 260px; object-fit: cover; display: block; background: #0f172a; }
+.noPoster { width: 100%; height: 260px; background: #0f172a; }
 .cardTitle { font-weight: 600; padding: 8px 10px; }
-.meta { color: #475569; padding: 0 10px 10px; font-size: 14px; }
+.meta { color: var(--muted); padding: 0 10px 10px; font-size: 14px; }
 
 
