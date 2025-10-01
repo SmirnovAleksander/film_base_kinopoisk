@@ -1,0 +1,43 @@
+.header {
+  background: #0b1324;
+  color: #fff;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo {
+  font-weight: 700;
+  text-decoration: none;
+  color: #fff;
+}
+.nav {
+  display: flex;
+  gap: 12px;
+}
+.link {
+  color: #cbd5e1;
+  text-decoration: none;
+}
+.user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.username {
+  color: #e2e8f0;
+}
+.button {
+  background: #1f2937;
+  color: #fff;
+  border: 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+
