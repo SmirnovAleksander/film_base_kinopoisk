@@ -1,4 +1,15 @@
 :root {
+  --bg: #ffffff;
+  --bg-elev: #f8fafc;
+  --text: #0f172a;
+  --muted: #475569;
+  --primary: #2563eb;
+  --primary-600: #1d4ed8;
+  --border: #e2e8f0;
+  --card: #ffffff;
+}
+
+.dark {
   --bg: #0b1120;
   --bg-elev: #0f172a;
   --text: #e2e8f0;

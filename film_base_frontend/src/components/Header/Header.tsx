@@ -2,9 +2,16 @@
 import Link from "next/link";
 import styles from "./Header.module.css";
 import { useAuthStore } from "@/store/auth";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 
 export default function Header() {
   const { user, logout } = useAuthStore();
+  const { theme, setTheme, systemTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const current = theme === "system" ? systemTheme : theme;
+  const label = mounted ? (current === "dark" ? "Светлая" : "Тёмная") : "Тема";
   return (
     <header className={styles.header}>
       <div className={styles.container}>
@@ -17,6 +24,9 @@ export default function Header() {
           <Link href="/register" className={styles.link}>Регистрация</Link>
         </nav>
         <div className={styles.user}>
+          <button className={styles.button} onClick={() => setTheme(current === "dark" ? "light" : "dark")} suppressHydrationWarning>
+            {label}
+          </button>
           {user ? (
             <>
               <span className={styles.username}>{user.username || user.email}</span>
