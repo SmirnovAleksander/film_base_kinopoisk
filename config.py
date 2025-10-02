@@ -10,7 +10,7 @@ DATABASE_CONFIG = {
     'port': 5432,
     'database': 'film_base_kinopoisk',
     'user': 'postgres',
-    'password': 'admin123'
+    'password': 'admin'
 }
 
 # Настройки задержек (в секундах)
@@ -40,7 +40,7 @@ LOGGING_CONFIG = {
 MAIL_CONFIG = {
     "MAIL_USERNAME": "aleksander50.500@gmail.com",  # Твоя почта Gmail
     "MAIL_PASSWORD": "yujb torm lmeg ywlw",     # Пароль приложения Gmail
-    "MAIL_FROM": "leksander50.500@gmail.com",      # От кого отправлять
+    "MAIL_FROM": "aleksander50.500@gmail.com",      # От кого отправлять
     "MAIL_PORT": 587,                         # Порт SMTP
     "MAIL_SERVER": "smtp.gmail.com",          # SMTP сервер Gmail
     "MAIL_STARTTLS": True,                    # Использовать STARTTLS

@@ -4,14 +4,26 @@ import { useFilmsStore } from "@/store/films";
 import styles from "./page.module.css";
 import { resolveMediaUrl } from "@/lib/utils/url";
 import Link from "next/link";
+import {useShallow} from "zustand/react/shallow";
+import type {FilmsState} from "../../store/films"
 
 export default function FilmsPage() {
-  const { items, page, pageSize, loading, list, search } = useFilmsStore();
+  const { items, page, pageSize, loading, list, search } = useFilmsStore(
+      useShallow((s:FilmsState) => ({
+          items: s.items,
+          page: s.page,
+          pageSize: s.pageSize,
+          loading: s.loading,
+          list: s.list,
+          search: s.search
+      }))
+  );
   const [q, setQ] = useState("");
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     list(1, 20);
-  }, [list]);
+  }, []);
 
   return (
     <div className={styles.container}>
@@ -26,21 +38,16 @@ export default function FilmsPage() {
         <div className={styles.grid}>
           {items.map((f) => (
             <Link key={f.id} href={`/films/${f.id}`} className={styles.card}>
-              {f.poster ? (
-                <img
-                  className={styles.poster}
-                  src={resolveMediaUrl(f.poster) || ""}
-                  alt={f.title}
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.display = "none";
-                    const placeholder = document.createElement("div");
-                    placeholder.className = styles.noPoster;
-                    e.currentTarget.parentElement?.prepend(placeholder);
-                  }}
-                />
-              ) : (
-                <div className={styles.noPoster} />
-              )}
+                {!imgError && f.poster ? (
+                    <img
+                        className={styles.poster}
+                        src={resolveMediaUrl(f.poster) || ""}
+                        alt={f.title}
+                        onError={() => setImgError(true)}
+                    />
+                ) : (
+                    <div className={styles.noPoster}>Нет постера</div>
+                )}
               <div className={styles.content}>
                 <div className={styles.cardTitle}>{f.title}</div>
                 <div className={styles.sub}>{f.original_title || ""}</div>

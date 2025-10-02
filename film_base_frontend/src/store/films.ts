@@ -2,7 +2,7 @@ import { create } from "zustand";
 import api from "@/lib/api/client";
 import { FilmListItem, Paginated, FilmDetails } from "@/lib/types";
 
-type FilmsState = {
+export type FilmsState = {
   items: FilmListItem[];
   page: number;
   pageSize: number;
