@@ -35,10 +35,62 @@ export type FilmDetails = {
   kp_votes_count: number | null;
   rating_imdb: number | null;
   imdb_votes_count: number | null;
+  budget?: string | null;
+  usa_box_office?: string | null;
+  rus_box_office?: string | null;
+  mpaa_rating?: string | null;
+  user_rating?: number | null;
+  user_rating_count?: number | null;
 };
 
 export type WatchProvider = { name: string; url: string; logo: string | null };
 export type SimilarFilm = { kinopoisk_id: number; title: string };
+
+export type UserRating = {
+  rating: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type FilmAverageRating = {
+  average_rating: number | null;
+  total_ratings: number;
+  min_rating: number | null;
+  max_rating: number | null;
+};
+
+export type UserRatingWithFilm = {
+  rating: number;
+  created_at: string;
+  updated_at: string;
+  film: {
+    id: number;
+    title: string;
+    poster: string | null;
+    year: number | null;
+  };
+};
+
+export type Actor = {
+  id: number;
+  kinopoisk_id: string;
+  name: string;
+  english_name: string | null;
+  career: string[] | null;
+  ganres: string[] | null;
+  height: string | null;
+  birthday_day_month: string | null;
+  birthday_year: number | null;
+  zodiac: string | null;
+  age: number | null;
+  birthplace: string[] | null;
+  spouse: string[] | null;
+  children: string[] | null;
+  total_films: number | null;
+  career_start_year: number | null;
+  career_end_year: number | null;
+  photo: string | null;
+};
 
 export type UserMe = {
   id: number;

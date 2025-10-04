@@ -287,16 +287,54 @@ class FilmPageParser:
                 imdb_count = imdb_count_match.group(1).replace(' ', '')
                 film_data['imdb_votes_count'] = imdb_count
         
-        # Извлекаем постер (data-tid="d813cf42")
-        poster_elem = self.soup.find('img', {'data-tid': 'd813cf42'})
-        if poster_elem and poster_elem.get('src'):
-            poster_url = poster_elem.get('src')
-            # Нормализуем URL - добавляем https:// если нужно
-            if poster_url.startswith('//'):
-                poster_url = 'https:' + poster_url
-            elif not poster_url.startswith('http'):
-                poster_url = 'https://' + poster_url
-            film_data['poster'] = poster_url
+        # Извлекаем постер (поиск по классу film-poster и data-tid)
+        poster_elem = None
+        
+        # Сначала ищем по классу film-poster
+        poster_elem = self.soup.find('img', class_=lambda x: x and 'film-poster' in x)
+        
+        # Если не найден, ищем по data-tid
+        if not poster_elem:
+            poster_elem = self.soup.find('img', {'data-tid': 'd813cf42'})
+        
+        if poster_elem:
+            poster_url = None
+            
+            # Приоритет: изображение 300x450 > srcset > src
+            if poster_elem.get('srcset'):
+                # Парсим srcset и ищем изображение 300x450
+                srcset = poster_elem.get('srcset')
+                
+                # Сначала ищем URL с 300x450 в srcset
+                srcset_urls = re.findall(r'([^\s]+)\s+(\d+)x', srcset)
+                poster_url = None
+                
+                # Ищем URL с 300x450 (1x множитель)
+                for url, multiplier in srcset_urls:
+                    if '300x450' in url and multiplier == '1':
+                        poster_url = url
+                        break
+                
+                # Если 300x450 не найден, берем первый доступный
+                if not poster_url and srcset_urls and len(srcset_urls) > 0:
+                    poster_url = srcset_urls[0][0]
+            
+            # Если srcset не найден, используем src
+            if not poster_url and poster_elem.get('src'):
+                src_url = poster_elem.get('src')
+                # Предпочитаем URL с 300x450
+                if '300x450' in src_url:
+                    poster_url = src_url
+                else:
+                    poster_url = src_url
+            
+            if poster_url:
+                # Нормализуем URL - добавляем https:// если нужно
+                if poster_url.startswith('//'):
+                    poster_url = 'https:' + poster_url
+                elif not poster_url.startswith('http'):
+                    poster_url = 'https://' + poster_url
+                film_data['poster'] = poster_url
         
         # Извлекаем год производства (data-test-id="year")
         year_elem = self.soup.find('div', {'data-test-id': 'year'})
@@ -336,7 +374,11 @@ class FilmPageParser:
             for link in director_links:
                 if link.get('href') and '/name/' in link.get('href'):
                     name = link.get_text(strip=True)
-                    person_id = link.get('href').split('/name/')[1].rstrip('/')
+                    href_parts = link.get('href').split('/name/')
+                    if len(href_parts) > 1:
+                        person_id = href_parts[1].rstrip('/')
+                    else:
+                        continue
                     directors.append({'name': name, 'id': person_id})
             if directors:
                 film_data['directors'] = directors
@@ -447,6 +489,53 @@ class FilmPageParser:
             if duration_div:
                 film_data['duration'] = duration_div.get_text(strip=True)
         
+        # Извлекаем бюджет фильма (data-test-id="budget" или data-per-id="cfbe5a01")
+        budget_elem = self.soup.find('div', {'data-test-id': 'budget'})
+        if budget_elem:
+            budget_value = budget_elem.find('div', {'data-tid': 'cfbe5a01'})
+            if budget_value:
+                budget_link = budget_value.find('a')
+                if budget_link and budget_link.get('href') and '/box/' in budget_link.get('href'):
+                    budget_text = budget_link.get_text(strip=True)
+                    # Очищаем текст от HTML entities (&nbsp; и т.д.)
+                    import html
+                    budget_clean = html.unescape(budget_text)
+                    film_data['budget'] = budget_clean
+        
+        # Извлекаем сборы в США (data-test-id="usaBox")
+        usa_box_elem = self.soup.find('div', {'data-test-id': 'usaBox'})
+        if usa_box_elem:
+            usa_box_value = usa_box_elem.find('div', {'data-tid': '41068c56'})
+            if usa_box_value:
+                usa_box_link = usa_box_value.find('a')
+                if usa_box_link and usa_box_link.get('href') and '/box/' in usa_box_link.get('href'):
+                    usa_box_text = usa_box_link.get_text(strip=True)
+                    # Очищаем текст от HTML entities (&nbsp; и т.д.)
+                    import html
+                    usa_box_clean = html.unescape(usa_box_text)
+                    film_data['usa_box_office'] = usa_box_clean
+        
+        # Извлекаем сборы в России (data-test-id="rusBox")
+        rus_box_elem = self.soup.find('div', {'data-test-id': 'rusBox'})
+        if rus_box_elem:
+            rus_box_value = rus_box_elem.find('div', {'data-tid': '41068c56'})
+            if rus_box_value:
+                rus_box_link = rus_box_value.find('a')
+                if rus_box_link and rus_box_link.get('href') and '/box/' in rus_box_link.get('href'):
+                    rus_box_text = rus_box_link.get_text(strip=True)
+                    # Очищаем текст от HTML entities (&nbsp; и т.д.)
+                    import html
+                    rus_box_clean = html.unescape(rus_box_text)
+                    film_data['rus_box_office'] = rus_box_clean
+        
+        # Извлекаем рейтинг MPAA (data-test-id="ratingMPAA")
+        mpaa_elem = self.soup.find('div', {'data-test-id': 'ratingMPAA'})
+        if mpaa_elem:
+            mpaa_span = mpaa_elem.find('span', {'data-tid': '5c1ffa33'})
+            if mpaa_span:
+                film_data['mpaa_rating'] = mpaa_span.get_text(strip=True)
+
+
         # Извлекаем похожие фильмы (data-tid="36b81cbf")
         similar_films_elem = self.soup.find('div', {'data-tid': '36b81cbf'})
         if similar_films_elem:
@@ -458,7 +547,11 @@ class FilmPageParser:
                 film_link = item.find('a', {'data-test-id': 'next-link'})
                 if film_link and film_link.get('href'):
                     # Извлекаем ID из URL /film/5919/ -> 5919
-                    film_id = film_link.get('href').split('/film/')[1].rstrip('/')
+                    href_parts = film_link.get('href').split('/film/')
+                    if len(href_parts) > 1:
+                        film_id = href_parts[1].rstrip('/')
+                    else:
+                        continue
                     
                     # Извлекаем название фильма
                     title_span = item.find('span', {'data-tid': 'ecca3393'})
@@ -478,7 +571,11 @@ class FilmPageParser:
             for link in actor_links:
                 if link.get('href') and '/name/' in link.get('href'):
                     name = link.get_text(strip=True)
-                    person_id = link.get('href').split('/name/')[1].rstrip('/')
+                    href_parts = link.get('href').split('/name/')
+                    if len(href_parts) > 1:
+                        person_id = href_parts[1].rstrip('/')
+                    else:
+                        continue
                     actors.append({'name': name, 'id': person_id})
             
             if actors:

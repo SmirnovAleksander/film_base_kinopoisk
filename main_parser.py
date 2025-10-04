@@ -69,7 +69,13 @@ class MainParser:
                 rating_kp DECIMAL(3,1),
                 kp_votes_count VARCHAR(50),
                 rating_imdb DECIMAL(3,1),
-                imdb_votes_count VARCHAR(50)
+                imdb_votes_count VARCHAR(50),
+                budget VARCHAR(100),
+                usa_box_office VARCHAR(100),
+                rus_box_office VARCHAR(100),
+                mpaa_rating VARCHAR(20),
+                user_rating DECIMAL(3,1),
+                user_rating_count INTEGER DEFAULT 0
             )
             """,
             """
@@ -105,6 +111,17 @@ class MainParser:
                 career_start_year INTEGER,
                 career_end_year INTEGER,
                 photo VARCHAR(1000)
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS user_film_ratings (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
+                film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
+                rating DECIMAL(3,1) NOT NULL CHECK (rating >= 1.0 AND rating <= 10.0),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, film_id)
             )
             """,
             """
@@ -398,8 +415,9 @@ class MainParser:
             insert_film = """
             INSERT INTO film (kinopoisk_id, title, original_title, description, full_description, 
                              poster, year, tagline, ru_premiere, world_premiere, age_rating, 
-                             duration, rating_kp, kp_votes_count, rating_imdb, imdb_votes_count)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                             duration, rating_kp, kp_votes_count, rating_imdb, imdb_votes_count,
+                             budget, usa_box_office, rus_box_office, mpaa_rating, user_rating, user_rating_count)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
                 title = EXCLUDED.title,
                 original_title = EXCLUDED.original_title,
@@ -415,7 +433,13 @@ class MainParser:
                 rating_kp = EXCLUDED.rating_kp,
                 kp_votes_count = EXCLUDED.kp_votes_count,
                 rating_imdb = EXCLUDED.rating_imdb,
-                imdb_votes_count = EXCLUDED.imdb_votes_count
+                imdb_votes_count = EXCLUDED.imdb_votes_count,
+                budget = EXCLUDED.budget,
+                usa_box_office = EXCLUDED.usa_box_office,
+                rus_box_office = EXCLUDED.rus_box_office,
+                mpaa_rating = EXCLUDED.mpaa_rating,
+                user_rating = EXCLUDED.user_rating,
+                user_rating_count = EXCLUDED.user_rating_count
             RETURNING id
             """
             
@@ -435,7 +459,13 @@ class MainParser:
                 film_data.get('rating_kp'),
                 film_data.get('kp_votes_count'),
                 film_data.get('rating_imdb'),
-                film_data.get('imdb_votes_count')
+                film_data.get('imdb_votes_count'),
+                film_data.get('budget'),
+                film_data.get('usa_box_office'),
+                film_data.get('rus_box_office'),
+                film_data.get('mpaa_rating'),
+                None,  # user_rating - будет обновляться автоматически
+                0      # user_rating_count - будет обновляться автоматически
             ))
             
             film_db_id = cursor.fetchone()[0]

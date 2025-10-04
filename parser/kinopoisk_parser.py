@@ -215,31 +215,47 @@ class KinopoiskParser:
         
         # Извлекаем ID фильмов из ссылок (data-tid="23a2a59")
         film_links = self.soup.find_all('a', {'data-tid': '23a2a59'})
-        for link in film_links:
-            if link.get('href') and '/film/' in link.get('href'):
-                # Извлекаем ID из URL /film/535341/ -> 535341
-                film_id = link.get('href').split('/film/')[1].rstrip('/')
-                
-                # Ищем название фильма в том же контейнере или рядом
-                film_name = None
-                # Сначала ищем внутри ссылки
-                title_span = link.find('span', {'data-tid': '4502216a'})
-                if title_span:
-                    film_name = title_span.get_text(strip=True)
-                else:
-                    # Если не найдено внутри, ищем в родительском элементе
-                    parent = link.parent
-                    if parent:
-                        title_span = parent.find('span', {'data-tid': '4502216a'})
-                        if title_span:
-                            film_name = title_span.get_text(strip=True)
-                
-                film_data = {'id': film_id}
-                if film_name:
-                    film_data['name'] = film_name
-                
-                films.append(film_data)
+        print(f"🔍 Найдено {len(film_links)} ссылок с data-tid='23a2a59'")
         
+        valid_links = 0
+        invalid_links = 0
+        
+        for i, link in enumerate(film_links):
+            href = link.get('href')
+            print(f"  [{i+1}] href: {href}")
+            
+            if href and '/film/' in href:
+                valid_links += 1
+                # Извлекаем ID из URL /film/535341/ -> 535341
+                href_parts = href.split('/film/')
+                if len(href_parts) > 1:
+                    film_id = href_parts[1].rstrip('/')
+                    
+                    # Ищем название фильма в атрибуте alt изображения
+                    film_name = None
+                    img = link.find('img')
+                    if img and img.get('alt'):
+                        film_name = img.get('alt').strip()
+                    
+                    film_data = {'id': film_id}
+                    if film_name:
+                        film_data['name'] = film_name
+                    
+                    films.append(film_data)
+                    print(f"    ✅ Добавлен фильм: {film_id} - {film_name}")
+                else:
+                    print(f"    ❌ Не удалось извлечь ID из: {href}")
+            else:
+                invalid_links += 1
+                print(f"    ❌ Некорректная ссылка: {href}")
+        
+        print(f"📊 Статистика:")
+        print(f"   Всего ссылок: {len(film_links)}")
+        print(f"   Валидных ссылок: {valid_links}")
+        print(f"   Некорректных ссылок: {invalid_links}")
+        print(f"   Обработано фильмов: {len(films)}")
+        
+        print(f"📊 Обработано {len(films)} фильмов")
         return films
     
     def save_to_json(self, films: List[Dict], output_file: str = 'output/films_data.json'):

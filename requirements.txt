@@ -8,3 +8,5 @@ uvicorn==0.30.6
 python-jose==3.3.0
 passlib[bcrypt]==1.7.4
 fastapi-mail==1.4.1
+Pillow==10.4.0
+pillow-avif-plugin==1.5.2
