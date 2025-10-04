@@ -33,6 +33,49 @@ def list_stuff(page: int = 1, page_size: int = 20):
             cur.close()
 
 
+@router.get("/kinopoisk/{kinopoisk_id}", summary="Получить актера по Кинопоиск ID")
+def get_stuff_by_kinopoisk_id(kinopoisk_id: str):
+    """Получает актера по его Кинопоиск ID"""
+    with get_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute(
+                """
+                SELECT id, kinopoisk_id, name, english_name, career, ganres, height,
+                       birthday_day_month, birthday_year, zodiac, age, birthplace,
+                       spouse, children, total_films, career_start_year, career_end_year,
+                       photo
+                FROM stuff WHERE kinopoisk_id=%s
+                """,
+                (kinopoisk_id,)
+            )
+            r = cur.fetchone()
+            if not r:
+                raise HTTPException(status_code=404, detail="Actor not found")
+            return {
+                "id": r[0],
+                "kinopoisk_id": r[1],
+                "name": r[2],
+                "english_name": r[3],
+                "career": r[4],
+                "ganres": r[5],
+                "height": r[6],
+                "birthday_day_month": r[7],
+                "birthday_year": r[8],
+                "zodiac": r[9],
+                "age": r[10],
+                "birthplace": r[11],
+                "spouse": r[12],
+                "children": r[13],
+                "total_films": r[14],
+                "career_start_year": r[15],
+                "career_end_year": r[16],
+                "photo": r[17],
+            }
+        finally:
+            cur.close()
+
+
 @router.get("/{stuff_id}", summary="Get Stuff")
 def get_stuff(stuff_id: int):
     with get_connection() as conn:

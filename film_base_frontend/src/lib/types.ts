@@ -71,6 +71,27 @@ export type UserRatingWithFilm = {
   };
 };
 
+export type Actor = {
+  id: number;
+  kinopoisk_id: string;
+  name: string;
+  english_name: string | null;
+  career: string[] | null;
+  ganres: string[] | null;
+  height: string | null;
+  birthday_day_month: string | null;
+  birthday_year: number | null;
+  zodiac: string | null;
+  age: number | null;
+  birthplace: string[] | null;
+  spouse: string[] | null;
+  children: string[] | null;
+  total_films: number | null;
+  career_start_year: number | null;
+  career_end_year: number | null;
+  photo: string | null;
+};
+
 export type UserMe = {
   id: number;
   email: string;

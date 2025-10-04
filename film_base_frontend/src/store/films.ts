@@ -58,6 +58,10 @@ export const useFilmsStore = create<FilmsState>((set, get) => ({
     const resp = await api.get<FilmDetails>(`/films/${id}`);
     return resp.data;
   },
+  async getByKinopoiskId(kinopoiskId: string) {
+    const resp = await api.get<FilmDetails>(`/films/kinopoisk/${kinopoiskId}`);
+    return resp.data;
+  },
 }));
 
 
