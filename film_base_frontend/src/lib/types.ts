@@ -35,6 +35,10 @@ export type FilmDetails = {
   kp_votes_count: number | null;
   rating_imdb: number | null;
   imdb_votes_count: number | null;
+  budget?: string | null;
+  usa_box_office?: string | null;
+  rus_box_office?: string | null;
+  mpaa_rating?: string | null;
 };
 
 export type WatchProvider = { name: string; url: string; logo: string | null };

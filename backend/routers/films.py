@@ -273,7 +273,11 @@ def get_film(film_id: int):
                        rating_kp,
                        kp_votes_count,
                        rating_imdb,
-                       imdb_votes_count
+                       imdb_votes_count,
+                       budget,
+                       usa_box_office,
+                       rus_box_office,
+                       mpaa_rating
                 FROM film
                 WHERE id=%s
                 """,
@@ -300,6 +304,10 @@ def get_film(film_id: int):
                 "kp_votes_count": r[14],
                 "rating_imdb": r[15],
                 "imdb_votes_count": r[16],
+                "budget": r[17],
+                "usa_box_office": r[18],
+                "rus_box_office": r[19],
+                "mpaa_rating": r[20],
             }
         finally:
             cur.close()

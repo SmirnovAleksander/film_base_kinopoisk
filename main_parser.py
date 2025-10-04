@@ -69,7 +69,11 @@ class MainParser:
                 rating_kp DECIMAL(3,1),
                 kp_votes_count VARCHAR(50),
                 rating_imdb DECIMAL(3,1),
-                imdb_votes_count VARCHAR(50)
+                imdb_votes_count VARCHAR(50),
+                budget VARCHAR(100),
+                usa_box_office VARCHAR(100),
+                rus_box_office VARCHAR(100),
+                mpaa_rating VARCHAR(20)
             )
             """,
             """
@@ -398,8 +402,9 @@ class MainParser:
             insert_film = """
             INSERT INTO film (kinopoisk_id, title, original_title, description, full_description, 
                              poster, year, tagline, ru_premiere, world_premiere, age_rating, 
-                             duration, rating_kp, kp_votes_count, rating_imdb, imdb_votes_count)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                             duration, rating_kp, kp_votes_count, rating_imdb, imdb_votes_count,
+                             budget, usa_box_office, rus_box_office, mpaa_rating)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
                 title = EXCLUDED.title,
                 original_title = EXCLUDED.original_title,
@@ -415,7 +420,11 @@ class MainParser:
                 rating_kp = EXCLUDED.rating_kp,
                 kp_votes_count = EXCLUDED.kp_votes_count,
                 rating_imdb = EXCLUDED.rating_imdb,
-                imdb_votes_count = EXCLUDED.imdb_votes_count
+                imdb_votes_count = EXCLUDED.imdb_votes_count,
+                budget = EXCLUDED.budget,
+                usa_box_office = EXCLUDED.usa_box_office,
+                rus_box_office = EXCLUDED.rus_box_office,
+                mpaa_rating = EXCLUDED.mpaa_rating
             RETURNING id
             """
             
@@ -435,7 +444,11 @@ class MainParser:
                 film_data.get('rating_kp'),
                 film_data.get('kp_votes_count'),
                 film_data.get('rating_imdb'),
-                film_data.get('imdb_votes_count')
+                film_data.get('imdb_votes_count'),
+                film_data.get('budget'),
+                film_data.get('usa_box_office'),
+                film_data.get('rus_box_office'),
+                film_data.get('mpaa_rating')
             ))
             
             film_db_id = cursor.fetchone()[0]
