@@ -489,6 +489,53 @@ class FilmPageParser:
             if duration_div:
                 film_data['duration'] = duration_div.get_text(strip=True)
         
+        # Извлекаем бюджет фильма (data-test-id="budget" или data-per-id="cfbe5a01")
+        budget_elem = self.soup.find('div', {'data-test-id': 'budget'})
+        if budget_elem:
+            budget_value = budget_elem.find('div', {'data-tid': 'cfbe5a01'})
+            if budget_value:
+                budget_link = budget_value.find('a')
+                if budget_link and budget_link.get('href') and '/box/' in budget_link.get('href'):
+                    budget_text = budget_link.get_text(strip=True)
+                    # Очищаем текст от HTML entities (&nbsp; и т.д.)
+                    import html
+                    budget_clean = html.unescape(budget_text)
+                    film_data['budget'] = budget_clean
+        
+        # Извлекаем сборы в США (data-test-id="usaBox")
+        usa_box_elem = self.soup.find('div', {'data-test-id': 'usaBox'})
+        if usa_box_elem:
+            usa_box_value = usa_box_elem.find('div', {'data-tid': '41068c56'})
+            if usa_box_value:
+                usa_box_link = usa_box_value.find('a')
+                if usa_box_link and usa_box_link.get('href') and '/box/' in usa_box_link.get('href'):
+                    usa_box_text = usa_box_link.get_text(strip=True)
+                    # Очищаем текст от HTML entities (&nbsp; и т.д.)
+                    import html
+                    usa_box_clean = html.unescape(usa_box_text)
+                    film_data['usa_box_office'] = usa_box_clean
+        
+        # Извлекаем сборы в России (data-test-id="rusBox")
+        rus_box_elem = self.soup.find('div', {'data-test-id': 'rusBox'})
+        if rus_box_elem:
+            rus_box_value = rus_box_elem.find('div', {'data-tid': '41068c56'})
+            if rus_box_value:
+                rus_box_link = rus_box_value.find('a')
+                if rus_box_link and rus_box_link.get('href') and '/box/' in rus_box_link.get('href'):
+                    rus_box_text = rus_box_link.get_text(strip=True)
+                    # Очищаем текст от HTML entities (&nbsp; и т.д.)
+                    import html
+                    rus_box_clean = html.unescape(rus_box_text)
+                    film_data['rus_box_office'] = rus_box_clean
+        
+        # Извлекаем рейтинг MPAA (data-test-id="ratingMPAA")
+        mpaa_elem = self.soup.find('div', {'data-test-id': 'ratingMPAA'})
+        if mpaa_elem:
+            mpaa_span = mpaa_elem.find('span', {'data-tid': '5c1ffa33'})
+            if mpaa_span:
+                film_data['mpaa_rating'] = mpaa_span.get_text(strip=True)
+
+
         # Извлекаем похожие фильмы (data-tid="36b81cbf")
         similar_films_elem = self.soup.find('div', {'data-tid': '36b81cbf'})
         if similar_films_elem:
