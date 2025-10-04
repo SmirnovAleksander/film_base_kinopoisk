@@ -287,16 +287,54 @@ class FilmPageParser:
                 imdb_count = imdb_count_match.group(1).replace(' ', '')
                 film_data['imdb_votes_count'] = imdb_count
         
-        # Извлекаем постер (data-tid="d813cf42")
-        poster_elem = self.soup.find('img', {'data-tid': 'd813cf42'})
-        if poster_elem and poster_elem.get('src'):
-            poster_url = poster_elem.get('src')
-            # Нормализуем URL - добавляем https:// если нужно
-            if poster_url.startswith('//'):
-                poster_url = 'https:' + poster_url
-            elif not poster_url.startswith('http'):
-                poster_url = 'https://' + poster_url
-            film_data['poster'] = poster_url
+        # Извлекаем постер (поиск по классу film-poster и data-tid)
+        poster_elem = None
+        
+        # Сначала ищем по классу film-poster
+        poster_elem = self.soup.find('img', class_=lambda x: x and 'film-poster' in x)
+        
+        # Если не найден, ищем по data-tid
+        if not poster_elem:
+            poster_elem = self.soup.find('img', {'data-tid': 'd813cf42'})
+        
+        if poster_elem:
+            poster_url = None
+            
+            # Приоритет: изображение 300x450 > srcset > src
+            if poster_elem.get('srcset'):
+                # Парсим srcset и ищем изображение 300x450
+                srcset = poster_elem.get('srcset')
+                
+                # Сначала ищем URL с 300x450 в srcset
+                srcset_urls = re.findall(r'([^\s]+)\s+(\d+)x', srcset)
+                poster_url = None
+                
+                # Ищем URL с 300x450 (1x множитель)
+                for url, multiplier in srcset_urls:
+                    if '300x450' in url and multiplier == '1':
+                        poster_url = url
+                        break
+                
+                # Если 300x450 не найден, берем первый доступный
+                if not poster_url and srcset_urls and len(srcset_urls) > 0:
+                    poster_url = srcset_urls[0][0]
+            
+            # Если srcset не найден, используем src
+            if not poster_url and poster_elem.get('src'):
+                src_url = poster_elem.get('src')
+                # Предпочитаем URL с 300x450
+                if '300x450' in src_url:
+                    poster_url = src_url
+                else:
+                    poster_url = src_url
+            
+            if poster_url:
+                # Нормализуем URL - добавляем https:// если нужно
+                if poster_url.startswith('//'):
+                    poster_url = 'https:' + poster_url
+                elif not poster_url.startswith('http'):
+                    poster_url = 'https://' + poster_url
+                film_data['poster'] = poster_url
         
         # Извлекаем год производства (data-test-id="year")
         year_elem = self.soup.find('div', {'data-test-id': 'year'})
@@ -336,7 +374,11 @@ class FilmPageParser:
             for link in director_links:
                 if link.get('href') and '/name/' in link.get('href'):
                     name = link.get_text(strip=True)
-                    person_id = link.get('href').split('/name/')[1].rstrip('/')
+                    href_parts = link.get('href').split('/name/')
+                    if len(href_parts) > 1:
+                        person_id = href_parts[1].rstrip('/')
+                    else:
+                        continue
                     directors.append({'name': name, 'id': person_id})
             if directors:
                 film_data['directors'] = directors
@@ -458,7 +500,11 @@ class FilmPageParser:
                 film_link = item.find('a', {'data-test-id': 'next-link'})
                 if film_link and film_link.get('href'):
                     # Извлекаем ID из URL /film/5919/ -> 5919
-                    film_id = film_link.get('href').split('/film/')[1].rstrip('/')
+                    href_parts = film_link.get('href').split('/film/')
+                    if len(href_parts) > 1:
+                        film_id = href_parts[1].rstrip('/')
+                    else:
+                        continue
                     
                     # Извлекаем название фильма
                     title_span = item.find('span', {'data-tid': 'ecca3393'})
@@ -478,7 +524,11 @@ class FilmPageParser:
             for link in actor_links:
                 if link.get('href') and '/name/' in link.get('href'):
                     name = link.get_text(strip=True)
-                    person_id = link.get('href').split('/name/')[1].rstrip('/')
+                    href_parts = link.get('href').split('/name/')
+                    if len(href_parts) > 1:
+                        person_id = href_parts[1].rstrip('/')
+                    else:
+                        continue
                     actors.append({'name': name, 'id': person_id})
             
             if actors:
