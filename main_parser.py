@@ -134,6 +134,7 @@ class MainParser:
                 edited_at TIMESTAMP NULL,
                 is_deleted BOOLEAN DEFAULT FALSE,
                 status VARCHAR(20) DEFAULT 'published',
+                moderated_at TIMESTAMP NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP NULL
             )

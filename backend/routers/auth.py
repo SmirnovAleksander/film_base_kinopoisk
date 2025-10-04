@@ -58,13 +58,31 @@ def register(email: str, password: str, username: Optional[str] = None):
             cur.execute("SELECT 1 FROM app_user WHERE email=%s OR username=%s", (email, username))
             if cur.fetchone():
                 raise HTTPException(status_code=400, detail="Email or username already exists")
+            
+            # Определяем роль пользователя на основе специальных учетных данных
+            user_role = "user"  # По умолчанию обычный пользователь
+            
+            # Специальные учетные данные для админа (по username и паролю)
+            if username == "admin123" and password == "qwerty123":
+                user_role = "admin"
+            # Специальные учетные данные для модератора (по username и паролю)
+            elif username == "moderator123" and password == "qwerty123":
+                user_role = "moderator"
+            
             cur.execute(
-                "INSERT INTO app_user (email, username, password_hash) VALUES (%s, %s, %s) RETURNING id",
-                (email, username, hash_password(password))
+                "INSERT INTO app_user (email, username, password_hash, role) VALUES (%s, %s, %s, %s) RETURNING id",
+                (email, username, hash_password(password), user_role)
             )
             user_id = cur.fetchone()[0]
             conn.commit()
-            return {"id": user_id, "email": email, "username": username}
+            
+            return {
+                "id": user_id, 
+                "email": email, 
+                "username": username,
+                "role": user_role,
+                "message": f"Пользователь зарегистрирован с ролью: {user_role}"
+            }
         finally:
             cur.close()
 
