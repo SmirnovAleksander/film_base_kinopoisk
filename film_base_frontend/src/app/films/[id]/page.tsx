@@ -6,6 +6,8 @@ import { FilmDetails, SimilarFilm, WatchProvider } from "@/lib/types";
 import styles from "./page.module.css";
 import Link from "next/link";
 import { resolveMediaUrl } from "@/lib/utils/url";
+import { useHistoryStore } from "@/store/history";
+import { useAuthStore } from "@/store/auth";
 
 type FilmStuff = { id: number; kinopoisk_id: number | null; name: string; english_name: string | null; photo: string | null; role: string };
 
@@ -17,6 +19,9 @@ export default function FilmDetailsPage() {
   const [similar, setSimilar] = useState<SimilarFilm[]>([]);
   const [loading, setLoading] = useState(true);
   const [stuff, setStuff] = useState<FilmStuff[]>([]);
+  
+  const { addFilmToHistory } = useHistoryStore();
+  const { user } = useAuthStore();
 
   useEffect(() => {
     async function load() {
@@ -31,12 +36,22 @@ export default function FilmDetailsPage() {
         setProviders(p.data || []);
         setSimilar(s.data || []);
         setStuff(st.data || []);
+        
+        // Добавляем фильм в историю посещений, если пользователь авторизован
+        if (user) {
+          try {
+            await addFilmToHistory(id);
+          } catch (error) {
+            // Игнорируем ошибки истории, чтобы не мешать основному функционалу
+            console.warn('Не удалось добавить фильм в историю:', error);
+          }
+        }
       } finally {
         setLoading(false);
       }
     }
     if (id) load();
-  }, [id]);
+  }, [id, user, addFilmToHistory]);
 
   if (loading) return <div className={styles.container}>Загрузка...</div>;
   if (!film) return <div className={styles.container}>Фильм не найден</div>;
