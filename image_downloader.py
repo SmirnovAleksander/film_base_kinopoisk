@@ -7,7 +7,7 @@ from PIL import Image
 import io
 
 # Базовый путь для сохранения изображений
-BASE_PATH = "F:\\data_base_images"
+BASE_PATH = "images"
 
 class ImageDownloader:
     """Класс для скачивания и сохранения изображений в формате AVIF"""
