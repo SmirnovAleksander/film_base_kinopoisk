@@ -277,7 +277,9 @@ def get_film(film_id: int):
                        budget,
                        usa_box_office,
                        rus_box_office,
-                       mpaa_rating
+                       mpaa_rating,
+                       user_rating,
+                       user_rating_count
                 FROM film
                 WHERE id=%s
                 """,
@@ -308,6 +310,8 @@ def get_film(film_id: int):
                 "usa_box_office": r[18],
                 "rus_box_office": r[19],
                 "mpaa_rating": r[20],
+                "user_rating": float(r[21]) if r[21] else None,
+                "user_rating_count": r[22],
             }
         finally:
             cur.close()

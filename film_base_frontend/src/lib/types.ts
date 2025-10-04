@@ -39,10 +39,37 @@ export type FilmDetails = {
   usa_box_office?: string | null;
   rus_box_office?: string | null;
   mpaa_rating?: string | null;
+  user_rating?: number | null;
+  user_rating_count?: number | null;
 };
 
 export type WatchProvider = { name: string; url: string; logo: string | null };
 export type SimilarFilm = { kinopoisk_id: number; title: string };
+
+export type UserRating = {
+  rating: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type FilmAverageRating = {
+  average_rating: number | null;
+  total_ratings: number;
+  min_rating: number | null;
+  max_rating: number | null;
+};
+
+export type UserRatingWithFilm = {
+  rating: number;
+  created_at: string;
+  updated_at: string;
+  film: {
+    id: number;
+    title: string;
+    poster: string | null;
+    year: number | null;
+  };
+};
 
 export type UserMe = {
   id: number;
