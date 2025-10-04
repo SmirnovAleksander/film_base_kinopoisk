@@ -92,14 +92,52 @@ export type Actor = {
   photo: string | null;
 };
 
+export type UserRole = "user" | "moderator" | "admin";
+
 export type UserMe = {
   id: number;
   email: string;
   username: string | null;
   is_email_verified: boolean;
-  role: string;
+  role: UserRole;
   created_at: string | null;
   last_login_at: string | null;
+};
+
+export type User = {
+  id: number;
+  email: string;
+  username: string | null;
+  is_email_verified: boolean;
+  role: UserRole;
+  created_at: string | null;
+  last_login_at: string | null;
+};
+
+export type UserStats = {
+  total_users: number;
+  verified_users: number;
+  unverified_users: number;
+  role_distribution: Record<UserRole, number>;
+  new_users_30d: number;
+};
+
+export type CommentModeration = {
+  id: number;
+  film_id: number;
+  user_id: number;
+  content: string;
+  created_at: string;
+  film_title: string;
+  user_email: string;
+  username: string | null;
+};
+
+export type ModerationStats = {
+  total_comments: number;
+  status_distribution: Record<string, number>;
+  comments_7d: number;
+  pending_comments: number;
 };
 
 
