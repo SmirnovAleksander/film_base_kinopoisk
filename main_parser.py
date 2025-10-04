@@ -149,6 +149,15 @@ class MainParser:
             )
             """,
             """
+            CREATE TABLE IF NOT EXISTS user_film_history (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
+                film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
+                visited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, film_id)
+            )
+            """,
+            """
             CREATE TABLE IF NOT EXISTS genre (
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(100) UNIQUE NOT NULL
@@ -261,9 +270,9 @@ class MainParser:
             
             # URL страницы со списком фильмов
             if page == 1:
-                page_url = "https://kinopoisk.ru/lists/movies/top250/"
+                page_url = "https://www.kinopoisk.ru/lists/movies/?b=films&b=high_rated"
             else:
-                page_url = f"https://kinopoisk.ru/lists/movies/top250/?page={page}"
+                page_url = f"https://www.kinopoisk.ru/lists/movies/?b=films&b=high_rated/?page={page}"
             
             try:
                 # Парсим список фильмов

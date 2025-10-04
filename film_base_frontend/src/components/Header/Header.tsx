@@ -21,9 +21,10 @@ export default function Header() {
         <nav className={styles.nav}>
           <Link href="/films" className={styles.link}>Фильмы</Link>
           <Link href="/stuff" className={styles.link}>Персоны</Link>
+          {user && <Link href="/history" className={styles.link}>История</Link>}
           <Link href="/profile" className={styles.link}>Профиль</Link>
-          <Link href="/login" className={styles.link}>Войти</Link>
-          <Link href="/register" className={styles.link}>Регистрация</Link>
+          {!user && <Link href="/login" className={styles.link}>Войти</Link>}
+          {!user && <Link href="/register" className={styles.link}>Регистрация</Link>}
         </nav>
         <div className={styles.user}>
           <button className={styles.button} onClick={() => setTheme(current === "dark" ? "light" : "dark")} suppressHydrationWarning>

@@ -140,4 +140,31 @@ export type ModerationStats = {
   pending_comments: number;
 };
 
+export type FilmHistoryItem = {
+  visited_at: string;
+  film: {
+    id: number;
+    kinopoisk_id: string;
+    title: string;
+    original_title: string | null;
+    poster: string | null;
+    year: number | null;
+    rating_kp: number | null;
+    rating_imdb: number | null;
+  };
+};
+
+export type FilmHistoryResponse = {
+  history: FilmHistoryItem[];
+  total: number;
+};
+
+export type HistoryStats = {
+  total_visits: number;
+  visits_7d: number;
+  visits_30d: number;
+  favorite_genre: string | null;
+  favorite_genre_count: number;
+};
+
 

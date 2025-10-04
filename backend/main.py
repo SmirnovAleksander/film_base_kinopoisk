@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 
-from .routers import auth, films, comments, users, stuff, bookmarks, ratings
+from .routers import auth, films, comments, users, stuff, bookmarks, ratings, history
 from .utils.db import get_conn, init_connection_pool, close_connection_pool
 
 
@@ -31,6 +31,7 @@ app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(stuff.router, prefix="/stuff", tags=["stuff"])
 app.include_router(bookmarks.router, prefix="/bookmarks", tags=["bookmarks"])
 app.include_router(ratings.router, prefix="/ratings", tags=["ratings"])
+app.include_router(history.router, prefix="/history", tags=["history"])
 
 # Static files for images (e.g., /images/films/film_*.jpg)
 try:

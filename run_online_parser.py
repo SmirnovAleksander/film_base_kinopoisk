@@ -15,7 +15,7 @@ def main():
     print()
     
     # URL для парсинга
-    kinopoisk_url = "https://www.kinopoisk.ru/lists/movies/?b=films"
+    kinopoisk_url = "https://www.kinopoisk.ru/lists/movies/?b=films&b=high_rated"
     
     try:
         # Создаем парсер
