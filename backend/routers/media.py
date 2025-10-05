@@ -4,15 +4,15 @@ from ..utils.db import get_connection
 
 router = APIRouter()
 
-@router.get("/", summary="Список новостей")
-def list_news(
+@router.get("/", summary="Список медиа контента")
+def list_media(
     page: int = Query(1, ge=1, description="Номер страницы"),
-    limit: int = Query(20, ge=1, le=100, description="Количество новостей на странице"),
+    limit: int = Query(20, ge=1, le=100, description="Количество элементов на странице"),
     category: Optional[str] = Query(None, description="Фильтр по категории"),
     card_type: Optional[str] = Query(None, description="Фильтр по типу карточки (regular/feature)")
 ):
     """
-    Получить список новостей с пагинацией и фильтрацией
+    Получить список медиа контента с пагинацией и фильтрацией
     """
     if page < 1 or limit < 1 or limit > 100:
         raise HTTPException(status_code=400, detail="Invalid pagination")
@@ -48,9 +48,9 @@ def list_news(
             rows = cur.fetchall()
             
             # Преобразуем результат в словари
-            news_data = []
+            media_data = []
             for row in rows:
-                news_data.append({
+                media_data.append({
                     "id": row[0],
                     "url": row[1],
                     "title": row[2],
@@ -62,7 +62,7 @@ def list_news(
                     "parsed_at": row[8].isoformat() if row[8] else None
                 })
             
-            # Получаем общее количество новостей для пагинации
+            # Получаем общее количество элементов для пагинации
             count_query = "SELECT COUNT(*) FROM news WHERE 1=1"
             count_params = []
             
@@ -78,7 +78,7 @@ def list_news(
             total_count = cur.fetchone()[0]
             
             return {
-                "news": news_data,
+                "media": media_data,
                 "pagination": {
                     "page": page,
                     "limit": limit,
@@ -88,12 +88,12 @@ def list_news(
             }
             
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Ошибка получения новостей: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Ошибка получения медиа контента: {str(e)}")
 
-@router.get("/categories", summary="Список категорий новостей")
-def get_news_categories():
+@router.get("/categories", summary="Список категорий медиа")
+def get_media_categories():
     """
-    Получить список всех категорий новостей
+    Получить список всех категорий медиа контента
     """
     with get_connection() as conn:
         cur = conn.cursor()
@@ -106,17 +106,17 @@ def get_news_categories():
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Ошибка получения категорий: {str(e)}")
 
-@router.get("/stats", summary="Статистика новостей")
-def get_news_stats():
+@router.get("/stats", summary="Статистика медиа")
+def get_media_stats():
     """
-    Получить статистику по новостям
+    Получить статистику по медиа контенту
     """
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            # Общее количество новостей
+            # Общее количество медиа контента
             cur.execute("SELECT COUNT(*) FROM news")
-            total_news = cur.fetchone()[0]
+            total_media = cur.fetchone()[0]
             
             # Количество по категориям
             cur.execute("SELECT category, COUNT(*) FROM news WHERE category IS NOT NULL GROUP BY category ORDER BY COUNT(*) DESC")
@@ -127,7 +127,7 @@ def get_news_stats():
             card_types_stats = {row[0]: row[1] for row in cur.fetchall()}
             
             return {
-                "total_news": total_news,
+                "total_media": total_media,
                 "categories": categories_stats,
                 "card_types": card_types_stats
             }
@@ -135,10 +135,10 @@ def get_news_stats():
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Ошибка получения статистики: {str(e)}")
 
-@router.get("/{news_id}", summary="Получить новость по ID")
-def get_news_by_id(news_id: int):
+@router.get("/{media_id}", summary="Получить медиа по ID")
+def get_media_by_id(media_id: int):
     """
-    Получить новость по ID
+    Получить медиа контент по ID
     """
     with get_connection() as conn:
         cur = conn.cursor()
@@ -149,12 +149,12 @@ def get_news_by_id(news_id: int):
                 FROM news 
                 WHERE id = %s
                 """,
-                (news_id,)
+                (media_id,)
             )
             row = cur.fetchone()
             
             if not row:
-                raise HTTPException(status_code=404, detail="Новость не найдена")
+                raise HTTPException(status_code=404, detail="Медиа контент не найден")
             
             return {
                 "id": row[0],
@@ -171,4 +171,4 @@ def get_news_by_id(news_id: int):
         except HTTPException:
             raise
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Ошибка получения новости: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Ошибка получения медиа контента: {str(e)}")
