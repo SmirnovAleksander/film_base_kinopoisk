@@ -6,12 +6,12 @@ import { resolveMediaUrl } from "@/lib/utils/url";
 import Link from "next/link";
 import { useShallow } from "zustand/react/shallow";
 import type { FilmsState } from "../../store/films";
-import {useTheme} from "next-themes";
+import { useTheme } from "next-themes";
 
 const VISIBLE_COUNT = 3;
 
 export default function FilmsPage() {
-    const { items, page, pageSize, loading, list, search, totalKnown} = useFilmsStore(
+    const { items, page, pageSize, loading, list, search, totalKnown } = useFilmsStore(
         useShallow((s: FilmsState) => ({
             items: s.items,
             page: s.page,
@@ -19,7 +19,7 @@ export default function FilmsPage() {
             loading: s.loading,
             list: s.list,
             search: s.search,
-            totalKnown: s.totalKnown
+            totalKnown: s.totalKnown,
         }))
     );
     const { theme, systemTheme } = useTheme();
@@ -31,15 +31,20 @@ export default function FilmsPage() {
         Array.from({ length: VISIBLE_COUNT }, (_, i) => i + 1)
     );
     const [showStartButton, setShowStartButton] = useState(false);
-    const totalItems = totalKnown;
-    let totalPages = null;
-    if (totalItems !== undefined) {
-        totalPages = Math.ceil(totalItems / pageSize);
-    }
 
+    // локальная выбранная страница — мгновенная подсветка при клике
+    const [selectedPageLocal, setSelectedPageLocal] = useState<number>(page ?? 1);
+    useEffect(() => {
+        setSelectedPageLocal(page ?? 1);
+    }, [page]);
+
+    const totalItems = totalKnown;
+    const totalPages = totalItems ? Math.ceil(totalItems / pageSize) : null;
+
+    // начальная загрузка
     useEffect(() => {
         list(page ?? 1, pageSize);
-        if (page && page >= visiblePages[visiblePages.length - 1]) {
+        if (page && page >= visiblePages[visiblePages.length - 1] && totalPages !== null && totalPages > page) {
             let newVisible = [...visiblePages];
             const last = visiblePages[visiblePages.length - 1];
             const next = last + 1;
@@ -50,54 +55,59 @@ export default function FilmsPage() {
                 setShowStartButton(true);
             }
         }
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // оставляем как была начальная логика
 
     const goToPage = (newPage: number) => {
         list(newPage, pageSize);
     };
 
-    const handlePageClick = (p: number) => {
-        const lastVisible = visiblePages[visiblePages.length - 1];
+    // единый обработчик перехода — минимальные изменения логики внутри
+    const selectPage = (target: number) => {
+        if (totalPages !== null && (target < 1 || target > totalPages)) return;
 
-        if (p === lastVisible && totalPages !== null && totalPages > 3) {
-            const next = lastVisible + 1;
-            setVisiblePages((prev) => prev.slice(1).concat(next));
-            setShowStartButton(true);
-        }
+        // мгновенно подсвечиваем целевую страницу
+        setSelectedPageLocal(target);
 
-        goToPage(p);
-    };
+        // корректируем видимую зону относительно target (минимальные изменения: slice/concat)
+        setVisiblePages((prev) => {
+            const firstVisible = prev[0];
+            const lastVisible = prev[prev.length - 1];
 
-    const handleNext = () => {
-        const current = page ?? 1;
-        const lastVisible = visiblePages[visiblePages.length - 1];
+            // если целевая справа или равна правой границе — сдвинуть вправо (как у тебя было)
+            if (target >= lastVisible && lastVisible < (totalPages ?? Infinity)) {
+                if (totalPages !== null && lastVisible >= totalPages) return prev;
+                return prev.slice(1).concat(lastVisible + 1);
+            }
 
-        if (current === lastVisible) {
-            const next = lastVisible + 1;
-            setVisiblePages((prev) => prev.slice(1).concat(next));
-            setShowStartButton(true);
-            goToPage(next);
-        } else {
-            const next = current + 1;
-            goToPage(next);
-        }
+            // если целевая слева или равна левой границе — сдвинуть влево
+            if (target <= firstVisible && firstVisible > 1) {
+                if (firstVisible <= 1) return prev;
+                return [firstVisible - 1, ...prev.slice(0, -1)];
+            }
+
+            // иначе — внутри окна, не меняем
+            return prev;
+        });
+
+        setShowStartButton(target > VISIBLE_COUNT);
+        goToPage(target);
     };
 
     const handleStart = () => {
         setVisiblePages(Array.from({ length: VISIBLE_COUNT }, (_, i) => i + 1));
         setShowStartButton(false);
+        setSelectedPageLocal(1);
         goToPage(1);
     };
 
     const renderPager = () => {
+        const nextExists = totalPages != null && (page ?? 1) + 1 <= totalPages;
+
         return (
             <div className={styles.pagerContent}>
                 {showStartButton ? (
-                    <button
-                        className={styles.pagerContent__item}
-                        onClick={handleStart}
-                        aria-label="К началу"
-                    >
+                    <button className={styles.pagerContent__item} onClick={handleStart} aria-label="К началу">
                         К началу
                     </button>
                 ) : null}
@@ -107,24 +117,25 @@ export default function FilmsPage() {
                         <button
                             key={p}
                             className={styles.pagerContent__item}
-                            style={page === p ?
-                                currentTheme === "dark" ?
-                                    {background: "rgba(255, 255, 255, 0.15)"}
-                                    : {background: "rgba(0, 0, 0, 0.15)"}
-                                : {}
+                            style={
+                                selectedPageLocal === p
+                                    ? currentTheme === "dark"
+                                        ? { background: "rgba(255, 255, 255, 0.15)" }
+                                        : { background: "rgba(0, 0, 0, 0.15)" }
+                                    : {}
                             }
-                            onClick={() => handlePageClick(p)}
+                            onClick={() => selectPage(p)}
                         >
                             {p}
                         </button>
                     )
                 ))}
-                {totalPages != null && page + 1 <= totalPages  ?(
-                    <button className={styles.pagerContent__item} onClick={handleNext}>
+
+                {nextExists ? (
+                    <button className={styles.pagerContent__item} onClick={() => selectPage((page ?? 1) + 1)}>
                         Дальше
                     </button>
                 ) : null}
-
             </div>
         );
     };
