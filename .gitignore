@@ -182,3 +182,5 @@ cython_debug/
 # Downloaded images
 images/
 output/
+
+.idea
