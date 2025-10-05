@@ -32,7 +32,6 @@ export default function FilmsPage() {
     );
     const [showStartButton, setShowStartButton] = useState(false);
 
-    // локальная выбранная страница — мгновенная подсветка при клике
     const [selectedPageLocal, setSelectedPageLocal] = useState<number>(page ?? 1);
     useEffect(() => {
         setSelectedPageLocal(page ?? 1);
@@ -41,7 +40,6 @@ export default function FilmsPage() {
     const totalItems = totalKnown;
     const totalPages = totalItems ? Math.ceil(totalItems / pageSize) : null;
 
-    // начальная загрузка
     useEffect(() => {
         list(page ?? 1, pageSize);
         if (page && page >= visiblePages[visiblePages.length - 1] && totalPages !== null && totalPages > page) {
@@ -55,38 +53,31 @@ export default function FilmsPage() {
                 setShowStartButton(true);
             }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // оставляем как была начальная логика
+    }, []);
 
     const goToPage = (newPage: number) => {
         list(newPage, pageSize);
     };
 
-    // единый обработчик перехода — минимальные изменения логики внутри
     const selectPage = (target: number) => {
         if (totalPages !== null && (target < 1 || target > totalPages)) return;
 
-        // мгновенно подсвечиваем целевую страницу
         setSelectedPageLocal(target);
 
-        // корректируем видимую зону относительно target (минимальные изменения: slice/concat)
         setVisiblePages((prev) => {
             const firstVisible = prev[0];
             const lastVisible = prev[prev.length - 1];
 
-            // если целевая справа или равна правой границе — сдвинуть вправо (как у тебя было)
             if (target >= lastVisible && lastVisible < (totalPages ?? Infinity)) {
                 if (totalPages !== null && lastVisible >= totalPages) return prev;
                 return prev.slice(1).concat(lastVisible + 1);
             }
 
-            // если целевая слева или равна левой границе — сдвинуть влево
             if (target <= firstVisible && firstVisible > 1) {
                 if (firstVisible <= 1) return prev;
                 return [firstVisible - 1, ...prev.slice(0, -1)];
             }
 
-            // иначе — внутри окна, не меняем
             return prev;
         });
 
