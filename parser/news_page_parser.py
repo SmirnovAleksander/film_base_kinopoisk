@@ -325,17 +325,21 @@ class NewsPageParser:
             if img_elem:
                 news_data['image'] = img_elem.get('src', '')
             
-            # Категория (data-tid="b66cdd18")
-            category_elem = article.find('span', {'data-tid': 'b66cdd18'})
-            if category_elem:
-                news_data['category'] = category_elem.get_text(strip=True)
+            # Категория (data-tid="b66cdd18" внутри data-tid="543e842b")
+            category_wrapper = article.find('div', {'data-tid': '543e842b'})
+            if category_wrapper:
+                category_elem = category_wrapper.find('span', {'data-tid': 'b66cdd18'})
+                if category_elem:
+                    news_data['category'] = category_elem.get_text(strip=True)
             
-            # Заголовок
-            title_elem = article.find('h3')
-            if title_elem:
-                title_span = title_elem.find('span')
-                if title_span:
-                    news_data['title'] = title_span.get_text(strip=True)
+            # Заголовок (h3 внутри data-tid="543e842b")
+            title_wrapper = article.find('div', {'data-tid': '543e842b'})
+            if title_wrapper:
+                title_elem = title_wrapper.find_next('h3')
+                if title_elem:
+                    title_span = title_elem.find('span')
+                    if title_span:
+                        news_data['title'] = title_span.get_text(strip=True)
             
             # Дата
             date_elem = article.find('span', class_='NUIoouHmDcRbqxQpQ8v8')
@@ -374,10 +378,12 @@ class NewsPageParser:
             if img_elem:
                 news_data['image'] = img_elem.get('src', '')
             
-            # Категория (data-tid="b66cdd18")
-            category_elem = article.find('span', {'data-tid': 'b66cdd18'})
-            if category_elem:
-                news_data['category'] = category_elem.get_text(strip=True)
+            # Категория (data-tid="b66cdd18" внутри data-tid="543e842b")
+            category_wrapper = article.find('div', {'data-tid': '543e842b'})
+            if category_wrapper:
+                category_elem = category_wrapper.find('span', {'data-tid': 'b66cdd18'})
+                if category_elem:
+                    news_data['category'] = category_elem.get_text(strip=True)
             
             # Заголовок
             title_elem = article.find('h3', class_='post-feature-card__title')
