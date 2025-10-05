@@ -16,6 +16,11 @@ def list_films(page: int = 1, page_size: int = 20):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
+            # 1) total
+            cur.execute("SELECT COUNT(*) FROM film")
+            total_count = cur.fetchone()[0] or 0
+
+            # 2) page items
             cur.execute(
                 """
                 SELECT id,
@@ -49,9 +54,10 @@ def list_films(page: int = 1, page_size: int = 20):
                     "rating_kp": r[8],
                     "rating_imdb": r[9],
                 })
-            return {"items": films, "page": page, "page_size": page_size}
+            return {"items": films, "page": page, "page_size": page_size, "total_count": total_count}
         finally:
             cur.close()
+
 
 
 @router.get("/search", summary="Поиск фильмов по названию (ru|en)")
@@ -68,13 +74,17 @@ def search_films(
 
     column = "title" if lang == "ru" else "original_title"
     offset = (page - 1) * page_size
-
-    # Подготовим паттерн для ILIKE
     pattern = f"%{query}%"
 
     with get_connection() as conn:
         cur = conn.cursor()
         try:
+            # 1) count matching rows
+            count_sql = f"SELECT COUNT(*) FROM film WHERE {column} ILIKE %s"
+            cur.execute(count_sql, (pattern,))
+            total_count = cur.fetchone()[0] or 0
+
+            # 2) select page
             sql = f"""
                 SELECT id,
                        kinopoisk_id,
@@ -108,9 +118,10 @@ def search_films(
                 }
                 for r in rows
             ]
-            return {"items": items, "page": page, "page_size": page_size}
+            return {"items": items, "page": page, "page_size": page_size, "total_count": total_count}
         finally:
             cur.close()
+
 
 @router.get("/countries", summary="Все страны (справочник)")
 def list_countries():
@@ -156,10 +167,7 @@ def films_filter(
     if lang not in ("ru", "en"):
         raise HTTPException(status_code=400, detail="lang must be 'ru' or 'en'")
 
-    # Логика по годам: если задан start_year и нет end_year -> точный год,
-    # если задан end_year -> диапазон [start_year, end_year]
     effective_year = start_year
-
     offset = (page - 1) * page_size
 
     with get_connection() as conn:
@@ -179,26 +187,21 @@ def films_filter(
                 conditions.append("fc.country_id = %s")
                 params.append(country_id)
 
-            # Фильтр по году/диапазону
             if effective_year is not None and end_year is None:
-                # Точный год
                 conditions.append("f.year = %s")
                 params.append(effective_year)
             elif end_year is not None:
-                # Диапазон: от effective_year (если задан) до end_year
                 if effective_year is not None:
                     conditions.append("f.year >= %s")
                     params.append(effective_year)
                 conditions.append("f.year <= %s")
                 params.append(end_year)
 
-            # Поиск по названию (опционально)
             if title is not None and title.strip() != "":
                 column = "f.title" if lang == "ru" else "f.original_title"
                 conditions.append(f"{column} ILIKE %s")
                 params.append(f"%{title}%")
 
-            # Фильтр по рейтингу (опционально)
             rating_column = "rating_kp" if source == "kp" else "rating_imdb"
             if min_rating is not None:
                 conditions.append(f"CAST(f.{rating_column} AS NUMERIC) >= %s")
@@ -210,6 +213,12 @@ def films_filter(
             joins_sql = "\n".join(joins)
             where_clause = ("WHERE " + " AND ".join(conditions)) if conditions else ""
 
+            # 1) count - используем DISTINCT f.id, чтобы не дублировались записи из-за JOIN
+            count_sql = f"SELECT COUNT(DISTINCT f.id) FROM film f {joins_sql} {where_clause}"
+            cur.execute(count_sql, tuple(params))
+            total_count = cur.fetchone()[0] or 0
+
+            # 2) select page
             sql = f"""
                 SELECT f.id,
                        f.kinopoisk_id,
@@ -227,8 +236,10 @@ def films_filter(
                 ORDER BY f.id
                 LIMIT %s OFFSET %s
             """
-            params.extend([page_size, offset])
-            cur.execute(sql, tuple(params))
+            # параметры для выборки — те же, плюс page_size и offset
+            params_for_select = params.copy()
+            params_for_select.extend([page_size, offset])
+            cur.execute(sql, tuple(params_for_select))
 
             rows = cur.fetchall()
             items = [
@@ -246,9 +257,10 @@ def films_filter(
                 }
                 for r in rows
             ]
-            return {"items": items, "page": page, "page_size": page_size}
+            return {"items": items, "page": page, "page_size": page_size, "total_count": total_count}
         finally:
             cur.close()
+
 
 @router.get("/{film_id}", summary="Детали фильма")
 def get_film(film_id: int):
