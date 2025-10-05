@@ -158,7 +158,7 @@ class MainParser:
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS news (
+            CREATE TABLE IF NOT EXISTS media (
                 id SERIAL PRIMARY KEY,
                 url VARCHAR(500) UNIQUE NOT NULL,
                 title VARCHAR(1000) NOT NULL,
@@ -167,6 +167,7 @@ class MainParser:
                 date VARCHAR(100),
                 comments_count INTEGER DEFAULT 0,
                 card_type VARCHAR(20),
+                type VARCHAR(20) DEFAULT 'news',
                 parsed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """,
@@ -702,63 +703,66 @@ class MainParser:
         finally:
             cursor.close()
     
-    def save_news_to_db(self, news_list):
-        """Сохраняет новости в БД"""
-        if not self.db_connection or not news_list:
+    def save_media_to_db(self, media_list):
+        """Сохраняет медиа контент в БД"""
+        if not self.db_connection or not media_list:
             return
         
         cursor = self.db_connection.cursor()
         
         try:
-            for news in news_list:
-                # Проверяем, существует ли уже такая новость
+            for media_item in media_list:
+                # Проверяем, существует ли уже такой медиа контент
                 cursor.execute(
-                    "SELECT id FROM news WHERE url = %s",
-                    (news.get('url'),)
+                    "SELECT id FROM media WHERE url = %s",
+                    (media_item.get('url'),)
                 )
                 
                 if cursor.fetchone():
-                    # Обновляем существующую новость
+                    # Обновляем существующий медиа контент
                     cursor.execute("""
-                        UPDATE news SET 
+                        UPDATE media SET 
                             title = %s,
                             image = %s,
                             category = %s,
                             date = %s,
                             comments_count = %s,
                             card_type = %s,
+                            type = %s,
                             parsed_at = CURRENT_TIMESTAMP
                         WHERE url = %s
                     """, (
-                        news.get('title'),
-                        news.get('image'),
-                        news.get('category'),
-                        news.get('date'),
-                        int(news.get('comments_count', 0)) if news.get('comments_count') else 0,
-                        news.get('card_type'),
-                        news.get('url')
+                        media_item.get('title'),
+                        media_item.get('image'),
+                        media_item.get('category'),
+                        media_item.get('date'),
+                        int(media_item.get('comments_count', 0)) if media_item.get('comments_count') else 0,
+                        media_item.get('card_type'),
+                        media_item.get('type', 'news'),
+                        media_item.get('url')
                     ))
                 else:
-                    # Вставляем новую новость
+                    # Вставляем новый медиа контент
                     cursor.execute("""
-                        INSERT INTO news (url, title, image, category, date, comments_count, card_type)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        INSERT INTO media (url, title, image, category, date, comments_count, card_type, type)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                     """, (
-                        news.get('url'),
-                        news.get('title'),
-                        news.get('image'),
-                        news.get('category'),
-                        news.get('date'),
-                        int(news.get('comments_count', 0)) if news.get('comments_count') else 0,
-                        news.get('card_type')
+                        media_item.get('url'),
+                        media_item.get('title'),
+                        media_item.get('image'),
+                        media_item.get('category'),
+                        media_item.get('date'),
+                        int(media_item.get('comments_count', 0)) if media_item.get('comments_count') else 0,
+                        media_item.get('card_type'),
+                        media_item.get('type', 'news')
                     ))
             
             self.db_connection.commit()
-            print(f"✅ Сохранено {len(news_list)} новостей в БД")
+            print(f"✅ Сохранено {len(media_list)} медиа элементов в БД")
             
         except Exception as e:
             self.db_connection.rollback()
-            print(f"❌ Ошибка сохранения новостей в БД: {e}")
+            print(f"❌ Ошибка сохранения медиа контента в БД: {e}")
         finally:
             cursor.close()
     

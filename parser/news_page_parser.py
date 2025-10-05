@@ -235,36 +235,52 @@ class NewsPageParser:
             print(f"❌ Ошибка при парсинге новостей: {e}")
             return []
     
-    def parse_multiple_pages(self, pages_count: int = 5) -> List[Dict]:
+    def parse_multiple_pages(self, pages_count: int = 5, content_type: str = 'news') -> List[Dict]:
         """
-        Парсит новости с нескольких страниц
+        Парсит контент с нескольких страниц
         
         Args:
             pages_count: Количество страниц для парсинга
+            content_type: Тип контента (news, video, game, podcast)
             
         Returns:
-            List[Dict]: Список всех новостей с всех страниц
+            List[Dict]: Список всего контента с всех страниц
         """
-        all_news = []
+        all_content = []
+        
+        # Определяем базовый URL в зависимости от типа контента
+        base_urls = {
+            'news': 'https://www.kinopoisk.ru/media/news/',
+            'video': 'https://www.kinopoisk.ru/media/video/',
+            'game': 'https://www.kinopoisk.ru/media/game/',
+            'podcast': 'https://www.kinopoisk.ru/media/podcast/'
+        }
+        
+        base_url = base_urls.get(content_type, 'https://www.kinopoisk.ru/media/news/')
         
         try:
             for page_num in range(1, pages_count + 1):
-                print(f"📄 Парсинг страницы {page_num}/{pages_count}")
+                print(f"📄 Парсинг страницы {page_num}/{pages_count} ({content_type})")
                 
                 # Формируем URL для страницы
                 if page_num == 1:
-                    page_url = "https://www.kinopoisk.ru/media/news/"
+                    page_url = base_url
                 else:
-                    page_url = f"https://www.kinopoisk.ru/media/news/?page={page_num}"
+                    page_url = f"{base_url}?page={page_num}"
                 
                 # Загружаем страницу
                 self.load_html_from_url(page_url)
                 
                 if self.soup:
-                    # Парсим новости с текущей страницы
-                    page_news = self.parse_news_list()
-                    all_news.extend(page_news)
-                    print(f"✅ Страница {page_num}: найдено {len(page_news)} новостей")
+                    # Парсим контент с текущей страницы
+                    page_content = self.parse_news_list()
+                    
+                    # Добавляем тип контента к каждому элементу
+                    for item in page_content:
+                        item['type'] = content_type
+                    
+                    all_content.extend(page_content)
+                    print(f"✅ Страница {page_num}: найдено {len(page_content)} элементов ({content_type})")
                 else:
                     print(f"❌ Не удалось загрузить страницу {page_num}")
                 
@@ -272,12 +288,12 @@ class NewsPageParser:
                 if page_num < pages_count:
                     time.sleep(2)
             
-            print(f"📊 Всего найдено новостей: {len(all_news)}")
-            return all_news
+            print(f"📊 Всего найдено элементов ({content_type}): {len(all_content)}")
+            return all_content
             
         except Exception as e:
             print(f"❌ Ошибка при парсинге нескольких страниц: {e}")
-            return all_news
+            return all_content
     
     def parse_news_item(self, news_element) -> Dict:
         """
