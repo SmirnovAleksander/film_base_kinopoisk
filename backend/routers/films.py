@@ -285,7 +285,13 @@ def get_film(film_id: int):
                        rating_kp,
                        kp_votes_count,
                        rating_imdb,
-                       imdb_votes_count
+                       imdb_votes_count,
+                       budget,
+                       usa_box_office,
+                       rus_box_office,
+                       mpaa_rating,
+                       user_rating,
+                       user_rating_count
                 FROM film
                 WHERE id=%s
                 """,
@@ -312,6 +318,80 @@ def get_film(film_id: int):
                 "kp_votes_count": r[14],
                 "rating_imdb": r[15],
                 "imdb_votes_count": r[16],
+                "budget": r[17],
+                "usa_box_office": r[18],
+                "rus_box_office": r[19],
+                "mpaa_rating": r[20],
+                "user_rating": float(r[21]) if r[21] else None,
+                "user_rating_count": r[22],
+            }
+        finally:
+            cur.close()
+
+
+@router.get("/kinopoisk/{kinopoisk_id}", summary="Получить фильм по Кинопоиск ID")
+def get_film_by_kinopoisk_id(kinopoisk_id: str):
+    """Получает фильм по его Кинопоиск ID"""
+    with get_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute(
+                """
+                SELECT id,
+                       kinopoisk_id,
+                       title,
+                       original_title,
+                       description,
+                       full_description,
+                       poster,
+                       year,
+                       tagline,
+                       ru_premiere,
+                       world_premiere,
+                       age_rating,
+                       duration,
+                       rating_kp,
+                       kp_votes_count,
+                       rating_imdb,
+                       imdb_votes_count,
+                       budget,
+                       usa_box_office,
+                       rus_box_office,
+                       mpaa_rating,
+                       user_rating,
+                       user_rating_count
+                FROM film
+                WHERE kinopoisk_id = %s
+                """,
+                (kinopoisk_id,)
+            )
+            r = cur.fetchone()
+            if not r:
+                raise HTTPException(status_code=404, detail="Film not found")
+            return {
+                "id": r[0],
+                "kinopoisk_id": r[1],
+                "title": r[2],
+                "original_title": r[3],
+                "description": r[4],
+                "full_description": r[5],
+                "poster": r[6],
+                "year": r[7],
+                "tagline": r[8],
+                "ru_premiere": r[9],
+                "world_premiere": r[10],
+                "age_rating": r[11],
+                "duration": r[12],
+                "rating_kp": r[13],
+                "kp_votes_count": r[14],
+                "rating_imdb": r[15],
+                "imdb_votes_count": r[16],
+                "budget": r[17],
+                "usa_box_office": r[18],
+                "rus_box_office": r[19],
+                "mpaa_rating": r[20],
+                "user_rating": float(r[21]) if r[21] else None,
+                "user_rating_count": r[22],
             }
         finally:
             cur.close()

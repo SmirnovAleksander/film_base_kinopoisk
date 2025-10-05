@@ -69,7 +69,13 @@ class MainParser:
                 rating_kp DECIMAL(3,1),
                 kp_votes_count VARCHAR(50),
                 rating_imdb DECIMAL(3,1),
-                imdb_votes_count VARCHAR(50)
+                imdb_votes_count VARCHAR(50),
+                budget VARCHAR(100),
+                usa_box_office VARCHAR(100),
+                rus_box_office VARCHAR(100),
+                mpaa_rating VARCHAR(20),
+                user_rating DECIMAL(3,1),
+                user_rating_count INTEGER DEFAULT 0
             )
             """,
             """
@@ -108,6 +114,17 @@ class MainParser:
             )
             """,
             """
+            CREATE TABLE IF NOT EXISTS user_film_ratings (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
+                film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
+                rating DECIMAL(3,1) NOT NULL CHECK (rating >= 1.0 AND rating <= 10.0),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, film_id)
+            )
+            """,
+            """
             CREATE TABLE IF NOT EXISTS comment (
                 id SERIAL PRIMARY KEY,
                 film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
@@ -117,6 +134,7 @@ class MainParser:
                 edited_at TIMESTAMP NULL,
                 is_deleted BOOLEAN DEFAULT FALSE,
                 status VARCHAR(20) DEFAULT 'published',
+                moderated_at TIMESTAMP NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP NULL
             )
@@ -128,6 +146,29 @@ class MainParser:
                 user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(film_id, user_id)
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS user_film_history (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
+                film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
+                visited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, film_id)
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS media (
+                id SERIAL PRIMARY KEY,
+                url VARCHAR(500) UNIQUE NOT NULL,
+                title VARCHAR(1000) NOT NULL,
+                image VARCHAR(1000),
+                category VARCHAR(100),
+                date VARCHAR(100),
+                comments_count INTEGER DEFAULT 0,
+                card_type VARCHAR(20),
+                type VARCHAR(20) DEFAULT 'news',
+                parsed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """,
             """
@@ -243,9 +284,9 @@ class MainParser:
             
             # URL страницы со списком фильмов
             if page == 1:
-                page_url = "https://kinopoisk.ru/lists/movies/top250/"
+                page_url = "https://www.kinopoisk.ru/lists/movies/?b=films&b=high_rated"
             else:
-                page_url = f"https://kinopoisk.ru/lists/movies/top250/?page={page}"
+                page_url = f"https://www.kinopoisk.ru/lists/movies/?b=films&b=high_rated/?page={page}"
             
             try:
                 # Парсим список фильмов
@@ -398,8 +439,9 @@ class MainParser:
             insert_film = """
             INSERT INTO film (kinopoisk_id, title, original_title, description, full_description, 
                              poster, year, tagline, ru_premiere, world_premiere, age_rating, 
-                             duration, rating_kp, kp_votes_count, rating_imdb, imdb_votes_count)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                             duration, rating_kp, kp_votes_count, rating_imdb, imdb_votes_count,
+                             budget, usa_box_office, rus_box_office, mpaa_rating, user_rating, user_rating_count)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
                 title = EXCLUDED.title,
                 original_title = EXCLUDED.original_title,
@@ -415,7 +457,13 @@ class MainParser:
                 rating_kp = EXCLUDED.rating_kp,
                 kp_votes_count = EXCLUDED.kp_votes_count,
                 rating_imdb = EXCLUDED.rating_imdb,
-                imdb_votes_count = EXCLUDED.imdb_votes_count
+                imdb_votes_count = EXCLUDED.imdb_votes_count,
+                budget = EXCLUDED.budget,
+                usa_box_office = EXCLUDED.usa_box_office,
+                rus_box_office = EXCLUDED.rus_box_office,
+                mpaa_rating = EXCLUDED.mpaa_rating,
+                user_rating = EXCLUDED.user_rating,
+                user_rating_count = EXCLUDED.user_rating_count
             RETURNING id
             """
             
@@ -435,7 +483,13 @@ class MainParser:
                 film_data.get('rating_kp'),
                 film_data.get('kp_votes_count'),
                 film_data.get('rating_imdb'),
-                film_data.get('imdb_votes_count')
+                film_data.get('imdb_votes_count'),
+                film_data.get('budget'),
+                film_data.get('usa_box_office'),
+                film_data.get('rus_box_office'),
+                film_data.get('mpaa_rating'),
+                None,  # user_rating - будет обновляться автоматически
+                0      # user_rating_count - будет обновляться автоматически
             ))
             
             film_db_id = cursor.fetchone()[0]
@@ -646,6 +700,69 @@ class MainParser:
             )
         except Exception as e:
             print(f"❌ Ошибка создания связи похожих фильмов: {e}")
+        finally:
+            cursor.close()
+    
+    def save_media_to_db(self, media_list):
+        """Сохраняет медиа контент в БД"""
+        if not self.db_connection or not media_list:
+            return
+        
+        cursor = self.db_connection.cursor()
+        
+        try:
+            for media_item in media_list:
+                # Проверяем, существует ли уже такой медиа контент
+                cursor.execute(
+                    "SELECT id FROM media WHERE url = %s",
+                    (media_item.get('url'),)
+                )
+                
+                if cursor.fetchone():
+                    # Обновляем существующий медиа контент
+                    cursor.execute("""
+                        UPDATE media SET 
+                            title = %s,
+                            image = %s,
+                            category = %s,
+                            date = %s,
+                            comments_count = %s,
+                            card_type = %s,
+                            type = %s,
+                            parsed_at = CURRENT_TIMESTAMP
+                        WHERE url = %s
+                    """, (
+                        media_item.get('title'),
+                        media_item.get('image'),
+                        media_item.get('category'),
+                        media_item.get('date'),
+                        int(media_item.get('comments_count', 0)) if media_item.get('comments_count') else 0,
+                        media_item.get('card_type'),
+                        media_item.get('type', 'news'),
+                        media_item.get('url')
+                    ))
+                else:
+                    # Вставляем новый медиа контент
+                    cursor.execute("""
+                        INSERT INTO media (url, title, image, category, date, comments_count, card_type, type)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (
+                        media_item.get('url'),
+                        media_item.get('title'),
+                        media_item.get('image'),
+                        media_item.get('category'),
+                        media_item.get('date'),
+                        int(media_item.get('comments_count', 0)) if media_item.get('comments_count') else 0,
+                        media_item.get('card_type'),
+                        media_item.get('type', 'news')
+                    ))
+            
+            self.db_connection.commit()
+            print(f"✅ Сохранено {len(media_list)} медиа элементов в БД")
+            
+        except Exception as e:
+            self.db_connection.rollback()
+            print(f"❌ Ошибка сохранения медиа контента в БД: {e}")
         finally:
             cursor.close()
     
