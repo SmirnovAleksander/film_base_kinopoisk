@@ -158,6 +158,19 @@ class MainParser:
             )
             """,
             """
+            CREATE TABLE IF NOT EXISTS news (
+                id SERIAL PRIMARY KEY,
+                url VARCHAR(500) UNIQUE NOT NULL,
+                title VARCHAR(1000) NOT NULL,
+                image VARCHAR(1000),
+                category VARCHAR(100),
+                date VARCHAR(100),
+                comments_count INTEGER DEFAULT 0,
+                card_type VARCHAR(20),
+                parsed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """,
+            """
             CREATE TABLE IF NOT EXISTS genre (
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(100) UNIQUE NOT NULL
@@ -686,6 +699,66 @@ class MainParser:
             )
         except Exception as e:
             print(f"❌ Ошибка создания связи похожих фильмов: {e}")
+        finally:
+            cursor.close()
+    
+    def save_news_to_db(self, news_list):
+        """Сохраняет новости в БД"""
+        if not self.db_connection or not news_list:
+            return
+        
+        cursor = self.db_connection.cursor()
+        
+        try:
+            for news in news_list:
+                # Проверяем, существует ли уже такая новость
+                cursor.execute(
+                    "SELECT id FROM news WHERE url = %s",
+                    (news.get('url'),)
+                )
+                
+                if cursor.fetchone():
+                    # Обновляем существующую новость
+                    cursor.execute("""
+                        UPDATE news SET 
+                            title = %s,
+                            image = %s,
+                            category = %s,
+                            date = %s,
+                            comments_count = %s,
+                            card_type = %s,
+                            parsed_at = CURRENT_TIMESTAMP
+                        WHERE url = %s
+                    """, (
+                        news.get('title'),
+                        news.get('image'),
+                        news.get('category'),
+                        news.get('date'),
+                        int(news.get('comments_count', 0)) if news.get('comments_count') else 0,
+                        news.get('card_type'),
+                        news.get('url')
+                    ))
+                else:
+                    # Вставляем новую новость
+                    cursor.execute("""
+                        INSERT INTO news (url, title, image, category, date, comments_count, card_type)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """, (
+                        news.get('url'),
+                        news.get('title'),
+                        news.get('image'),
+                        news.get('category'),
+                        news.get('date'),
+                        int(news.get('comments_count', 0)) if news.get('comments_count') else 0,
+                        news.get('card_type')
+                    ))
+            
+            self.db_connection.commit()
+            print(f"✅ Сохранено {len(news_list)} новостей в БД")
+            
+        except Exception as e:
+            self.db_connection.rollback()
+            print(f"❌ Ошибка сохранения новостей в БД: {e}")
         finally:
             cursor.close()
     
