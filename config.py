@@ -10,7 +10,7 @@ DATABASE_CONFIG = {
     'port': 5432,
     'database': 'film_base_kinopoisk',
     'user': 'postgres',
-    'password': 'admin'
+    'password': 'admin123'
 }
 
 # Настройки задержек (в секундах)
