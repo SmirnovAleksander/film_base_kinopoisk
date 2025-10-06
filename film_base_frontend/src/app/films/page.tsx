@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFilmsStore } from "@/store/films";
 import styles from "./page.module.css";
 import { resolveMediaUrl } from "@/lib/utils/url";
@@ -23,7 +23,13 @@ export default function FilmsPage() {
             totalKnown: s.totalKnown,
         }))
     );
+
     const { theme, systemTheme } = useTheme();
+    const [isPressFilter, setIsPressFilter] = useState(false);
+
+    // wrapperRef включает и кнопку, и сам popover — тогда клик по кнопке не считается "вне"
+    const wrapperRef = useRef<HTMLDivElement | null>(null);
+    const filterRef = useRef<HTMLDivElement | null>(null);
     const currentTheme = theme === "system" ? systemTheme : theme;
 
     const [q, setQ] = useState("");
@@ -55,6 +61,23 @@ export default function FilmsPage() {
             }
         }
     }, []);
+
+    // add/remove обработчик только когда меню открыто; проверяем wrapperRef.contains
+    useEffect(() => {
+        if (!isPressFilter) return;
+
+        const handlePointerDown = (e: PointerEvent) => {
+            // если клик вне wrapper'а — закрываем
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+                setIsPressFilter(false);
+            }
+        };
+
+        document.addEventListener("pointerdown", handlePointerDown);
+        return () => {
+            document.removeEventListener("pointerdown", handlePointerDown);
+        };
+    }, [isPressFilter]);
 
     const goToPage = (newPage: number) => {
         list(newPage, pageSize);
@@ -104,8 +127,8 @@ export default function FilmsPage() {
                     </button>
                 ) : null}
 
-                {visiblePages.map((p) => (
-                    totalPages != null && p <= totalPages && (
+                {visiblePages.map((p) =>
+                    totalPages != null && p <= totalPages ? (
                         <button
                             key={p}
                             className={styles.pagerContent__item}
@@ -120,8 +143,8 @@ export default function FilmsPage() {
                         >
                             {p}
                         </button>
-                    )
-                ))}
+                    ) : null
+                )}
 
                 {nextExists ? (
                     <button className={styles.pagerContent__item} onClick={() => selectPage((page ?? 1) + 1)}>
@@ -131,33 +154,48 @@ export default function FilmsPage() {
             </div>
         );
     };
+
     const reduceText = (text: string) => {
         let newText = "";
-
         for (let i = 0; i < text.length - 1 && i < MIN_CHAR_FOR_DESCRIPTION; i++) {
             newText += text[i];
-            if ((i < text.length - 1) && (i + 1 >= MIN_CHAR_FOR_DESCRIPTION)) {
+            if (i + 1 >= MIN_CHAR_FOR_DESCRIPTION) {
                 newText += "...";
             }
         }
-
         return newText;
-    }
+    };
+
+    const filter = () => {
+        return (
+            <div ref={filterRef} className={styles.button_filter}>
+                допили
+            </div>
+        );
+    };
+
     return (
         <div className={styles.container}>
             <h1 className={styles.title}>Фильмы</h1>
 
-            <div className={styles.searchRow}>
+            {/* wrapperRef охватывает input, кнопки и сам popover */}
+            <div ref={wrapperRef} className={styles.searchRow}>
                 <input
                     className={styles.input}
                     placeholder="Поиск по названию"
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
                 />
+                <button className={styles.button} onClick={() => setIsPressFilter((prev) => !prev)}>
+                    Фильтр
+                </button>
                 <button className={styles.button} onClick={() => search(q, 1, 20)}>
                     Искать
                 </button>
+
             </div>
+
+            {isPressFilter && filter()}
 
             {loading ? (
                 <div>Загрузка...</div>
@@ -185,9 +223,9 @@ export default function FilmsPage() {
                                     <span>KP: {f.rating_kp ?? "-"}</span>
                                     <span>IMDb: {f.rating_imdb ?? "-"}</span>
                                 </div>
-                                {f.full_description ?
+                                {f.full_description ? (
                                     <div className={styles.desc}>{reduceText(f.full_description)}</div>
-                                : null}
+                                ) : null}
                             </div>
                         </Link>
                     ))}
