@@ -9,6 +9,7 @@ import type { FilmsState } from "../../store/films";
 import { useTheme } from "next-themes";
 
 const VISIBLE_COUNT = 3;
+const MIN_CHAR_FOR_DESCRIPTION = 300;
 
 export default function FilmsPage() {
     const { items, page, pageSize, loading, list, search, totalKnown } = useFilmsStore(
@@ -81,7 +82,7 @@ export default function FilmsPage() {
             return prev;
         });
 
-        setShowStartButton(target > VISIBLE_COUNT);
+        setShowStartButton(target > VISIBLE_COUNT - 1);
         goToPage(target);
     };
 
@@ -130,7 +131,18 @@ export default function FilmsPage() {
             </div>
         );
     };
+    const reduceText = (text: string) => {
+        let newText = "";
 
+        for (let i = 0; i < text.length - 1 && i < MIN_CHAR_FOR_DESCRIPTION; i++) {
+            newText += text[i];
+            if ((i < text.length - 1) && (i + 1 >= MIN_CHAR_FOR_DESCRIPTION)) {
+                newText += "...";
+            }
+        }
+
+        return newText;
+    }
     return (
         <div className={styles.container}>
             <h1 className={styles.title}>Фильмы</h1>
@@ -173,7 +185,9 @@ export default function FilmsPage() {
                                     <span>KP: {f.rating_kp ?? "-"}</span>
                                     <span>IMDb: {f.rating_imdb ?? "-"}</span>
                                 </div>
-                                {f.full_description ? <div className={styles.desc}>{f.full_description}</div> : null}
+                                {f.full_description ?
+                                    <div className={styles.desc}>{reduceText(f.full_description)}</div>
+                                : null}
                             </div>
                         </Link>
                     ))}

@@ -44,7 +44,10 @@ export type FilmDetails = {
 };
 
 export type WatchProvider = { name: string; url: string; logo: string | null };
-export type SimilarFilm = { kinopoisk_id: number; title: string };
+export type SimilarFilm = {
+    kinopoisk_id: number;
+    title: string;
+};
 
 export type UserRating = {
   rating: number;

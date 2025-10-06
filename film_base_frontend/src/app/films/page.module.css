@@ -24,6 +24,7 @@
     gap: 5px;
     margin-top: 16px;
     margin-bottom: 21px;
+    justify-content: center;
 }
 .pagerContent__item{
     border: none;

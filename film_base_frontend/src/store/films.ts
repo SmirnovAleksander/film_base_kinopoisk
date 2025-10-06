@@ -56,7 +56,7 @@ function normalizePaginated(resp: any, defaultPage = 1, defaultPageSize = 20) {
 export const useFilmsStore = create<FilmsState>((set, get) => ({
     items: [],
     page: 1,
-    pageSize: 20,
+    pageSize: 10,
     totalKnown: undefined,
     loading: false,
     error: null,

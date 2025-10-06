@@ -87,7 +87,7 @@ export default function FilmDetailsPage() {
           <div className={styles.providers}>
             {providers.map((p) => (
               <a key={p.name} href={p.url} target="_blank" rel="noreferrer" className={styles.provider}>
-                {p.logo ? <img src={resolveMediaUrl(p.logo) || ""} alt={p.name} /> : null}
+                {p.logo ? <img style={{width: "50%"}} src={resolveMediaUrl(p.logo) || ""} alt={p.name} /> : null}
                 <span>{p.name}</span>
               </a>
             ))}
@@ -97,12 +97,20 @@ export default function FilmDetailsPage() {
 
       {similar.length ? (
         <section className={styles.section}>
-          <h2 className={styles.h2}>Похожие фильмы</h2>
-          <ul className={styles.similar}>
+          <h2 className={styles.h2}>Похожие фильмы:</h2>
+          <div className={styles.similar}>
             {similar.map((s) => (
-              <li key={s.kinopoisk_id}>{s.title}</li>
+                <Link
+                    href={`https://www.kinopoisk.ru/film/${s.kinopoisk_id}`}
+                    key={s.kinopoisk_id}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.link}
+                >
+                    {s.title}
+                </Link>
             ))}
-          </ul>
+          </div>
         </section>
       ) : null}
 
