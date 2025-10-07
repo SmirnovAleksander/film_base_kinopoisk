@@ -29,6 +29,9 @@ export const useAuthStore = create<AuthState>()(
             async login(loginOrEmail, password) {
                 set({ loading: true, error: null });
                 try {
+                    Cookies.remove("access_token");
+                    Cookies.remove("refresh_token");
+
                     const form = new URLSearchParams();
                     form.set("username", loginOrEmail);
                     form.set("password", password);
@@ -38,6 +41,7 @@ export const useAuthStore = create<AuthState>()(
                     const { access_token, refresh_token } = resp.data || {};
                     if (access_token) Cookies.set("access_token", access_token);
                     if (refresh_token) Cookies.set("refresh_token", refresh_token);
+
                     await get().fetchMe();
                     set({ loading: false });
                     return true;

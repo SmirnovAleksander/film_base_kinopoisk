@@ -1,3 +1,4 @@
+// app/page.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -21,7 +22,7 @@ export default function Home() {
 
     useEffect(() => {
         if (!films || films.length === 0) list(1, 20).catch(() => {});
-    }, []);
+    }, [films, list]);
 
     const setImgSlot = (slotRef: HTMLImageElement | null, src: string, alt: string) => {
         if (!slotRef) return;
@@ -93,7 +94,7 @@ export default function Home() {
                 activeSlotRef.current = isAActive ? "B" : "A";
                 setCurrentIndex(next);
             }, 60);
-        }, 5000);
+        }, 5500);
 
         intervalRef.current = id as unknown as number;
         return () => {
@@ -102,120 +103,42 @@ export default function Home() {
         };
     }, [films, currentIndex]);
 
-    if (!films || films.length === 0) {
-        return (
-            <div className="container" style={{ padding: 24 }}>
-                <h1 style={{ fontSize: 28, marginBottom: 12 }}>Добро пожаловать в FilmBase</h1>
-                <p className="muted" style={{ marginBottom: 16 }}>
-                    Каталог фильмов с авторизацией, поиском и закладками.
-                </p>
-                <div style={{ display: "flex", gap: 12 }}>
-                    <Link className="btn" href="/films">Перейти к фильмам</Link>
-                    {!user && <Link className="btn" href="/login">Войти</Link>}
-                </div>
-                <div style={{ marginTop: 24, textAlign: "center", color: "#888" }}>
-                    {loading ? "Загрузка фильмов..." : "Нет данных фильмов"}
-                </div>
-            </div>
-        );
-    }
-
-    const currentFilm = films[currentIndex];
+    const currentFilm = films?.[currentIndex];
 
     return (
-        <div
-            className="container"
-            style={{
-                padding: 24,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-            }}
-        >
-            <h1 style={{ fontSize: 28, marginBottom: 12 }}>Добро пожаловать в FilmBase</h1>
-            <p className="muted" style={{ marginBottom: 16 }}>
-                Каталог фильмов с авторизацией, поиском и закладками.
-            </p>
+        <div className="pageRoot">
+            <img
+                ref={imgARef}
+                className="bgImg"
+                src=""
+                alt=""
+                style={{ opacity: activeSlotRef.current === "A" ? 1 : 0 }}
+            />
+            <img
+                ref={imgBRef}
+                className="bgImg"
+                src=""
+                alt=""
+                style={{ opacity: activeSlotRef.current === "B" ? 1 : 0 }}
+            />
 
-            {/* --- КЛИКАБЕЛЬНЫЙ СЛАЙДШОУ --- */}
-            <Link
-                href={`/films/${currentFilm?.id}`}
-                style={{
-                    width: "100%",
-                    maxWidth: 1000,
-                    height: 460,
-                    position: "relative",
-                    overflow: "hidden",
-                    borderRadius: 12,
-                    boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
-                    marginBottom: 18,
-                    background: "#111",
-                    marginTop: 40,
-                    cursor: "pointer",
-                    display: "block",
-                }}
-            >
-                {/* слот A */}
-                <img
-                    ref={imgARef}
-                    key="slot-a"
-                    src=""
-                    alt=""
-                    style={{
-                        position: "absolute",
-                        inset: 0,
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        objectPosition: "center",
-                        transition: "opacity 1s ease-in-out",
-                        opacity: activeSlotRef.current === "A" ? 1 : 0,
-                    }}
-                />
+            <div className="overlay" />
 
-                {/* слот B */}
-                <img
-                    ref={imgBRef}
-                    key="slot-b"
-                    src=""
-                    alt=""
-                    style={{
-                        position: "absolute",
-                        inset: 0,
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        objectPosition: "center",
-                        transition: "opacity 1s ease-in-out",
-                        opacity: activeSlotRef.current === "B" ? 1 : 0,
-                    }}
-                />
+            <main className="heroWrap">
+                <div className="heroCard">
+                    <h1 className="title">FilmBase</h1>
+                    <p className="lead">Каталог фильмов с авторизацией, поиском и закладками.</p>
 
-                {/* overlay с текстом */}
-                <div
-                    style={{
-                        position: "absolute",
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        padding: "20px 24px",
-                        background:
-                            "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 60%, rgba(0,0,0,0.85) 100%)",
-                        color: "#fff",
-                    }}
-                >
-                    <h2 style={{ margin: 0, fontSize: 28 }}>{currentFilm?.title}</h2>
-                    <div style={{ marginTop: 6, opacity: 0.9 }}>
-                        {currentFilm?.year ? `Год: ${currentFilm.year}` : null}
-                        {currentFilm?.duration ? ` • ${currentFilm.duration} мин` : null}
+                    <div className="ctaRow">
+                        <Link className="btn" href="/films">Перейти к фильмам</Link>
+                        {!user && <Link className="btn" href="/login">Войти</Link>}
+                    </div>
+
+                    <div className="now">
+                        {currentFilm ? `Сейчас: ${currentFilm.title}` : (loading ? "Загрузка..." : "Нет фильмов")}
                     </div>
                 </div>
-            </Link>
-
-            <div style={{ display: "flex", gap: 12 }}>
-                <Link className="btn" href="/films">Перейти к фильмам</Link>
-                {!user && <Link className="btn" href="/login">Войти</Link>}
-            </div>
+            </main>
         </div>
     );
 }

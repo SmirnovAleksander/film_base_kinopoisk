@@ -1,3 +1,4 @@
+// app/films/page.tsx
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useFilmsStore } from "@/store/films";
@@ -5,11 +6,11 @@ import styles from "./page.module.css";
 import { resolveMediaUrl } from "@/lib/utils/url";
 import Link from "next/link";
 import { useShallow } from "zustand/react/shallow";
-import type { FilmsState } from "../../store/films";
+import type { FilmsState } from "@/store/films";
 import { useTheme } from "next-themes";
 
 const VISIBLE_COUNT = 3;
-const MIN_CHAR_FOR_DESCRIPTION = 300;
+const MIN_CHAR_FOR_DESCRIPTION = 150;
 
 export default function FilmsPage() {
     const { items, page, pageSize, loading, list, search, totalKnown } = useFilmsStore(
@@ -26,8 +27,6 @@ export default function FilmsPage() {
 
     const { theme, systemTheme } = useTheme();
     const [isPressFilter, setIsPressFilter] = useState(false);
-
-    // wrapperRef включает и кнопку, и сам popover — тогда клик по кнопке не считается "вне"
     const wrapperRef = useRef<HTMLDivElement | null>(null);
     const filterRef = useRef<HTMLDivElement | null>(null);
     const currentTheme = theme === "system" ? systemTheme : theme;
@@ -40,52 +39,30 @@ export default function FilmsPage() {
     const [showStartButton, setShowStartButton] = useState(false);
 
     const [selectedPageLocal, setSelectedPageLocal] = useState<number>(page ?? 1);
-    useEffect(() => {
-        setSelectedPageLocal(page ?? 1);
-    }, [page]);
+    useEffect(() => setSelectedPageLocal(page ?? 1), [page]);
 
     const totalItems = totalKnown;
     const totalPages = totalItems ? Math.ceil(totalItems / pageSize) : null;
 
     useEffect(() => {
         list(page ?? 1, pageSize);
-        if (page && page >= visiblePages[visiblePages.length - 1] && totalPages !== null && totalPages > page) {
-            let newVisible = [...visiblePages];
-            const last = visiblePages[visiblePages.length - 1];
-            const next = last + 1;
-            newVisible = newVisible.slice(1).concat(next);
-
-            setVisiblePages(newVisible);
-            if (page && page > VISIBLE_COUNT) {
-                setShowStartButton(true);
-            }
-        }
     }, []);
 
-    // add/remove обработчик только когда меню открыто; проверяем wrapperRef.contains
     useEffect(() => {
         if (!isPressFilter) return;
-
         const handlePointerDown = (e: PointerEvent) => {
-            // если клик вне wrapper'а — закрываем
             if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
                 setIsPressFilter(false);
             }
         };
-
         document.addEventListener("pointerdown", handlePointerDown);
-        return () => {
-            document.removeEventListener("pointerdown", handlePointerDown);
-        };
+        return () => document.removeEventListener("pointerdown", handlePointerDown);
     }, [isPressFilter]);
 
-    const goToPage = (newPage: number) => {
-        list(newPage, pageSize);
-    };
+    const goToPage = (newPage: number) => list(newPage, pageSize);
 
     const selectPage = (target: number) => {
         if (totalPages !== null && (target < 1 || target > totalPages)) return;
-
         setSelectedPageLocal(target);
 
         setVisiblePages((prev) => {
@@ -118,7 +95,6 @@ export default function FilmsPage() {
 
     const renderPager = () => {
         const nextExists = totalPages != null && (page ?? 1) + 1 <= totalPages;
-
         return (
             <div className={styles.pagerContent}>
                 {showStartButton ? (
@@ -135,8 +111,8 @@ export default function FilmsPage() {
                             style={
                                 selectedPageLocal === p
                                     ? currentTheme === "dark"
-                                        ? { background: "rgba(255, 255, 255, 0.15)" }
-                                        : { background: "rgba(0, 0, 0, 0.15)" }
+                                        ? { background: "rgba(255, 255, 255, 0.12)" }
+                                        : { background: "rgba(0, 0, 0, 0.08)" }
                                     : {}
                             }
                             onClick={() => selectPage(p)}
@@ -156,20 +132,15 @@ export default function FilmsPage() {
     };
 
     const reduceText = (text: string) => {
-        let newText = "";
-        for (let i = 0; i < text.length - 1 && i < MIN_CHAR_FOR_DESCRIPTION; i++) {
-            newText += text[i];
-            if (i + 1 >= MIN_CHAR_FOR_DESCRIPTION) {
-                newText += "...";
-            }
-        }
-        return newText;
+        if (!text) return "";
+        return text.length > MIN_CHAR_FOR_DESCRIPTION ? text.slice(0, MIN_CHAR_FOR_DESCRIPTION) + "..." : text;
     };
 
     const filter = () => {
         return (
             <div ref={filterRef} className={styles.button_filter}>
-                допили
+                {/* stub: add filter controls here */}
+                Фильтр (доработать)
             </div>
         );
     };
@@ -178,7 +149,6 @@ export default function FilmsPage() {
         <div className={styles.container}>
             <h1 className={styles.title}>Фильмы</h1>
 
-            {/* wrapperRef охватывает input, кнопки и сам popover */}
             <div ref={wrapperRef} className={styles.searchRow}>
                 <input
                     className={styles.input}
@@ -189,10 +159,9 @@ export default function FilmsPage() {
                 <button className={styles.button} onClick={() => setIsPressFilter((prev) => !prev)}>
                     Фильтр
                 </button>
-                <button className={styles.button} onClick={() => search(q, 1, 20)}>
+                <button className={styles.button} onClick={() => search(q, 1, pageSize)}>
                     Искать
                 </button>
-
             </div>
 
             {isPressFilter && filter()}
@@ -218,14 +187,12 @@ export default function FilmsPage() {
                                 <div className={styles.cardTitle}>{f.title}</div>
                                 <div className={styles.sub}>{f.original_title || ""}</div>
                                 <div className={styles.ratings}>
-                                    <span>Год: {f.year ?? "-"}</span>
-                                    <span>Длительность: {f.duration ?? "-"}</span>
-                                    <span>KP: {f.rating_kp ?? "-"}</span>
-                                    <span>IMDb: {f.rating_imdb ?? "-"}</span>
+                                    <span className={styles.badge}>Год: {f.year ?? "-"}</span>
+                                    <span className={styles.badge}>Длительность: {f.duration ?? "-"}</span>
+                                    <span className={styles.badge}>KP: {f.rating_kp ?? "-"}</span>
+                                    <span className={styles.badge}>IMDb: {f.rating_imdb ?? "-"}</span>
                                 </div>
-                                {f.full_description ? (
-                                    <div className={styles.desc}>{reduceText(f.full_description)}</div>
-                                ) : null}
+                                {f.full_description ? <div className={styles.desc}>{reduceText(f.full_description)}</div> : null}
                             </div>
                         </Link>
                     ))}
