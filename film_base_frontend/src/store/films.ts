@@ -62,7 +62,7 @@ export const useFilmsStore = create<FilmsState>((set, get) => ({
     error: null,
     query: "",
 
-    async list(page = 1, pageSize = 20) {
+    async list(page = 1, pageSize = 10) {
         set({ loading: true, error: null });
         try {
             const resp = await api.get<Paginated<FilmListItem>>("/films", {
