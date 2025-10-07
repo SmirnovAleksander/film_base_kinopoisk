@@ -389,7 +389,7 @@ class ActorPageParser:
                 photo_url = 'https:' + photo_url
             elif not photo_url.startswith('http'):
                 photo_url = 'https://' + photo_url
-            actor_data['photo'] = photo_url
+            actor_data['image'] = photo_url
         
         return actor_data
     

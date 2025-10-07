@@ -68,6 +68,15 @@ class NewsPageParser:
         Returns:
             BeautifulSoup объект
         """
+        # Разрешаем парсинг только для допустимых доменов/путей
+        allowed_prefixes = (
+            'https://www.kinopoisk.ru/media/',
+            'https://www.kinopoisk.ru/media/news/',
+            'https://www.kinopoisk.ru/media/article/',
+        )
+        if not any(url.startswith(p) for p in allowed_prefixes):
+            raise ValueError("URL не поддерживается этим парсером. Допустимы только /media, /media/news, /media/article")
+
         try:
             # Расширенные заголовки для обхода защиты от ботов
             headers = {
@@ -249,14 +258,12 @@ class NewsPageParser:
         all_content = []
         
         # Определяем базовый URL в зависимости от типа контента
-        base_urls = {
-            'news': 'https://www.kinopoisk.ru/media/news/',
-            'video': 'https://www.kinopoisk.ru/media/video/',
-            'game': 'https://www.kinopoisk.ru/media/game/',
-            'podcast': 'https://www.kinopoisk.ru/media/podcast/'
-        }
-        
-        base_url = base_urls.get(content_type, 'https://www.kinopoisk.ru/media/news/')
+        # Разрешённые только типы media/news и media/article, media (лендинг)
+        if content_type not in ('news', 'article', 'media'):
+            content_type = 'news'
+        base_url = 'https://www.kinopoisk.ru/media/news/' if content_type == 'news' else (
+            'https://www.kinopoisk.ru/media/article/' if content_type == 'article' else 'https://www.kinopoisk.ru/media/'
+        )
         
         try:
             for page_num in range(1, pages_count + 1):
@@ -347,15 +354,24 @@ class NewsPageParser:
                 category_elem = category_wrapper.find('span', {'data-tid': 'b66cdd18'})
                 if category_elem:
                     news_data['category'] = category_elem.get_text(strip=True)
+                else:
+                    # Фолбэк: категория может быть ссылкой <a> внутри этого же блока
+                    link_cat = category_wrapper.find('a')
+                    if link_cat and link_cat.get_text(strip=True):
+                        news_data['category'] = link_cat.get_text(strip=True)
             
-            # Заголовок (h3 внутри data-tid="543e842b")
-            title_wrapper = article.find('div', {'data-tid': '543e842b'})
-            if title_wrapper:
-                title_elem = title_wrapper.find_next('h3')
+            # Заголовок: в <h3> первый span — лейбл (например, «Подкаст»), его игнорируем
+            if category_wrapper:
+                title_elem = category_wrapper.find_next('h3')
                 if title_elem:
-                    title_span = title_elem.find('span')
-                    if title_span:
-                        news_data['title'] = title_span.get_text(strip=True)
+                    spans = title_elem.find_all('span')
+                    if spans:
+                        if len(spans) > 1:
+                            title_text = " ".join(s.get_text(strip=True) for s in spans[1:] if s.get_text(strip=True))
+                        else:
+                            title_text = spans[0].get_text(strip=True)
+                        if title_text:
+                            news_data['title'] = title_text
             
             # Дата
             date_elem = article.find('span', class_='NUIoouHmDcRbqxQpQ8v8')

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Скрипт для парсинга всех типов медиа контента
-Парсит news, video, game, podcast по 2 страницы каждый
+Скрипт для парсинга допустимых типов медиа контента Кинопоиска
+Парсит только: media (лендинг), news, article — по 2 страницы каждый
 """
 
 import json
@@ -21,8 +21,8 @@ def main():
     parser = NewsPageParser()
     main_parser = MainParser()
     
-    # Типы контента для парсинга
-    content_types = ['news', 'video', 'game', 'podcast']
+    # Допустимые типы контента
+    content_types = ['media', 'news', 'article']
     all_content = []
     
     try:

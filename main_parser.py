@@ -74,7 +74,6 @@ class MainParser:
                 budget VARCHAR(100),
                 usa_box_office VARCHAR(100),
                 rus_box_office VARCHAR(100),
-                mpaa_rating VARCHAR(20),
                 user_rating DECIMAL(3,1),
                 user_rating_count INTEGER DEFAULT 0
             )
@@ -438,8 +437,8 @@ class MainParser:
             INSERT INTO film (kinopoisk_id, title, original_title, description, full_description, 
                              poster, year, tagline, ru_premiere, world_premiere, content_rating, is_family_friendly,
                              duration, rating_kp, kp_votes_count, rating_imdb, imdb_votes_count,
-                             budget, usa_box_office, rus_box_office, mpaa_rating, user_rating, user_rating_count)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                             budget, usa_box_office, rus_box_office, user_rating, user_rating_count)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
                 title = EXCLUDED.title,
                 original_title = EXCLUDED.original_title,
@@ -460,7 +459,6 @@ class MainParser:
                 budget = EXCLUDED.budget,
                 usa_box_office = EXCLUDED.usa_box_office,
                 rus_box_office = EXCLUDED.rus_box_office,
-                mpaa_rating = EXCLUDED.mpaa_rating,
                 user_rating = EXCLUDED.user_rating,
                 user_rating_count = EXCLUDED.user_rating_count
             RETURNING id
@@ -487,7 +485,6 @@ class MainParser:
                 film_data.get('budget'),
                 film_data.get('usa_box_office'),
                 film_data.get('rus_box_office'),
-                film_data.get('mpaa_rating'),
                 None,  # user_rating - будет обновляться автоматически
                 0      # user_rating_count - будет обновляться автоматически
             ))

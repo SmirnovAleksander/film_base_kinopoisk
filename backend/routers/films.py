@@ -290,7 +290,6 @@ def get_film(film_id: int):
                        budget,
                        usa_box_office,
                        rus_box_office,
-                       mpaa_rating,
                        user_rating,
                        user_rating_count
                 FROM film
@@ -323,9 +322,8 @@ def get_film(film_id: int):
                 "budget": r[18],
                 "usa_box_office": r[19],
                 "rus_box_office": r[20],
-                "mpaa_rating": r[21],
-                "user_rating": float(r[22]) if r[22] else None,
-                "user_rating_count": r[23],
+                "user_rating": float(r[21]) if r[21] else None,
+                "user_rating_count": r[22],
             }
         finally:
             cur.close()
@@ -360,7 +358,6 @@ def get_film_by_kinopoisk_id(kinopoisk_id: str):
                        budget,
                        usa_box_office,
                        rus_box_office,
-                       mpaa_rating,
                        user_rating,
                        user_rating_count
                 FROM film
@@ -393,9 +390,8 @@ def get_film_by_kinopoisk_id(kinopoisk_id: str):
                 "budget": r[18],
                 "usa_box_office": r[19],
                 "rus_box_office": r[20],
-                "mpaa_rating": r[21],
-                "user_rating": float(r[22]) if r[22] else None,
-                "user_rating_count": r[23],
+                "user_rating": float(r[21]) if r[21] else None,
+                "user_rating_count": r[22],
             }
         finally:
             cur.close()
