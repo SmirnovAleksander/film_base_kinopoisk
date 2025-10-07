@@ -450,6 +450,116 @@ def get_similar_films(film_id: int):
             cur.close()
 
 
+@router.get("/{film_id}/recommendations", summary="Рекомендуемые фильмы на основе контентной фильтрации")
+def get_film_recommendations(film_id: int, limit: int = Query(10, ge=1, le=50, description="Количество рекомендаций")):
+    """
+    Система рекомендаций на основе:
+    - Жанры (40%)
+    - Участники (30%) 
+    - Год выпуска (15%)
+    - Рейтинг (15%)
+    """
+    with get_connection() as conn:
+        cur = conn.cursor()
+        try:
+            # Получаем данные текущего фильма
+            cur.execute("""
+                SELECT f.id, f.year, f.rating_kp, f.title, f.poster, f.kinopoisk_id
+                FROM film f WHERE f.id = %s
+            """, (film_id,))
+            
+            current_film = cur.fetchone()
+            if not current_film:
+                return []
+            
+            current_year = current_film[1]
+            current_rating = current_film[2]
+            
+            # Получаем жанры текущего фильма
+            cur.execute("""
+                SELECT g.name FROM film_genre fg
+                JOIN genre g ON g.id = fg.genre_id
+                WHERE fg.film_id = %s
+            """, (film_id,))
+            current_genres = [row[0] for row in cur.fetchall()]
+            
+            # Получаем участников текущего фильма
+            cur.execute("""
+                SELECT fs.stuff_id FROM film_stuff fs
+                WHERE fs.film_id = %s
+            """, (film_id,))
+            current_stuff_ids = [row[0] for row in cur.fetchall()]
+            
+            # Получаем кандидатов для рекомендаций (исключаем текущий фильм)
+            cur.execute("""
+                SELECT DISTINCT f.id, f.title, f.year, f.rating_kp, f.poster, f.kinopoisk_id,
+                       f.description, f.original_title
+                FROM film f
+                WHERE f.id != %s AND f.title IS NOT NULL
+                ORDER BY f.rating_kp DESC NULLS LAST
+                LIMIT 200
+            """, (film_id,))
+            
+            candidates = cur.fetchall()
+            recommendations = []
+            
+            for candidate in candidates:
+                candidate_id = candidate[0]
+                candidate_year = candidate[2]
+                candidate_rating = candidate[3]
+                
+                # Подсчет совпадений по жанрам (40%)
+                cur.execute("""
+                    SELECT COUNT(*) FROM film_genre fg1
+                    JOIN film_genre fg2 ON fg1.genre_id = fg2.genre_id
+                    WHERE fg1.film_id = %s AND fg2.film_id = %s
+                """, (film_id, candidate_id))
+                genre_matches = cur.fetchone()[0]
+                genre_score = (genre_matches / max(len(current_genres), 1)) * 0.4 if current_genres else 0
+                
+                # Подсчет совпадений по участникам (30%)
+                cur.execute("""
+                    SELECT COUNT(*) FROM film_stuff fs1
+                    JOIN film_stuff fs2 ON fs1.stuff_id = fs2.stuff_id
+                    WHERE fs1.film_id = %s AND fs2.film_id = %s
+                """, (film_id, candidate_id))
+                stuff_matches = cur.fetchone()[0]
+                stuff_score = (stuff_matches / max(len(current_stuff_ids), 1)) * 0.3 if current_stuff_ids else 0
+                
+                # Близость по году (15%)
+                year_diff = abs((current_year or 0) - (candidate_year or 0))
+                year_score = max(0, (10 - year_diff) / 10) * 0.15 if current_year and candidate_year else 0
+                
+                # Близость по рейтингу (15%)
+                rating_diff = abs(float(current_rating or 0) - float(candidate_rating or 0))
+                rating_score = max(0, (2 - rating_diff) / 2) * 0.15 if current_rating and candidate_rating else 0
+                
+                # Общий скор
+                total_score = genre_score + stuff_score + year_score + rating_score
+                
+                if total_score > 0.1:  # Минимальный порог релевантности
+                    recommendations.append({
+                        "id": candidate[0],
+                        "kinopoisk_id": candidate[5],
+                        "title": candidate[1],
+                        "original_title": candidate[7],
+                        "year": candidate[2],
+                        "rating_kp": candidate[3],
+                        "poster": candidate[4],
+                        "description": candidate[6],
+                        "relevance_score": round(total_score, 3),
+                        "genre_matches": genre_matches,
+                        "stuff_matches": stuff_matches
+                    })
+            
+            # Сортируем по релевантности и возвращаем топ
+            recommendations.sort(key=lambda x: x["relevance_score"], reverse=True)
+            return recommendations[:limit]
+            
+        finally:
+            cur.close()
+
+
 @router.get("/{film_id}/stills", summary="Кадры и обои фильма (оригиналы)")
 def get_film_stills(film_id: int):
     with get_connection() as conn:

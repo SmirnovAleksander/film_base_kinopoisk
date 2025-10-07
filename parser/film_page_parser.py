@@ -554,7 +554,7 @@ class FilmPageParser:
                         continue
                     
                     data_obj = {'id': film_id}
-
+                    
                     # Извлекаем название фильма
                     title_span = item.find('span', {'data-tid': 'ecca3393'})
                     if title_span:
