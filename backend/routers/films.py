@@ -431,6 +431,31 @@ def get_similar_films(film_id: int):
             cur.close()
 
 
+@router.get("/{film_id}/stills", summary="Кадры и обои фильма (оригиналы)")
+def get_film_stills(film_id: int):
+    with get_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute(
+                """
+                SELECT picture_id, original_url, source
+                FROM film_still
+                WHERE film_id = %s
+                ORDER BY source, picture_id
+                """,
+                (film_id,)
+            )
+            rows = cur.fetchall()
+            grouped = {"stills": [], "wall": []}
+            for r in rows:
+                item = {"id": r[0], "original": r[1]}
+                src = r[2]
+                if src in grouped:
+                    grouped[src].append(item)
+            return grouped
+        finally:
+            cur.close()
+
 @router.get("/{film_id}/stuff", summary="Список участников (stuff), участвовавших в фильме")
 def get_film_stuff(film_id: int, role: str = Query("all", description="Роль участника (например: actor, director, writer). 'all' — без фильтра")):
     with get_connection() as conn:

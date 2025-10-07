@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from parser.kinopoisk_parser import KinopoiskParser
 from parser.film_page_parser import FilmPageParser
 from parser.actor_page_parser import ActorPageParser
+from parser.stills_page_parser import StillsPageParser
 from config import DATABASE_CONFIG, DELAYS, PARSING_CONFIG, LOGGING_CONFIG
 from image_downloader import ImageDownloader
 
@@ -21,6 +22,7 @@ class MainParser:
         self.kinopoisk_parser = KinopoiskParser()
         self.film_parser = FilmPageParser()
         self.actor_parser = ActorPageParser()
+        self.stills_parser = StillsPageParser()
         
         # Инициализируем загрузчик изображений
         self.image_downloader = ImageDownloader()
@@ -252,6 +254,17 @@ class MainParser:
             """
             ,
             """
+            CREATE TABLE IF NOT EXISTS film_still (
+                id SERIAL PRIMARY KEY,
+                film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
+                picture_id VARCHAR(20) NOT NULL,
+                original_url TEXT NOT NULL,
+                source VARCHAR(16) NOT NULL CHECK (source IN ('stills','wall')),
+                UNIQUE(film_id, picture_id, source)
+            )
+            """
+            ,
+            """
             CREATE TABLE IF NOT EXISTS film_watch_provider (
                 id SERIAL PRIMARY KEY,
                 film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
@@ -313,6 +326,9 @@ class MainParser:
                         
                         # Парсим похожие фильмы
                         self.parse_similar_films(film_details, film_db_id)
+
+                        # Парсим кадры (stills + wall)
+                        self.parse_and_save_stills(film_id, film_db_id)
                         
                         # Тихий режим
                     
@@ -438,7 +454,7 @@ class MainParser:
                              poster, year, tagline, ru_premiere, world_premiere, content_rating, is_family_friendly,
                              duration, rating_kp, kp_votes_count, rating_imdb, imdb_votes_count,
                              budget, usa_box_office, rus_box_office, user_rating, user_rating_count)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
                 title = EXCLUDED.title,
                 original_title = EXCLUDED.original_title,
@@ -534,6 +550,52 @@ class MainParser:
                 )
         except Exception as e:
             print(f"❌ Ошибка сохранения провайдеров: {e}")
+        finally:
+            cursor.close()
+
+    def parse_and_save_stills(self, film_kinopoisk_id: str, film_db_id: int):
+        """Парсит страницы /stills и /wall и сохраняет оригиналы изображений."""
+        urls = [
+            f"https://www.kinopoisk.ru/film/{film_kinopoisk_id}/stills/",
+            f"https://www.kinopoisk.ru/film/{film_kinopoisk_id}/wall/",
+        ]
+        grouped = {"stills": [], "wall": []}
+        for url in urls:
+            try:
+                self.stills_parser.load_html_from_url(url)
+                items = self.stills_parser.extract_stills_info()
+                key = 'stills' if '/stills' in url else ('wall' if '/wall' in url else 'stills')
+                grouped[key].extend(items)
+                # Небольшая пауза между загрузками
+                time.sleep(self.delays['BETWEEN_FILMS'])
+            except Exception as e:
+                print(f"⚠️ Не удалось спарсить кадры {url}: {e}")
+        # Сохраняем в БД
+        self.save_film_stills(film_db_id, grouped)
+
+    def save_film_stills(self, film_db_id: int, grouped_items):
+        """Сохраняет кадры фильма в таблицу film_still."""
+        cursor = self.db_connection.cursor()
+        try:
+            for source in ('stills', 'wall'):
+                for it in grouped_items.get(source, []):
+                    picture_id = it.get('id')
+                    original_url = it.get('original')
+                    if not picture_id or not original_url:
+                        continue
+                    cursor.execute(
+                        """
+                        INSERT INTO film_still (film_id, picture_id, original_url, source)
+                        VALUES (%s, %s, %s, %s)
+                        ON CONFLICT (film_id, picture_id, source) DO UPDATE SET
+                            original_url = EXCLUDED.original_url
+                        """,
+                        (film_db_id, picture_id, original_url, source)
+                    )
+            self.db_connection.commit()
+        except Exception as e:
+            print(f"❌ Ошибка сохранения кадров: {e}")
+            self.db_connection.rollback()
         finally:
             cursor.close()
     
