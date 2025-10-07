@@ -277,10 +277,10 @@ class MainParser:
     
     def parse_all_films(self, start_page=1, max_pages=5):
         """Парсинг всех фильмов с нескольких страниц"""
-        print(f"🚀 Начинаем парсинг с страницы {start_page}")
+        # Старт парсинга
         
         for page in range(start_page, start_page + max_pages):
-            print(f"\n📄 Парсинг страницы {page}")
+            # Парсинг страницы
             
             # URL страницы со списком фильмов
             if page == 1:
@@ -292,7 +292,7 @@ class MainParser:
                 # Парсим список фильмов
                 self.kinopoisk_parser.load_html_from_url(page_url)
                 film_ids = self.kinopoisk_parser.parse_all_films()
-                
+                # Единый вывод: количество найденных фильмов на странице
                 print(f"📊 Найдено {len(film_ids)} фильмов на странице {page}")
                 
                 # Парсим каждый фильм
@@ -301,7 +301,7 @@ class MainParser:
                     if not film_id:
                         continue
                         
-                    print(f"\n🎬 [{i}/{len(film_ids)}] Парсинг фильма ID: {film_id}")
+                    # Без подробного вывода по каждому фильму
                     
                     # Парсим детали фильма
                     film_details = self.parse_film_details(film_id)
@@ -315,7 +315,7 @@ class MainParser:
                         # Парсим похожие фильмы
                         self.parse_similar_films(film_details, film_db_id)
                         
-                        print(f"✅ Фильм {film_id} сохранен в БД")
+                        # Тихий режим
                     
                     # Пауза между запросами
                     time.sleep(self.delays['BETWEEN_FILMS'])
@@ -326,11 +326,9 @@ class MainParser:
             
             # Пауза между страницами (кроме последней)
             if page < start_page + max_pages - 1:
-                if self.logging_config['SHOW_DELAYS']:
-                    print(f"⏳ Пауза между страницами ({self.delays['BETWEEN_PAGES']}с)...")
+                # Тихий режим
                 time.sleep(self.delays['BETWEEN_PAGES'])
-        
-        print(f"\n🎉 Парсинг завершен! Обработано {max_pages} страниц")
+        # Завершение без лишнего вывода
     
     def parse_film_details(self, film_id):
         """Парсинг детальной страницы фильма"""
@@ -424,16 +422,16 @@ class MainParser:
         cursor = self.db_connection.cursor()
         
         try:
-            # Скачиваем постер фильма
-            poster_url = film_data.get('poster')
-            if poster_url:
-                film_id = film_data.get('kinopoisk_id')
-                downloaded_poster = self.image_downloader.download_film_poster(poster_url, film_id)
-                if downloaded_poster:
-                    film_data['poster'] = downloaded_poster
-                    print(f"📸 Постер фильма {film_id} скачан: {downloaded_poster}")
-                else:
-                    print(f"⚠️ Не удалось скачать постер для фильма {film_id}")
+            # # Скачиваем постер фильма
+            # poster_url = film_data.get('poster')
+            # if poster_url:
+            #     film_id = film_data.get('kinopoisk_id')
+            #     downloaded_poster = self.image_downloader.download_film_poster(poster_url, film_id)
+            #     if downloaded_poster:
+            #         film_data['poster'] = downloaded_poster
+            #         print(f"📸 Постер фильма {film_id} скачан: {downloaded_poster}")
+            #     else:
+            #         print(f"⚠️ Не удалось скачать постер для фильма {film_id}")
             
             # Вставляем фильм
             insert_film = """
@@ -545,16 +543,16 @@ class MainParser:
         cursor = self.db_connection.cursor()
         
         try:
-            # Скачиваем фото актера
-            photo_url = person_data.get('photo')
-            if photo_url:
-                actor_id = person_data.get('kinopoisk_id')
-                downloaded_photo = self.image_downloader.download_actor_photo(photo_url, actor_id)
-                if downloaded_photo:
-                    person_data['photo'] = downloaded_photo
-                    print(f"📸 Фото актера {actor_id} скачано: {downloaded_photo}")
-                else:
-                    print(f"⚠️ Не удалось скачать фото для актера {actor_id}")
+            # # Скачиваем фото актера
+            # photo_url = person_data.get('photo')
+            # if photo_url:
+            #     actor_id = person_data.get('kinopoisk_id')
+            #     downloaded_photo = self.image_downloader.download_actor_photo(photo_url, actor_id)
+            #     if downloaded_photo:
+            #         person_data['photo'] = downloaded_photo
+            #         print(f"📸 Фото актера {actor_id} скачано: {downloaded_photo}")
+            #     else:
+            #         print(f"⚠️ Не удалось скачать фото для актера {actor_id}")
             
             # Вставляем участника
             insert_person = """

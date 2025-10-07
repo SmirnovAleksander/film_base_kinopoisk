@@ -215,14 +215,12 @@ class KinopoiskParser:
         
         # Извлекаем ID фильмов из ссылок (data-tid="23a2a59")
         film_links = self.soup.find_all('a', {'data-tid': '23a2a59'})
-        print(f"🔍 Найдено {len(film_links)} ссылок с data-tid='23a2a59'")
         
         valid_links = 0
         invalid_links = 0
         
         for i, link in enumerate(film_links):
             href = link.get('href')
-            print(f"  [{i+1}] href: {href}")
             
             if href and '/film/' in href:
                 valid_links += 1
@@ -242,20 +240,11 @@ class KinopoiskParser:
                         film_data['name'] = film_name
                     
                     films.append(film_data)
-                    print(f"    ✅ Добавлен фильм: {film_id} - {film_name}")
                 else:
-                    print(f"    ❌ Не удалось извлечь ID из: {href}")
+                    pass
             else:
                 invalid_links += 1
-                print(f"    ❌ Некорректная ссылка: {href}")
         
-        print(f"📊 Статистика:")
-        print(f"   Всего ссылок: {len(film_links)}")
-        print(f"   Валидных ссылок: {valid_links}")
-        print(f"   Некорректных ссылок: {invalid_links}")
-        print(f"   Обработано фильмов: {len(films)}")
-        
-        print(f"📊 Обработано {len(films)} фильмов")
         return films
     
     def save_to_json(self, films: List[Dict], output_file: str = 'output/films_data.json'):
