@@ -15,7 +15,7 @@ def main():
     print()
     
     # URL для парсинга (можно изменить на нужный фильм)
-    film_url = "https://www.kinopoisk.ru/film/535341/"  # 1+1
+    film_url = "https://www.kinopoisk.ru/film/689/"  # 1+1
     
     try:
         # Создаем парсер

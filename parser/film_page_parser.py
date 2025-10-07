@@ -553,11 +553,100 @@ class FilmPageParser:
                     else:
                         continue
                     
+                    data_obj = {'id': film_id}
+
                     # Извлекаем название фильма
                     title_span = item.find('span', {'data-tid': 'ecca3393'})
                     if title_span:
-                        title = title_span.get_text(strip=True)
-                        similar_films.append({'title': title, 'id': film_id})
+                        data_obj['title'] = title_span.get_text(strip=True)
+
+                    # Пытаемся извлечь год (строго 19xx или 20xx как отдельное слово)
+                    try:
+                        year_text_candidates = item.stripped_strings
+                        for t in year_text_candidates:
+                            m = re.search(r'\b(19\d{2}|20\d{2})\b', t)
+                            if m:
+                                data_obj['year'] = m.group(1)
+                                break
+                    except Exception:
+                        pass
+
+                    # Пытаемся извлечь жанры: из текстов внутри карточки, разбивая по разделителям и фильтруя
+                    try:
+                        raw_tokens = []
+                        for t in item.stripped_strings:
+                            # разбиваем по типичным разделителям
+                            parts = re.split(r'[•·,\/|]', t)
+                            for p in parts:
+                                token = p.strip()
+                                if token:
+                                    raw_tokens.append(token)
+                        genres = []
+                        title_val = (data_obj.get('title') or '').lower()
+                        year_val = data_obj.get('year')
+                        for tok in raw_tokens:
+                            low = tok.lower()
+                            # отсекаем явные не-жанровые токены
+                            if low == '' or low == title_val:
+                                continue
+                            if year_val and year_val in tok:
+                                continue
+                            if re.search(r'\d', tok):  # содержит цифры
+                                continue
+                            # оставляем короткие жанровые слова/фразы
+                            if any(ch.isalpha() for ch in tok):
+                                genres.append(tok)
+                        if genres:
+                            # нормализуем, убираем дубликаты, оставляем до 5
+                            seen = set()
+                            uniq = []
+                            for g in genres:
+                                if g not in seen:
+                                    seen.add(g)
+                                    uniq.append(g)
+                            if uniq:
+                                data_obj['genres'] = uniq[:5]
+                    except Exception:
+                        pass
+
+                    # Извлекаем картинку (постер превью) из первого img
+                    img = item.find('img')
+                    poster_url = None
+                    if img:
+                        if img.get('srcset'):
+                            # берём последний элемент из srcset как наиболее крупный
+                            parts = [p.strip() for p in img.get('srcset').split(',') if p.strip()]
+                            if parts:
+                                poster_url = parts[-1].split()[0]
+                        if not poster_url and img.get('src'):
+                            poster_url = img.get('src')
+                    if poster_url:
+                        if poster_url.startswith('//'):
+                            poster_url = 'https:' + poster_url
+                        elif not poster_url.startswith('http'):
+                            poster_url = 'https://' + poster_url
+                        data_obj['poster'] = poster_url
+
+                    # Пытаемся извлечь рейтинг (первая встреченная дробь/число с точкой)
+                    try:
+                        rating_found = None
+                        for t in item.stripped_strings:
+                            m = re.search(r'\b(\d{1,2}(?:[\.,]\d)?)\b', t)
+                            if m:
+                                val = m.group(1).replace(',', '.')
+                                # отфильтруем невозможные >10
+                                try:
+                                    if 0.0 <= float(val) <= 10.0:
+                                        rating_found = val
+                                        break
+                                except Exception:
+                                    pass
+                        if rating_found is not None:
+                            data_obj['rating'] = rating_found
+                    except Exception:
+                        pass
+
+                    similar_films.append(data_obj)
             
             if similar_films:
                 film_data['similar_films'] = similar_films
