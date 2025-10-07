@@ -226,13 +226,13 @@ class FilmPageParser:
         """Извлекает данные из HTML элементов"""
         film_data = {}
         
-        # Извлекаем название фильма (data-tid="75209b22")
-        title_elem = self.soup.find('span', {'data-tid': '75209b22'})
-        if title_elem:
-            title_text = title_elem.get_text(strip=True)
-            # Убираем дату в скобках из названия (например, "1+1 (2011)" -> "1+1")
-            title_clean = re.sub(r'\s*\(\d{4}\)\s*$', '', title_text)
-            film_data['title'] = title_clean
+        # # Извлекаем название фильма (data-tid="75209b22")
+        # title_elem = self.soup.find('span', {'data-tid': '75209b22'})
+        # if title_elem:
+        #     title_text = title_elem.get_text(strip=True)
+        #     # Убираем дату в скобках из названия (например, "1+1 (2011)" -> "1+1")
+        #     title_clean = re.sub(r'\s*\(\d{4}\)\s*$', '', title_text)
+        #     film_data['title'] = title_clean
         
         # # Извлекаем оригинальное название (data-tid="eb6be89")
         # original_title_elem = self.soup.find('span', {'data-tid': 'eb6be89'})
@@ -244,10 +244,10 @@ class FilmPageParser:
         if description_elem:
             film_data['description'] = description_elem.get_text(strip=True)
         
-        # Извлекаем полное описание (data-tid="bbb11238")
-        full_description_elem = self.soup.find('p', {'data-tid': 'bbb11238'})
-        if full_description_elem:
-            film_data['full_description'] = full_description_elem.get_text(strip=True)
+        # # Извлекаем полное описание (data-tid="bbb11238")
+        # full_description_elem = self.soup.find('p', {'data-tid': 'bbb11238'})
+        # if full_description_elem:
+        #     film_data['full_description'] = full_description_elem.get_text(strip=True)
         
         # Извлекаем рейтинг Кинопоиска (data-tid="939058a8")
         kp_rating_elem = self.soup.find('span', {'data-tid': '939058a8'})
@@ -300,7 +300,7 @@ class FilmPageParser:
         if poster_elem:
             poster_url = None
             
-            # Приоритет: изображение 300x450 > srcset > src
+            # Приоритет: изображение 600x900 > srcset > src
             if poster_elem.get('srcset'):
                 # Парсим srcset и ищем изображение 300x450
                 srcset = poster_elem.get('srcset')
@@ -309,21 +309,21 @@ class FilmPageParser:
                 srcset_urls = re.findall(r'([^\s]+)\s+(\d+)x', srcset)
                 poster_url = None
                 
-                # Ищем URL с 300x450 (1x множитель)
+                # Ищем URL с 600x900 (1x множитель)
                 for url, multiplier in srcset_urls:
-                    if '300x450' in url and multiplier == '1':
+                    if '600x900' in url and multiplier == '1':
                         poster_url = url
                         break
                 
-                # Если 300x450 не найден, берем первый доступный
+                # Если 600x900 не найден, берем первый доступный
                 if not poster_url and srcset_urls and len(srcset_urls) > 0:
                     poster_url = srcset_urls[0][0]
             
             # Если srcset не найден, используем src
             if not poster_url and poster_elem.get('src'):
                 src_url = poster_elem.get('src')
-                # Предпочитаем URL с 300x450
-                if '300x450' in src_url:
+                # Предпочитаем URL с 600x900
+                if '600x900' in src_url:
                     poster_url = src_url
                 else:
                     poster_url = src_url
@@ -336,28 +336,28 @@ class FilmPageParser:
                     poster_url = 'https://' + poster_url
                 film_data['poster'] = poster_url
         
-        # Извлекаем год производства (data-test-id="year")
-        year_elem = self.soup.find('div', {'data-test-id': 'year'})
-        if year_elem:
-            year_link = year_elem.find('a')
-            if year_link:
-                film_data['year'] = year_link.get_text(strip=True)
+        # # Извлекаем год производства (data-test-id="year")
+        # year_elem = self.soup.find('div', {'data-test-id': 'year'})
+        # if year_elem:
+        #     year_link = year_elem.find('a')
+        #     if year_link:
+        #         film_data['year'] = year_link.get_text(strip=True)
         
-        # Извлекаем страны (data-test-id="countries")
-        countries_elem = self.soup.find('div', {'data-test-id': 'countries'})
-        if countries_elem:
-            country_links = countries_elem.find_all('a')
-            countries = [link.get_text(strip=True) for link in country_links]
-            if countries:
-                film_data['countries'] = countries
+        # # Извлекаем страны (data-test-id="countries")
+        # countries_elem = self.soup.find('div', {'data-test-id': 'countries'})
+        # if countries_elem:
+        #     country_links = countries_elem.find_all('a')
+        #     countries = [link.get_text(strip=True) for link in country_links]
+        #     if countries:
+        #         film_data['countries'] = countries
         
-        # Извлекаем жанры (data-test-id="genres")
-        genres_elem = self.soup.find('div', {'data-test-id': 'genres'})
-        if genres_elem:
-            genre_links = genres_elem.find_all('a')
-            genres = [link.get_text(strip=True) for link in genre_links if link.get_text(strip=True) != 'слова']
-            if genres:
-                film_data['genres'] = genres
+        # # Извлекаем жанры (data-test-id="genres")
+        # genres_elem = self.soup.find('div', {'data-test-id': 'genres'})
+        # if genres_elem:
+        #     genre_links = genres_elem.find_all('a')
+        #     genres = [link.get_text(strip=True) for link in genre_links if link.get_text(strip=True) != 'слова']
+        #     if genres:
+        #         film_data['genres'] = genres
         
         # Извлекаем слоган (data-test-id="tagline")
         tagline_elem = self.soup.find('div', {'data-test-id': 'tagline'})
@@ -475,12 +475,12 @@ class FilmPageParser:
             if premiere_link:
                 film_data['world_premiere'] = premiere_link.get_text(strip=True)
         
-        # Извлекаем возрастной рейтинг (data-test-id="ageRestriction")
-        age_elem = self.soup.find('div', {'data-test-id': 'ageRestriction'})
-        if age_elem:
-            age_span = age_elem.find('span', {'data-tid': '5c1ffa33'})
-            if age_span:
-                film_data['age_rating'] = age_span.get_text(strip=True)
+        # # Извлекаем возрастной рейтинг (data-test-id="ageRestriction")
+        # age_elem = self.soup.find('div', {'data-test-id': 'ageRestriction'})
+        # if age_elem:
+        #     age_span = age_elem.find('span', {'data-tid': '5c1ffa33'})
+        #     if age_span:
+        #         film_data['content_rating'] = age_span.get_text(strip=True)
         
         # # Извлекаем продолжительность (data-test-id="duration")
         # duration_elem = self.soup.find('div', {'data-test-id': 'duration'})
@@ -666,6 +666,43 @@ class FilmPageParser:
                         alternate_name = node.get('alternateName')
                         if alternate_name:
                             result['original_title'] = str(alternate_name)
+                        # Берём название фильма из name
+                        name_value = node.get('name')
+                        if name_value:
+                            result['title'] = str(name_value)
+                        # Полное описание из description
+                        description_value = node.get('description')
+                        if description_value:
+                            result['full_description'] = str(description_value)
+                        # Возрастной рейтинг (contentRating)
+                        content_rating = node.get('contentRating')
+                        if content_rating:
+                            result['content_rating'] = str(content_rating)
+                        # Жанры из JSON-LD (строка или список)
+                        genre_value = node.get('genre')
+                        if genre_value:
+                            if isinstance(genre_value, list):
+                                result['genres'] = [str(g).strip() for g in genre_value if g]
+                            else:
+                                # Разбиваем строку по запятым/точкам с запятой
+                                parts = [p.strip() for p in str(genre_value).replace(';', ',').split(',')]
+                                result['genres'] = [p for p in parts if p]
+                        # Год выпуска (datePublished)
+                        date_published = node.get('datePublished')
+                        if date_published:
+                            result['year'] = str(date_published).strip()
+                        # Страны производства (countryOfOrigin)
+                        countries_value = node.get('countryOfOrigin')
+                        if countries_value:
+                            if isinstance(countries_value, list):
+                                result['countries'] = [str(c).strip() for c in countries_value if c]
+                            else:
+                                result['countries'] = [str(countries_value).strip()]
+                        # Семейный контент (isFamilyFriendly)
+                        iff = node.get('isFamilyFriendly')
+                        if iff is not None:
+                            if isinstance(iff, bool):
+                                result['isFamilyFriendly'] = iff
                         return result
         except Exception:
             pass

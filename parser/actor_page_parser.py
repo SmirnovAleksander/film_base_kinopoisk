@@ -226,29 +226,29 @@ class ActorPageParser:
         """Извлекает данные из HTML элементов"""
         actor_data = {}
         
-        # Извлекаем основное имя актера (data-tid="f22e0093")
-        name_elem = self.soup.find('h1', {'data-tid': 'f22e0093'})
-        if name_elem:
-            actor_data['name'] = name_elem.get_text(strip=True)
+        # # Извлекаем основное имя актера (data-tid="f22e0093")
+        # name_elem = self.soup.find('h1', {'data-tid': 'f22e0093'})
+        # if name_elem:
+        #     actor_data['name'] = name_elem.get_text(strip=True)
         
-        # Извлекаем английское имя актера (data-tid="7cdbd36a")
-        english_name_elem = self.soup.find('div', {'data-tid': '7cdbd36a'})
-        if english_name_elem:
-            actor_data['english_name'] = english_name_elem.get_text(strip=True)
+        # # Извлекаем английское имя актера (data-tid="7cdbd36a")
+        # original_name_elem = self.soup.find('div', {'data-tid': '7cdbd36a'})
+        # if original_name_elem:
+        #     actor_data['original_name'] = original_name_elem.get_text(strip=True)
         
-        # Извлекаем карьеру/роли (data-test-id="career")
-        career_elem = self.soup.find('div', {'data-test-id': 'career'})
-        if career_elem:
-            # Находим все кнопки с ролями (data-tid="e150c550")
-            role_buttons = career_elem.find_all('button', {'data-tid': 'e150c550'})
-            roles = []
-            for button in role_buttons:
-                role_text = button.get_text(strip=True)
-                if role_text:
-                    roles.append(role_text)
+        # # Извлекаем карьеру/роли (data-test-id="career")
+        # career_elem = self.soup.find('div', {'data-test-id': 'career'})
+        # if career_elem:
+        #     # Находим все кнопки с ролями (data-tid="e150c550")
+        #     role_buttons = career_elem.find_all('button', {'data-tid': 'e150c550'})
+        #     roles = []
+        #     for button in role_buttons:
+        #         role_text = button.get_text(strip=True)
+        #         if role_text:
+        #             roles.append(role_text)
             
-            if roles:
-                actor_data['career'] = roles
+        #     if roles:
+        #         actor_data['career'] = roles
         
         # Извлекаем жанры (контейнер data-tid="e32f6be5", кнопки data-tid="9758b27c")
         genres_container = self.soup.find('div', {'data-tid': 'e32f6be5'})
@@ -286,28 +286,28 @@ class ActorPageParser:
         if birthday_elem:
             birthday_div = birthday_elem.find('div', {'data-tid': '71455188'})
             if birthday_div:
-                # Извлекаем отдельные компоненты
-                day_month_link = birthday_div.find('a', href=lambda x: x and 'birthday' in x and 'day' in x and 'month' in x)
-                if day_month_link:
-                    actor_data['birthday_day_month'] = day_month_link.get_text(strip=True)
+                # # Извлекаем отдельные компоненты
+                # day_month_link = birthday_div.find('a', href=lambda x: x and 'birthday' in x and 'day' in x and 'month' in x)
+                # if day_month_link:
+                #     actor_data['birthday_day_month'] = day_month_link.get_text(strip=True)
                 
-                year_link = birthday_div.find('a', href=lambda x: x and 'birthday' in x and 'year' in x)
-                if year_link:
-                    actor_data['birthday_year'] = year_link.get_text(strip=True)
+                # year_link = birthday_div.find('a', href=lambda x: x and 'birthday' in x and 'year' in x)
+                # if year_link:
+                #     actor_data['birthday_year'] = year_link.get_text(strip=True)
                 
                 zodiac_link = birthday_div.find('a', href=lambda x: x and 'zodiac' in x)
                 if zodiac_link:
                     actor_data['zodiac'] = zodiac_link.get_text(strip=True)
                 
-                # Извлекаем возраст
-                age_span = birthday_div.find('span', class_='styles_valueDark__jsGKY')
-                if age_span:
-                    age_text = age_span.get_text(strip=True)
-                    # Извлекаем только число из "47 лет"
-                    import re
-                    age_match = re.search(r'(\d+)', age_text)
-                    if age_match:
-                        actor_data['age'] = age_match.group(1)
+                # # Извлекаем возраст
+                # age_span = birthday_div.find('span', class_='styles_valueDark__jsGKY')
+                # if age_span:
+                #     age_text = age_span.get_text(strip=True)
+                #     # Извлекаем только число из "47 лет"
+                #     import re
+                #     age_match = re.search(r'(\d+)', age_text)
+                #     if age_match:
+                #         actor_data['age'] = age_match.group(1)
         
         # Извлекаем место рождения (data-test-id="placeOfBirthday")
         birthplace_elem = self.soup.find('div', {'data-test-id': 'placeOfBirthday'})
@@ -394,9 +394,69 @@ class ActorPageParser:
         return actor_data
     
     def _extract_from_meta(self) -> Dict:
-        """Извлекает данные из meta тегов"""
-        # TODO: Добавить парсинг meta тегов
-        return {}
+        """Извлекает данные из JSON-LD (script[type='application/ld+json']).
+        Берём основные поля актёра: name, alternateName, gender, jobTitle, birthDate.
+        """
+        result: Dict = {}
+        try:
+            for script in self.soup.find_all('script', type='application/ld+json'):
+                raw = script.string or script.get_text()
+                if not raw:
+                    continue
+                try:
+                    data = json.loads(raw)
+                except Exception:
+                    continue
+                nodes = data if isinstance(data, list) else [data]
+                for node in nodes:
+                    if not isinstance(node, dict):
+                        continue
+                    node_type = node.get('@type') or node.get('type')
+                    if node_type == 'Person' or (isinstance(node_type, list) and 'Person' in node_type):
+                        # Имя
+                        if node.get('name'):
+                            result['name'] = str(node.get('name'))
+                        # Оригинальное имя / альтернативное
+                        if node.get('alternateName'):
+                            result['original_name'] = str(node.get('alternateName'))
+                        # Пол (в JSON-LD может быть URL, например http://schema.org/Male)
+                        if node.get('gender'):
+                            gender_raw = node.get('gender')
+                            try:
+                                gender_str = str(gender_raw)
+                                # Берём последний сегмент после '/'
+                                if '/' in gender_str:
+                                    gender_str = gender_str.rstrip('/').split('/')[-1]
+                                result['gender'] = gender_str
+                            except Exception:
+                                result['gender'] = str(gender_raw)
+                        # Роли/должности (может быть строкой с перечислением через запятую или списком)
+                        job_title = node.get('jobTitle')
+                        if job_title:
+                            if isinstance(job_title, list):
+                                result['career'] = [str(x) for x in job_title if x]
+                            else:
+                                result['career'] = [str(job_title)]
+                        # # Изображение (image)
+                        # image_value = node.get('image')
+                        # if image_value:
+                        #     try:
+                        #         img = str(image_value)
+                        #         if img.startswith('//'):
+                        #             img = 'https:' + img
+                        #         elif not img.startswith('http'):
+                        #             img = 'https://' + img
+                        #         result['image'] = img
+                        #     except Exception:
+                        #         pass
+                        # Дата рождения (ISO YYYY-MM-DD)
+                        if node.get('birthDate'):
+                            result['birth_date'] = str(node.get('birthDate'))
+                            # Также попробуем заполнить год, если ещё не заполнен
+                        return result
+        except Exception:
+            pass
+        return result
     
     def save_to_json(self, actor_data: Dict, output_file: str = 'output/actor_details.json'):
         """

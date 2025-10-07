@@ -15,7 +15,7 @@ def main():
     print()
     
     # URL для парсинга (можно изменить на нужного актера)
-    actor_url = "https://www.kinopoisk.ru/name/71427/"  # Омар Си
+    actor_url = "https://www.kinopoisk.ru/name/41644/"  # Омар Си
     
     try:
         # Создаем парсер
