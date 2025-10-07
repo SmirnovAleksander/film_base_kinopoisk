@@ -27,13 +27,12 @@ export default function Header() {
           {!user && <Link href="/register" className={styles.link}>Регистрация</Link>}
         </nav>
         <div className={styles.user}>
-          <button className={styles.button} onClick={() => setTheme(current === "dark" ? "light" : "dark")} suppressHydrationWarning>
-            {label}
-          </button>
           {user ? (
             <>
-              <span className={styles.username}>{user.username || user.email}</span>
-              <button className={styles.button} onClick={logout}>Выйти</button>
+                <Link href="/profile" className={styles.username}>{user.username || user.email}</Link>
+                <button className={styles.button} onClick={() => setTheme(current === "dark" ? "light" : "dark")} suppressHydrationWarning>
+                    {label}
+                </button>
             </>
           ) : null}
         </div>

@@ -10,7 +10,7 @@
 .logo { font-weight: 700; text-decoration: none; color: var(--text); }
 .nav {
   display: flex;
-  gap: 12px;
+  gap: 40px;
 }
 .link { color: var(--muted); text-decoration: none; }
 .user {
@@ -18,7 +18,10 @@
   align-items: center;
   gap: 8px;
 }
-.username { color: var(--text); }
+.username {
+    color: var(--text);
+    text-decoration: none;
+}
 .button { background: var(--primary); color: #fff; border: 0; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
 
 
