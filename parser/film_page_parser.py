@@ -234,10 +234,10 @@ class FilmPageParser:
             title_clean = re.sub(r'\s*\(\d{4}\)\s*$', '', title_text)
             film_data['title'] = title_clean
         
-        # Извлекаем оригинальное название (data-tid="eb6be89")
-        original_title_elem = self.soup.find('span', {'data-tid': 'eb6be89'})
-        if original_title_elem:
-            film_data['original_title'] = original_title_elem.get_text(strip=True)
+        # # Извлекаем оригинальное название (data-tid="eb6be89")
+        # original_title_elem = self.soup.find('span', {'data-tid': 'eb6be89'})
+        # if original_title_elem:
+        #     film_data['original_title'] = original_title_elem.get_text(strip=True)
         
         # Извлекаем описание (data-tid="bfd38da2")
         description_elem = self.soup.find('p', {'data-tid': 'bfd38da2'})
@@ -482,12 +482,12 @@ class FilmPageParser:
             if age_span:
                 film_data['age_rating'] = age_span.get_text(strip=True)
         
-        # Извлекаем продолжительность (data-test-id="duration")
-        duration_elem = self.soup.find('div', {'data-test-id': 'duration'})
-        if duration_elem:
-            duration_div = duration_elem.find('div', {'data-tid': 'e1e37c21'})
-            if duration_div:
-                film_data['duration'] = duration_div.get_text(strip=True)
+        # # Извлекаем продолжительность (data-test-id="duration")
+        # duration_elem = self.soup.find('div', {'data-test-id': 'duration'})
+        # if duration_elem:
+        #     duration_div = duration_elem.find('div', {'data-tid': 'e1e37c21'})
+        #     if duration_div:
+        #         film_data['duration'] = duration_div.get_text(strip=True)
         
         # Извлекаем бюджет фильма (data-test-id="budget" или data-per-id="cfbe5a01")
         budget_elem = self.soup.find('div', {'data-test-id': 'budget'})
@@ -662,6 +662,10 @@ class FilmPageParser:
                         time_required = node.get('timeRequired') or node.get('duration')
                         if time_required is not None:
                             result['duration'] = str(time_required)
+                        # Берём оригинальное название из alternateName
+                        alternate_name = node.get('alternateName')
+                        if alternate_name:
+                            result['original_title'] = str(alternate_name)
                         return result
         except Exception:
             pass
