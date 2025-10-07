@@ -419,14 +419,33 @@ def get_watch_providers(film_id: int):
         finally:
             cur.close()
 
-@router.get("/{film_id}/similar", summary="Похожие фильмы")
+@router.get("/{film_id}/similar", summary="Похожие фильмы (расширенные)")
 def get_similar_films(film_id: int):
     with get_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT similar_film_id, similar_film_title FROM similar_film WHERE film_id=%s", (film_id,))
+            cur.execute(
+                """
+                SELECT similar_film_id, similar_film_title, similar_film_year,
+                       similar_film_genres, similar_film_poster, similar_film_rating
+                FROM similar_film
+                WHERE film_id=%s
+                ORDER BY id
+                """,
+                (film_id,)
+            )
             rows = cur.fetchall()
-            return [{"kinopoisk_id": r[0], "title": r[1]} for r in rows]
+            items = []
+            for r in rows:
+                items.append({
+                    "kinopoisk_id": r[0],
+                    "title": r[1],
+                    "year": r[2],
+                    "genres": r[3],
+                    "poster": r[4],
+                    "rating": r[5],
+                })
+            return items
         finally:
             cur.close()
 

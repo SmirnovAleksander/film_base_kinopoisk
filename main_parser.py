@@ -249,6 +249,10 @@ class MainParser:
                 film_id INTEGER REFERENCES film(id),
                 similar_film_id VARCHAR(20),
                 similar_film_title VARCHAR(500),
+                similar_film_year VARCHAR(10),
+                similar_film_genres TEXT[],
+                similar_film_poster TEXT,
+                similar_film_rating VARCHAR(10),
                 UNIQUE(film_id, similar_film_id)
             )
             """
@@ -426,11 +430,8 @@ class MainParser:
         print(f"🔗 Парсинг похожих фильмов: {len(similar_films)}")
         
         for similar_film in similar_films:
-            similar_film_id = similar_film.get('id')
-            similar_film_title = similar_film.get('title')
-            
-            if similar_film_id and similar_film_title:
-                self.save_similar_film_relation(film_db_id, similar_film_id, similar_film_title)
+            if similar_film.get('id') and similar_film.get('title'):
+                self.save_similar_film_extended(film_db_id, similar_film)
     
     def save_film_to_db(self, film_data):
         """Сохранение фильма в БД"""
@@ -746,14 +747,33 @@ class MainParser:
         finally:
             cursor.close()
     
-    def save_similar_film_relation(self, film_db_id, similar_film_id, similar_film_title):
-        """Создание связи похожих фильмов"""
+    def save_similar_film_extended(self, film_db_id, sf):
+        """Сохранение похожего фильма с расширенными полями"""
         cursor = self.db_connection.cursor()
         
         try:
             cursor.execute(
-                "INSERT INTO similar_film (film_id, similar_film_id, similar_film_title) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
-                (film_db_id, similar_film_id, similar_film_title)
+                """
+                INSERT INTO similar_film (
+                    film_id, similar_film_id, similar_film_title, similar_film_year,
+                    similar_film_genres, similar_film_poster, similar_film_rating
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (film_id, similar_film_id) DO UPDATE SET
+                    similar_film_title = EXCLUDED.similar_film_title,
+                    similar_film_year = EXCLUDED.similar_film_year,
+                    similar_film_genres = EXCLUDED.similar_film_genres,
+                    similar_film_poster = EXCLUDED.similar_film_poster,
+                    similar_film_rating = EXCLUDED.similar_film_rating
+                """,
+                (
+                    film_db_id,
+                    sf.get('id'),
+                    sf.get('title'),
+                    sf.get('year'),
+                    sf.get('genres'),
+                    sf.get('poster'),
+                    sf.get('rating'),
+                )
             )
         except Exception as e:
             print(f"❌ Ошибка создания связи похожих фильмов: {e}")
