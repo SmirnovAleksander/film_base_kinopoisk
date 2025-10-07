@@ -280,7 +280,8 @@ def get_film(film_id: int):
                        tagline,
                        ru_premiere,
                        world_premiere,
-                       age_rating,
+                       content_rating,
+                       is_family_friendly,
                        duration,
                        rating_kp,
                        kp_votes_count,
@@ -312,18 +313,19 @@ def get_film(film_id: int):
                 "tagline": r[8],
                 "ru_premiere": r[9],
                 "world_premiere": r[10],
-                "age_rating": r[11],
-                "duration": r[12],
-                "rating_kp": r[13],
-                "kp_votes_count": r[14],
-                "rating_imdb": r[15],
-                "imdb_votes_count": r[16],
-                "budget": r[17],
-                "usa_box_office": r[18],
-                "rus_box_office": r[19],
-                "mpaa_rating": r[20],
-                "user_rating": float(r[21]) if r[21] else None,
-                "user_rating_count": r[22],
+                "content_rating": r[11],
+                "isFamilyFriendly": r[12],
+                "duration": r[13],
+                "rating_kp": r[14],
+                "kp_votes_count": r[15],
+                "rating_imdb": r[16],
+                "imdb_votes_count": r[17],
+                "budget": r[18],
+                "usa_box_office": r[19],
+                "rus_box_office": r[20],
+                "mpaa_rating": r[21],
+                "user_rating": float(r[22]) if r[22] else None,
+                "user_rating_count": r[23],
             }
         finally:
             cur.close()
@@ -348,7 +350,8 @@ def get_film_by_kinopoisk_id(kinopoisk_id: str):
                        tagline,
                        ru_premiere,
                        world_premiere,
-                       age_rating,
+                       content_rating,
+                       is_family_friendly,
                        duration,
                        rating_kp,
                        kp_votes_count,
@@ -380,18 +383,19 @@ def get_film_by_kinopoisk_id(kinopoisk_id: str):
                 "tagline": r[8],
                 "ru_premiere": r[9],
                 "world_premiere": r[10],
-                "age_rating": r[11],
-                "duration": r[12],
-                "rating_kp": r[13],
-                "kp_votes_count": r[14],
-                "rating_imdb": r[15],
-                "imdb_votes_count": r[16],
-                "budget": r[17],
-                "usa_box_office": r[18],
-                "rus_box_office": r[19],
-                "mpaa_rating": r[20],
-                "user_rating": float(r[21]) if r[21] else None,
-                "user_rating_count": r[22],
+                "content_rating": r[11],
+                "isFamilyFriendly": r[12],
+                "duration": r[13],
+                "rating_kp": r[14],
+                "kp_votes_count": r[15],
+                "rating_imdb": r[16],
+                "imdb_votes_count": r[17],
+                "budget": r[18],
+                "usa_box_office": r[19],
+                "rus_box_office": r[20],
+                "mpaa_rating": r[21],
+                "user_rating": float(r[22]) if r[22] else None,
+                "user_rating_count": r[23],
             }
         finally:
             cur.close()
@@ -439,7 +443,7 @@ def get_film_stuff(film_id: int, role: str = Query("all", description="Роль 
             if role and role.lower() != "all":
                 cur.execute(
                     """
-                    SELECT s.id, s.kinopoisk_id, s.name, s.english_name, s.photo, fs.role
+                    SELECT s.id, s.kinopoisk_id, s.name, s.original_name, s.image, fs.role
                     FROM film_stuff fs
                     JOIN stuff s ON s.id = fs.stuff_id
                     WHERE fs.film_id = %s AND fs.role = %s
@@ -450,7 +454,7 @@ def get_film_stuff(film_id: int, role: str = Query("all", description="Роль 
             else:
                 cur.execute(
                     """
-                    SELECT s.id, s.kinopoisk_id, s.name, s.english_name, s.photo, fs.role
+                    SELECT s.id, s.kinopoisk_id, s.name, s.original_name, s.image, fs.role
                     FROM film_stuff fs
                     JOIN stuff s ON s.id = fs.stuff_id
                     WHERE fs.film_id = %s
@@ -464,8 +468,8 @@ def get_film_stuff(film_id: int, role: str = Query("all", description="Роль 
                     "id": r[0],
                     "kinopoisk_id": r[1],
                     "name": r[2],
-                    "english_name": r[3],
-                    "photo": r[4],
+                    "original_name": r[3],
+                    "image": r[4],
                     "role": r[5],
                 }
                 for r in rows

@@ -64,7 +64,8 @@ class MainParser:
                 tagline TEXT,
                 ru_premiere VARCHAR(100),
                 world_premiere VARCHAR(100),
-                age_rating VARCHAR(20),
+                content_rating VARCHAR(20),
+                is_family_friendly BOOLEAN DEFAULT FALSE,
                 duration VARCHAR(50),
                 rating_kp DECIMAL(3,1),
                 kp_votes_count VARCHAR(50),
@@ -96,12 +97,11 @@ class MainParser:
                 id SERIAL PRIMARY KEY,
                 kinopoisk_id VARCHAR(20) UNIQUE NOT NULL,
                 name VARCHAR(200),
-                english_name VARCHAR(200),
+                original_name VARCHAR(200),
                 career TEXT[],
                 ganres TEXT[],
                 height VARCHAR(50),
                 birthday_day_month VARCHAR(50),
-                birthday_year INTEGER,
                 zodiac VARCHAR(50),
                 age INTEGER,
                 birthplace TEXT[],
@@ -110,7 +110,7 @@ class MainParser:
                 total_films INTEGER,
                 career_start_year INTEGER,
                 career_end_year INTEGER,
-                photo VARCHAR(1000)
+                image VARCHAR(1000)
             )
             """,
             """
@@ -436,10 +436,10 @@ class MainParser:
             # Вставляем фильм
             insert_film = """
             INSERT INTO film (kinopoisk_id, title, original_title, description, full_description, 
-                             poster, year, tagline, ru_premiere, world_premiere, age_rating, 
+                             poster, year, tagline, ru_premiere, world_premiere, content_rating, is_family_friendly,
                              duration, rating_kp, kp_votes_count, rating_imdb, imdb_votes_count,
                              budget, usa_box_office, rus_box_office, mpaa_rating, user_rating, user_rating_count)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
                 title = EXCLUDED.title,
                 original_title = EXCLUDED.original_title,
@@ -450,7 +450,8 @@ class MainParser:
                 tagline = EXCLUDED.tagline,
                 ru_premiere = EXCLUDED.ru_premiere,
                 world_premiere = EXCLUDED.world_premiere,
-                age_rating = EXCLUDED.age_rating,
+                content_rating = EXCLUDED.content_rating,
+                is_family_friendly = EXCLUDED.is_family_friendly,
                 duration = EXCLUDED.duration,
                 rating_kp = EXCLUDED.rating_kp,
                 kp_votes_count = EXCLUDED.kp_votes_count,
@@ -476,7 +477,8 @@ class MainParser:
                 film_data.get('tagline'),
                 film_data.get('ru_premiere'),
                 film_data.get('world_premiere'),
-                film_data.get('age_rating'),
+                film_data.get('content_rating'),
+                film_data.get('isFamilyFriendly', False),
                 film_data.get('duration'),
                 film_data.get('rating_kp'),
                 film_data.get('kp_votes_count'),
@@ -556,19 +558,18 @@ class MainParser:
             
             # Вставляем участника
             insert_person = """
-            INSERT INTO stuff (kinopoisk_id, name, english_name, career, ganres, height, 
-                               birthday_day_month, birthday_year, zodiac, age, birthplace, 
+            INSERT INTO stuff (kinopoisk_id, name, original_name, career, ganres, height, 
+                               birthday_day_month, zodiac, age, birthplace, 
                                spouse, children, total_films, career_start_year, 
-                               career_end_year, photo)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                               career_end_year, image)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
                 name = EXCLUDED.name,
-                english_name = EXCLUDED.english_name,
+                original_name = EXCLUDED.original_name,
                 career = EXCLUDED.career,
                 ganres = EXCLUDED.ganres,
                 height = EXCLUDED.height,
                 birthday_day_month = EXCLUDED.birthday_day_month,
-                birthday_year = EXCLUDED.birthday_year,
                 zodiac = EXCLUDED.zodiac,
                 age = EXCLUDED.age,
                 birthplace = EXCLUDED.birthplace,
@@ -577,19 +578,18 @@ class MainParser:
                 total_films = EXCLUDED.total_films,
                 career_start_year = EXCLUDED.career_start_year,
                 career_end_year = EXCLUDED.career_end_year,
-                photo = EXCLUDED.photo
+                image = EXCLUDED.image
             RETURNING id
             """
             
             cursor.execute(insert_person, (
                 person_data.get('kinopoisk_id'),
                 person_data.get('name'),
-                person_data.get('english_name'),
+                person_data.get('original_name'),
                 person_data.get('career'),
                 person_data.get('genres'),
                 person_data.get('height'),
                 person_data.get('birthday_day_month'),
-                person_data.get('birthday_year'),
                 person_data.get('zodiac'),
                 person_data.get('age'),
                 person_data.get('birthplace'),
@@ -598,7 +598,7 @@ class MainParser:
                 person_data.get('total_films'),
                 person_data.get('career_start_year'),
                 person_data.get('career_end_year'),
-                person_data.get('photo')
+                person_data.get('image')
             ))
             
             person_db_id = cursor.fetchone()[0]
