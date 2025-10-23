@@ -22,18 +22,18 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, UserIdType]):
     ):
         log.warning(f"User {user.id} has registered.")
 
-    # async def on_after_forgot_password(
-    #         self,
-    #         user: User,
-    #         token: str,
-    #         request: Optional["Request"] = None
-    # ):
-    #     log.warning(f"User {user.id} has forgot their password. Reset token: {token}")
-    #
-    # async def on_after_request_verify(
-    #         self,
-    #         user: User,
-    #         token: str,
-    #         request: Optional["Request"] = None
-    # ):
-    #     log.warning(f"Verification requested for user {user.id}. Verification token: {token}")
+    async def on_after_request_verify(
+            self,
+            user: User,
+            token: str,
+            request: Optional["Request"] = None
+    ):
+        log.warning(f"Verification requested for user {user.id}. Verification token: {token}")
+
+    async def on_after_forgot_password(
+            self,
+            user: User,
+            token: str,
+            request: Optional["Request"] = None
+    ):
+        log.warning(f"User {user.id} has forgot their password. Reset token: {token}")
