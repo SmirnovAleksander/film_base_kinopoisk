@@ -7,8 +7,8 @@ from pydantic import EmailStr
 from core.authentication.user_manager import UserManager
 from core.models import db_helper, User
 from core.schemas.user import UserCreate
-from api.dependencies.authentification.user_manager import get_user_manager
-from api.dependencies.authentification.users import get_user_db
+from api.dependencies.authentification import get_user_manager
+from api.dependencies.authentification import get_user_db
 
 # from fastapi_users.exceptions import UserAlreadyExists
 # get_async_session_context = contextlib.asynccontextmanager(get_async_session)
