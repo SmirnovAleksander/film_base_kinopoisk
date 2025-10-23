@@ -22,3 +22,8 @@ router.include_router(
 router.include_router(
     router = fastapi_users.get_verify_router(UserRead),
 )
+
+# /forgot-password and /reset-password
+router.include_router(
+    router = fastapi_users.get_reset_password_router(),
+)
