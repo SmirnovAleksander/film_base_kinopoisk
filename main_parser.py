@@ -51,7 +51,7 @@ class MainParser:
             
         cursor = self.db_connection.cursor()
         
-        # Создаем таблицы
+        # Создаем таблицы для парсинга данных
         tables = [
             """
             CREATE TABLE IF NOT EXISTS film (
@@ -81,19 +81,6 @@ class MainParser:
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS app_user (
-                id SERIAL PRIMARY KEY,
-                email VARCHAR(320) UNIQUE NOT NULL,
-                username VARCHAR(100) UNIQUE,
-                password_hash VARCHAR(255) NOT NULL,
-                is_email_verified BOOLEAN DEFAULT FALSE,
-                role VARCHAR(20) DEFAULT 'user',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP NULL,
-                last_login_at TIMESTAMP NULL
-            )
-            """,
-            """
             CREATE TABLE IF NOT EXISTS stuff (
                 id SERIAL PRIMARY KEY,
                 kinopoisk_id VARCHAR(20) UNIQUE NOT NULL,
@@ -112,50 +99,6 @@ class MainParser:
                 career_start_year INTEGER,
                 career_end_year INTEGER,
                 image VARCHAR(1000)
-            )
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS user_film_ratings (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
-                film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
-                rating DECIMAL(3,1) NOT NULL CHECK (rating >= 1.0 AND rating <= 10.0),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(user_id, film_id)
-            )
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS comment (
-                id SERIAL PRIMARY KEY,
-                film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
-                user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
-                content TEXT NOT NULL,
-                is_edited BOOLEAN DEFAULT FALSE,
-                edited_at TIMESTAMP NULL,
-                is_deleted BOOLEAN DEFAULT FALSE,
-                status VARCHAR(20) DEFAULT 'published',
-                moderated_at TIMESTAMP NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP NULL
-            )
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS bookmark (
-                id SERIAL PRIMARY KEY,
-                film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
-                user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(film_id, user_id)
-            )
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS user_film_history (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
-                film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
-                visited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(user_id, film_id)
             )
             """,
             """
@@ -182,40 +125,6 @@ class MainParser:
             CREATE TABLE IF NOT EXISTS country (
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(100) UNIQUE NOT NULL
-            )
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS refresh_token (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
-                token_hash VARCHAR(255) NOT NULL,
-                issued_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                expires_at TIMESTAMP NOT NULL,
-                revoked_at TIMESTAMP NULL,
-                user_agent VARCHAR(300) NULL,
-                ip VARCHAR(64) NULL
-            )
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS email_verification_token (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
-                token VARCHAR(255) NOT NULL,
-                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                expires_at TIMESTAMP NOT NULL,
-                consumed_at TIMESTAMP NULL,
-                UNIQUE(user_id)
-            )
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS password_reset_token (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
-                token VARCHAR(255) NOT NULL,
-                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                expires_at TIMESTAMP NOT NULL,
-                consumed_at TIMESTAMP NULL,
-                UNIQUE(user_id)
             )
             """,
             """
@@ -255,8 +164,7 @@ class MainParser:
                 similar_film_rating VARCHAR(10),
                 UNIQUE(film_id, similar_film_id)
             )
-            """
-            ,
+            """,
             """
             CREATE TABLE IF NOT EXISTS film_still (
                 id SERIAL PRIMARY KEY,
@@ -266,8 +174,7 @@ class MainParser:
                 source VARCHAR(16) NOT NULL CHECK (source IN ('stills','wall')),
                 UNIQUE(film_id, picture_id, source)
             )
-            """
-            ,
+            """,
             """
             CREATE TABLE IF NOT EXISTS film_watch_provider (
                 id SERIAL PRIMARY KEY,
