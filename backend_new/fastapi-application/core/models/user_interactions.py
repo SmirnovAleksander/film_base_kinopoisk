@@ -39,10 +39,8 @@ class Comment(Base, IntIdPkMixin):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     is_edited: Mapped[bool] = mapped_column(Boolean, default=False)
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
-    status: Mapped[str] = mapped_column(String(20), default="pending")  # pending, approved, rejected, deleted
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     edited_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
-    moderated_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
     
     # Связи
     user: Mapped["User"] = relationship("User", back_populates="comments")

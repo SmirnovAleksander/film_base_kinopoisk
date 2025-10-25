@@ -56,34 +56,8 @@ class CommentRead(CommentBase):
     film_id: int
     is_edited: bool
     is_deleted: bool
-    status: str
     created_at: datetime
     edited_at: Optional[datetime] = None
-    moderated_at: Optional[datetime] = None
-
-
-class CommentModerationRead(CommentRead):
-    """Комментарий для модерации с дополнительной информацией"""
-    film_title: Optional[str] = None
-    user_email: Optional[str] = None
-    username: Optional[str] = None
-
-
-class CommentModerationResponse(BaseModel):
-    """Ответ для модерации комментариев"""
-    items: List[CommentModerationRead]
-    page: int
-    page_size: int
-    total_count: int
-    total_pages: int
-
-
-class CommentModerationStats(BaseModel):
-    """Статистика модерации комментариев"""
-    total_comments: int
-    status_distribution: dict
-    comments_7d: int
-    pending_comments: int
 
 
 class UserFilmRatingBase(BaseModel):
