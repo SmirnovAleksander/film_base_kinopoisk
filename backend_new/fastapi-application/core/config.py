@@ -14,6 +14,13 @@ class ApiV1Prefix(BaseModel):
     auth: str = "/auth"
     users: str = "/users"
     messages: str = "/messages"
+    films: str = "/films"
+    bookmarks: str = "/bookmarks"
+    comments: str = "/comments"
+    ratings: str = "/ratings"
+    history: str = "/history"
+    media: str = "/media"
+    stuff: str = "/stuff"
 
 class ApiPrefix(BaseModel):
     prefix: str = "/api"

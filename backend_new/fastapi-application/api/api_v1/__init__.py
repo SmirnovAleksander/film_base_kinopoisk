@@ -5,6 +5,13 @@ from core.config import settings
 from .auth import router as auth_router
 from .users import router as users_router
 from .messages import router as messages_router
+from .films import router as films_router
+from .bookmarks import router as bookmarks_router
+from .comments import router as comments_router
+from .ratings import router as ratings_router
+from .history import router as history_router
+from .media import router as media_router
+from .stuff import router as stuff_router
 
 http_bearer = HTTPBearer(auto_error=False)
 
@@ -13,6 +20,16 @@ router = APIRouter(
     dependencies=[Depends(http_bearer)],
 )
 
+# Аутентификация и пользователи
 router.include_router(auth_router)
 router.include_router(users_router)
 router.include_router(messages_router)
+
+# Основной функционал
+router.include_router(films_router)
+router.include_router(bookmarks_router)
+router.include_router(comments_router)
+router.include_router(ratings_router)
+router.include_router(history_router)
+router.include_router(media_router)
+router.include_router(stuff_router)
