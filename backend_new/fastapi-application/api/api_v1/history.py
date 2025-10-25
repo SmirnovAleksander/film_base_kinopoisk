@@ -9,7 +9,7 @@ from core.schemas import UserFilmHistoryResponse, UserFilmHistoryStats
 from api.api_v1.fastapi_users import current_active_user
 
 router = APIRouter(
-    prefix=settings.api.v1.prefix + "/history",
+    prefix="/history",
     tags=["History"],
 )
 

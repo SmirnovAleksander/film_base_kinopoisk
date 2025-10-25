@@ -22,7 +22,7 @@ from core.schemas import (
 )
 
 router = APIRouter(
-    prefix=settings.api.v1.prefix + "/films",
+    prefix="/films",
     tags=["Films"],
 )
 

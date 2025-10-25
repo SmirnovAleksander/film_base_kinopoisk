@@ -9,7 +9,7 @@ from core.schemas import BookmarkResponse, BookmarkStatusResponse
 from api.api_v1.fastapi_users import current_active_user
 
 router = APIRouter(
-    prefix=settings.api.v1.prefix + "/bookmarks",
+    prefix="/bookmarks",
     tags=["Bookmarks"],
 )
 

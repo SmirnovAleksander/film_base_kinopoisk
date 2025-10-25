@@ -7,7 +7,7 @@ from core.models import db_helper, Stuff
 from core.schemas import StuffRead, FilmSearchResponse
 
 router = APIRouter(
-    prefix=settings.api.v1.prefix + "/stuff",
+    prefix="/stuff",
     tags=["Stuff"],
 )
 

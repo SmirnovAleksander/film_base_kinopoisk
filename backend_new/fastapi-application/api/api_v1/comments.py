@@ -13,7 +13,7 @@ from core.schemas import (
 from api.api_v1.fastapi_users import current_active_user
 
 router = APIRouter(
-    prefix=settings.api.v1.prefix + "/comments",
+    prefix="/comments",
     tags=["Comments"],
 )
 

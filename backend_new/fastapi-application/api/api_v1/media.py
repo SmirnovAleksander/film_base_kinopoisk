@@ -14,7 +14,7 @@ from core.schemas import (
 )
 
 router = APIRouter(
-    prefix=settings.api.v1.prefix + "/media",
+    prefix="/media",
     tags=["Media"],
 )
 
