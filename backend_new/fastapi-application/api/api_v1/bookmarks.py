@@ -27,6 +27,11 @@ async def list_bookmarks(
     
     offset = (page - 1) * page_size
     
+    # Получаем общее количество закладок пользователя
+    total_count_stmt = select(func.count(Bookmark.id)).where(Bookmark.user_id == user.id)
+    total_count_result = await session.execute(total_count_stmt)
+    total_count = total_count_result.scalar()
+    
     stmt = (
         select(Bookmark)
         .options(selectinload(Bookmark.film))
@@ -49,14 +54,33 @@ async def list_bookmarks(
                     "id": bookmark.film.id,
                     "kinopoisk_id": bookmark.film.kinopoisk_id,
                     "title": bookmark.film.title,
+                    "original_title": bookmark.film.original_title,
+                    "description": bookmark.film.description,
+                    "full_description": bookmark.film.full_description,
                     "poster": bookmark.film.poster,
+                    "year": bookmark.film.year,
+                    "tagline": bookmark.film.tagline,
+                    "ru_premiere": bookmark.film.ru_premiere,
+                    "world_premiere": bookmark.film.world_premiere,
+                    "content_rating": bookmark.film.content_rating,
+                    "is_family_friendly": bookmark.film.is_family_friendly,
+                    "duration": bookmark.film.duration,
                     "rating_kp": bookmark.film.rating_kp,
+                    "kp_votes_count": bookmark.film.kp_votes_count,
+                    "rating_imdb": bookmark.film.rating_imdb,
+                    "imdb_votes_count": bookmark.film.imdb_votes_count,
+                    "user_rating": bookmark.film.user_rating,
+                    "user_rating_count": bookmark.film.user_rating_count,
+                    "budget": bookmark.film.budget,
+                    "usa_box_office": bookmark.film.usa_box_office,
+                    "rus_box_office": bookmark.film.rus_box_office,
                 } if bookmark.film else None
             }
             for bookmark in bookmarks
         ],
         page=page,
         page_size=page_size,
+        total_count=total_count or 0,
     )
 
 

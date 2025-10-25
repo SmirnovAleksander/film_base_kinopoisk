@@ -27,6 +27,7 @@ class BookmarkResponse(BaseModel):
     items: List[BookmarkRead]
     page: int
     page_size: int
+    total_count: int
 
 
 class BookmarkStatusResponse(BaseModel):
@@ -96,6 +97,7 @@ class UserRatingsResponse(BaseModel):
     items: List[UserFilmRatingRead]
     page: int
     page_size: int
+    total_count: int
 
 
 class UserFilmHistoryRead(BaseModel):

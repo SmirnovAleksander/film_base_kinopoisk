@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from core.config import settings
 from core.models import db_helper, Film, Genre, Country, Stuff, FilmStill, FilmWatchProvider, SimilarFilm
+from core.models.associations import film_stuff
 from core.schemas import (
     FilmRead,
     FilmReadWithDetails,
@@ -319,15 +320,24 @@ async def get_film_stuff(
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     """Получить участников фильма"""
-    stmt = select(Stuff).join(Film.stuff).where(Film.id == film_id)
-    
+    # Проверяем, что фильм существует
+    film_stmt = select(Film).where(Film.id == film_id)
+    film_result = await session.execute(film_stmt)
+    film = film_result.scalar_one_or_none()
+
+    if not film:
+        raise HTTPException(status_code=404, detail="Film not found")
+
+    # Строим запрос с использованием association table
+    stmt = select(Stuff).select_from(
+        Stuff.__table__.join(film_stuff).join(Film.__table__)
+    ).where(film_stuff.c.film_id == film_id)
+
     if role and role.lower() != "all":
-        # Здесь нужно будет добавить фильтрацию по роли через association table
-        # Пока оставим без фильтрации
-        pass
-    
+        stmt = stmt.where(film_stuff.c.role == role)
+
     stmt = stmt.order_by(Stuff.id)
     result = await session.execute(stmt)
     stuff = result.scalars().all()
-    
+
     return [StuffRead.model_validate(person) for person in stuff]
