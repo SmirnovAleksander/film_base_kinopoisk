@@ -18,7 +18,7 @@ class Bookmark(Base, IntIdPkMixin):
     __tablename__ = "bookmarks"
     
     user_id: Mapped[UserIdType] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    film_id: Mapped[int] = mapped_column(Integer, ForeignKey("films.id", ondelete="CASCADE"))
+    film_id: Mapped[int] = mapped_column(Integer, ForeignKey("film.id", ondelete="CASCADE"))
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     
     # Связи
@@ -35,7 +35,7 @@ class Comment(Base, IntIdPkMixin):
     __tablename__ = "comments"
     
     user_id: Mapped[UserIdType] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    film_id: Mapped[int] = mapped_column(Integer, ForeignKey("films.id", ondelete="CASCADE"))
+    film_id: Mapped[int] = mapped_column(Integer, ForeignKey("film.id", ondelete="CASCADE"))
     content: Mapped[str] = mapped_column(Text, nullable=False)
     is_edited: Mapped[bool] = mapped_column(Boolean, default=False)
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -52,7 +52,7 @@ class UserFilmRating(Base, IntIdPkMixin):
     __tablename__ = "user_film_ratings"
     
     user_id: Mapped[UserIdType] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    film_id: Mapped[int] = mapped_column(Integer, ForeignKey("films.id", ondelete="CASCADE"))
+    film_id: Mapped[int] = mapped_column(Integer, ForeignKey("film.id", ondelete="CASCADE"))
     rating: Mapped[float] = mapped_column(Float, nullable=False)  # 1.0 - 10.0
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -71,7 +71,7 @@ class UserFilmHistory(Base, IntIdPkMixin):
     __tablename__ = "user_film_history"
     
     user_id: Mapped[UserIdType] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    film_id: Mapped[int] = mapped_column(Integer, ForeignKey("films.id", ondelete="CASCADE"))
+    film_id: Mapped[int] = mapped_column(Integer, ForeignKey("film.id", ondelete="CASCADE"))
     visited_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     
     # Связи

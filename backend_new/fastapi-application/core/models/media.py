@@ -13,11 +13,11 @@ class Media(Base, IntIdPkMixin):
     __tablename__ = "media"
     
     url: Mapped[str] = mapped_column(String(500), nullable=False, unique=True)
-    title: Mapped[str] = mapped_column(String(500), nullable=False, index=True)
-    image: Mapped[Optional[str]] = mapped_column(String(500))
+    title: Mapped[str] = mapped_column(String(1000), nullable=False, index=True)
+    image: Mapped[Optional[str]] = mapped_column(String(1000))
     category: Mapped[Optional[str]] = mapped_column(String(100), index=True)
-    date: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    date: Mapped[Optional[str]] = mapped_column(String(100))
     comments_count: Mapped[int] = mapped_column(Integer, default=0)
-    card_type: Mapped[Optional[str]] = mapped_column(String(50))  # regular, feature
-    type: Mapped[Optional[str]] = mapped_column(String(50), index=True)  # news, video, game, podcast
+    card_type: Mapped[Optional[str]] = mapped_column(String(20))
+    type: Mapped[str] = mapped_column(String(20), default="news", index=True)
     parsed_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

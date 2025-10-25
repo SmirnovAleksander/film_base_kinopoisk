@@ -224,11 +224,13 @@ class MainParser:
                     if not film_id:
                         continue
                         
-                    # Без подробного вывода по каждому фильму
-                    
                     # Парсим детали фильма
                     film_details = self.parse_film_details(film_id)
                     if film_details:
+                        # Показываем название фильма перед парсингом актеров
+                        film_title = film_details.get('title', 'Unknown Film')
+                        print(f"🎬 Парсинг фильма: {film_title}")
+
                         # Сохраняем фильм в БД
                         film_db_id = self.save_film_to_db(film_details)
                         
@@ -242,6 +244,7 @@ class MainParser:
                         self.parse_and_save_stills(film_id, film_db_id)
                         
                         # Тихий режим
+                        print(f"✅ Фильм '{film_title}' полностью обработан")
                     
                     # Пауза между запросами
                     time.sleep(self.delays['BETWEEN_FILMS'])
@@ -273,6 +276,8 @@ class MainParser:
     
     def parse_film_people(self, film_id, film_db_id, film_data):
         """Парсинг всех участников фильма"""
+        film_title = film_data.get('title', 'Unknown Film')
+
         people_roles = [
             ('actors', 'actor'),
             ('directors', 'director'),
@@ -289,7 +294,7 @@ class MainParser:
             if not people_list:
                 continue
                 
-            print(f"👥 Парсинг {role_name}s: {len(people_list)} человек")
+            print(f"  👥 Парсинг {role_name}s ({len(people_list)} человек) для фильма '{film_title}'")
             
             for person_data in people_list:
                 person_id = person_data.get('id')
