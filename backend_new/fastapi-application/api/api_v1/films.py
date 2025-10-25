@@ -12,6 +12,7 @@ from core.schemas import (
     FilmReadWithDetails,
     FilmSearchResponse,
     FilmRecommendationRead,
+    FilmRecommendationsResponse,
     GenreRead,
     CountryRead,
     StuffRead,
@@ -341,3 +342,124 @@ async def get_film_stuff(
     stuff = result.scalars().all()
 
     return [StuffRead.model_validate(person) for person in stuff]
+
+
+@router.get("/{film_id}/recommendations", response_model=FilmRecommendationsResponse, summary="Рекомендуемые фильмы")
+async def get_film_recommendations(
+    film_id: int,
+    limit: int = Query(10, ge=1, le=50, description="Количество рекомендаций"),
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    """
+    Получить рекомендации фильмов на основе контентной фильтрации:
+    - Жанры (40%)
+    - Участники (30%)
+    - Год выпуска (15%)
+    - Рейтинг (15%)
+    """
+    # Проверяем, что фильм существует
+    film_stmt = (
+        select(Film)
+        .options(
+            selectinload(Film.genres),
+            selectinload(Film.stuff)
+        )
+        .where(Film.id == film_id)
+    )
+    film_result = await session.execute(film_stmt)
+    current_film = film_result.scalar_one_or_none()
+
+    if not current_film:
+        raise HTTPException(status_code=404, detail="Film not found")
+
+    # Получаем данные текущего фильма
+    current_genres = [genre.name for genre in current_film.genres]
+    current_stuff_ids = [stuff.id for stuff in current_film.stuff]
+    current_year = current_film.year
+    current_rating = current_film.rating_kp
+
+    # Получаем кандидатов для рекомендаций (исключаем текущий фильм)
+    candidates_stmt = (
+        select(Film)
+        .options(
+            selectinload(Film.genres),
+            selectinload(Film.stuff)
+        )
+        .where(Film.id != film_id)
+        .where(Film.title.isnot(None))
+        .order_by(Film.rating_kp.desc().nullslast())
+        .limit(200)
+    )
+    candidates_result = await session.execute(candidates_stmt)
+    candidates = candidates_result.scalars().all()
+
+    recommendations = []
+
+    for candidate in candidates:
+        candidate_year = candidate.year
+        candidate_rating = candidate.rating_kp
+
+        # Подсчет совпадений по жанрам (40%)
+        candidate_genres = [genre.name for genre in candidate.genres]
+        genre_matches = len(set(current_genres) & set(candidate_genres))
+        genre_score = (genre_matches / max(len(current_genres), 1)) * 0.4
+
+        # Подсчет совпадений по участникам (30%)
+        candidate_stuff_ids = [stuff.id for stuff in candidate.stuff]
+        stuff_matches = len(set(current_stuff_ids) & set(candidate_stuff_ids))
+        stuff_score = (stuff_matches / max(len(current_stuff_ids), 1)) * 0.3
+
+        # Близость по году (15%)
+        if current_year and candidate_year:
+            year_diff = abs(current_year - candidate_year)
+            year_score = max(0, (10 - year_diff) / 10) * 0.15
+        else:
+            year_score = 0
+
+        # Близость по рейтингу (15%)
+        if current_rating and candidate_rating:
+            rating_diff = abs(float(current_rating) - float(candidate_rating))
+            rating_score = max(0, (2 - rating_diff) / 2) * 0.15
+        else:
+            rating_score = 0
+
+        # Общий скор
+        total_score = genre_score + stuff_score + year_score + rating_score
+
+        if total_score > 0.1:  # Минимальный порог релевантности
+            recommendations.append({
+                "id": candidate.id,
+                "kinopoisk_id": candidate.kinopoisk_id,
+                "title": candidate.title,
+                "original_title": candidate.original_title,
+                "description": candidate.description,
+                "full_description": candidate.full_description,
+                "poster": candidate.poster,
+                "year": candidate.year,
+                "tagline": candidate.tagline,
+                "ru_premiere": candidate.ru_premiere,
+                "world_premiere": candidate.world_premiere,
+                "content_rating": candidate.content_rating,
+                "is_family_friendly": candidate.is_family_friendly,
+                "duration": candidate.duration,
+                "rating_kp": candidate.rating_kp,
+                "kp_votes_count": candidate.kp_votes_count,
+                "rating_imdb": candidate.rating_imdb,
+                "imdb_votes_count": candidate.imdb_votes_count,
+                "user_rating": candidate.user_rating,
+                "user_rating_count": candidate.user_rating_count,
+                "budget": candidate.budget,
+                "usa_box_office": candidate.usa_box_office,
+                "rus_box_office": candidate.rus_box_office,
+                "relevance_score": round(total_score, 3),
+                "genre_matches": genre_matches,
+                "stuff_matches": stuff_matches
+            })
+
+    # Сортируем по релевантности и возвращаем топ
+    recommendations.sort(key=lambda x: x["relevance_score"], reverse=True)
+
+    return FilmRecommendationsResponse(
+        items=[FilmRecommendationRead(**rec) for rec in recommendations[:limit]],
+        total_count=len(recommendations)
+    )

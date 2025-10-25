@@ -141,3 +141,9 @@ class FilmRecommendationRead(FilmRead):
     relevance_score: float = Field(..., description="Оценка релевантности")
     genre_matches: int = Field(..., description="Совпадения по жанрам")
     stuff_matches: int = Field(..., description="Совпадения по участникам")
+
+
+class FilmRecommendationsResponse(BaseModel):
+    """Ответ для рекомендаций фильмов"""
+    items: List[FilmRecommendationRead]
+    total_count: int
