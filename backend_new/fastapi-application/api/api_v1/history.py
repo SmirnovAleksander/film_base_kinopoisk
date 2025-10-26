@@ -5,7 +5,7 @@ from sqlalchemy.orm import selectinload
 
 from core.config import settings
 from core.models import db_helper, UserFilmHistory, Film, User, Genre
-from core.schemas import UserFilmHistoryResponse, UserFilmHistoryStats
+from core.schemas import UserFilmHistoryResponse, UserFilmHistoryStats, FilmRead, UserFilmHistoryRead
 from api.api_v1.fastapi_users import current_active_user
 
 router = APIRouter(
@@ -89,20 +89,14 @@ async def get_user_film_history(
     history = []
     for record in history_records:
         if record.film:
-            history.append({
-                "visited_at": record.visited_at,
-                "film": {
-                    "id": record.film.id,
-                    "kinopoisk_id": record.film.kinopoisk_id,
-                    "title": record.film.title,
-                    "original_title": record.film.original_title,
-                    "poster": record.film.poster,
-                    "year": record.film.year,
-                    "rating_kp": record.film.rating_kp,
-                    "rating_imdb": record.film.rating_imdb,
-                }
-            })
-    
+            # Правильно создаем объект FilmRead с помощью Pydantic
+            film_data = FilmRead.model_validate(record.film)
+
+            history.append(UserFilmHistoryRead(
+                visited_at=record.visited_at,
+                film=film_data
+            ))
+
     return UserFilmHistoryResponse(
         history=history,
         total=len(history)

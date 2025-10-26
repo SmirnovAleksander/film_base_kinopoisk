@@ -5,7 +5,7 @@ from sqlalchemy.orm import selectinload
 
 from core.config import settings
 from core.models import db_helper, Bookmark, Film, User
-from core.schemas import BookmarkResponse, BookmarkStatusResponse
+from core.schemas import BookmarkResponse, BookmarkStatusResponse, BookmarkRead, FilmRead
 from api.api_v1.fastapi_users import current_active_user
 
 router = APIRouter(
@@ -43,41 +43,21 @@ async def list_bookmarks(
     result = await session.execute(stmt)
     bookmarks = result.scalars().all()
     
+    items = []
+    for bookmark in bookmarks:
+        # Правильно создаем объект FilmRead с помощью Pydantic
+        film_data = FilmRead.model_validate(bookmark.film) if bookmark.film else None
+
+        items.append(BookmarkRead(
+            id=bookmark.id,
+            user_id=bookmark.user_id,
+            film_id=bookmark.film_id,
+            created_at=bookmark.created_at,
+            film=film_data
+        ))
+
     return BookmarkResponse(
-        items=[
-            {
-                "id": bookmark.id,
-                "user_id": bookmark.user_id,
-                "film_id": bookmark.film_id,
-                "created_at": bookmark.created_at,
-                "film": {
-                    "id": bookmark.film.id,
-                    "kinopoisk_id": bookmark.film.kinopoisk_id,
-                    "title": bookmark.film.title,
-                    "original_title": bookmark.film.original_title,
-                    "description": bookmark.film.description,
-                    "full_description": bookmark.film.full_description,
-                    "poster": bookmark.film.poster,
-                    "year": bookmark.film.year,
-                    "tagline": bookmark.film.tagline,
-                    "ru_premiere": bookmark.film.ru_premiere,
-                    "world_premiere": bookmark.film.world_premiere,
-                    "content_rating": bookmark.film.content_rating,
-                    "is_family_friendly": bookmark.film.is_family_friendly,
-                    "duration": bookmark.film.duration,
-                    "rating_kp": bookmark.film.rating_kp,
-                    "kp_votes_count": bookmark.film.kp_votes_count,
-                    "rating_imdb": bookmark.film.rating_imdb,
-                    "imdb_votes_count": bookmark.film.imdb_votes_count,
-                    "user_rating": bookmark.film.user_rating,
-                    "user_rating_count": bookmark.film.user_rating_count,
-                    "budget": bookmark.film.budget,
-                    "usa_box_office": bookmark.film.usa_box_office,
-                    "rus_box_office": bookmark.film.rus_box_office,
-                } if bookmark.film else None
-            }
-            for bookmark in bookmarks
-        ],
+        items=items,
         page=page,
         page_size=page_size,
         total_count=total_count or 0,

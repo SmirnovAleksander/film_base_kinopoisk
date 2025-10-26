@@ -9,6 +9,7 @@ from core.schemas import (
     UserFilmRatingCreate,
     UserFilmRatingUpdate,
     UserFilmRatingRead,
+    FilmRead,
     FilmAverageRatingRead,
     UserRatingsResponse,
 )
@@ -291,39 +292,18 @@ async def get_user_ratings(
     
     items = []
     for rating in ratings:
-        items.append({
-            "id": rating.id,
-            "user_id": rating.user_id,
-            "film_id": rating.film_id,
-            "rating": rating.rating,
-            "created_at": rating.created_at,
-            "updated_at": rating.updated_at,
-            "film": {
-                "id": rating.film.id,
-                "kinopoisk_id": rating.film.kinopoisk_id,
-                "title": rating.film.title,
-                "original_title": rating.film.original_title,
-                "description": rating.film.description,
-                "full_description": rating.film.full_description,
-                "poster": rating.film.poster,
-                "year": rating.film.year,
-                "tagline": rating.film.tagline,
-                "ru_premiere": rating.film.ru_premiere,
-                "world_premiere": rating.film.world_premiere,
-                "content_rating": rating.film.content_rating,
-                "is_family_friendly": rating.film.is_family_friendly,
-                "duration": rating.film.duration,
-                "rating_kp": rating.film.rating_kp,
-                "kp_votes_count": rating.film.kp_votes_count,
-                "rating_imdb": rating.film.rating_imdb,
-                "imdb_votes_count": rating.film.imdb_votes_count,
-                "user_rating": rating.film.user_rating,
-                "user_rating_count": rating.film.user_rating_count,
-                "budget": rating.film.budget,
-                "usa_box_office": rating.film.usa_box_office,
-                "rus_box_office": rating.film.rus_box_office,
-            } if rating.film else None
-        })
+        # Правильно создаем объект FilmRead с помощью Pydantic
+        film_data = FilmRead.model_validate(rating.film) if rating.film else None
+
+        items.append(UserFilmRatingRead(
+            id=rating.id,
+            user_id=rating.user_id,
+            film_id=rating.film_id,
+            rating=rating.rating,
+            created_at=rating.created_at,
+            updated_at=rating.updated_at,
+            film=film_data
+        ))
     
     return UserRatingsResponse(
         items=items,
