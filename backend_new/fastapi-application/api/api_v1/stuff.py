@@ -2,9 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
-from core.config import settings
-from core.models import db_helper, Stuff
-from core.schemas import StuffRead, FilmSearchResponse
+from core.models import ( 
+    db_helper, 
+    Stuff
+)
+from core.schemas import StuffRead
 
 router = APIRouter(
     prefix="/stuff",

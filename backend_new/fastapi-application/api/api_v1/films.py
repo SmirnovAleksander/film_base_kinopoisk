@@ -1,11 +1,19 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
+from sqlalchemy import select, func, and_
 from sqlalchemy.orm import selectinload
 
-from core.config import settings
-from core.models import db_helper, Film, Genre, Country, Stuff, FilmStill, FilmWatchProvider, SimilarFilm
+from core.models import ( 
+    db_helper, 
+    Film, 
+    Genre, 
+    Country, 
+    Stuff, 
+    FilmStill, 
+    FilmWatchProvider, 
+    SimilarFilm 
+    )
 from core.models.associations import film_stuff
 from core.schemas import (
     FilmRead,

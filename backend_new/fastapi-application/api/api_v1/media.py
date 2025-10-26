@@ -3,8 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, distinct
 
-from core.config import settings
-from core.models import db_helper, Media
+from core.models import ( 
+    db_helper, 
+    Media
+)
 from core.schemas import (
     MediaRead,
     MediaResponse,

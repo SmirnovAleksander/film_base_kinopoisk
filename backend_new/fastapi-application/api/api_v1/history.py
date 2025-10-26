@@ -3,9 +3,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, desc
 from sqlalchemy.orm import selectinload
 
-from core.config import settings
-from core.models import db_helper, UserFilmHistory, Film, User, Genre
-from core.schemas import UserFilmHistoryResponse, UserFilmHistoryStats, FilmRead, UserFilmHistoryRead
+from core.models import ( 
+    db_helper, 
+    UserFilmHistory, 
+    Film, 
+    User, 
+    Genre
+)
+from core.schemas import ( 
+    UserFilmHistoryResponse, 
+    UserFilmHistoryStats, 
+    FilmRead, 
+    UserFilmHistoryRead
+)
 from api.api_v1.fastapi_users import current_active_user
 
 router = APIRouter(

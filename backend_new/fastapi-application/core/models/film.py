@@ -1,6 +1,5 @@
-from datetime import datetime
 from typing import Optional, List, TYPE_CHECKING
-from sqlalchemy import String, Integer, Text, Float, Boolean, DateTime, ForeignKey, ARRAY, UniqueConstraint
+from sqlalchemy import String, Integer, Text, Boolean, ForeignKey, ARRAY, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import DECIMAL
 

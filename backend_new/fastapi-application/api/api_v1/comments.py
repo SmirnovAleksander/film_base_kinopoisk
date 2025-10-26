@@ -3,8 +3,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 
-from core.config import settings
-from core.models import db_helper, Comment, Film, User
+from core.models import ( 
+    db_helper, 
+    Comment, 
+    Film, 
+    User 
+)
 from core.schemas import (
     CommentCreate,
     CommentUpdate,

@@ -3,8 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
 from sqlalchemy.orm import selectinload
 
-from core.config import settings
-from core.models import db_helper, UserFilmRating, Film, User
+from core.models import ( 
+    db_helper, 
+    UserFilmRating, 
+    Film, 
+    User
+)
 from core.schemas import (
     UserFilmRatingCreate,
     UserFilmRatingUpdate,

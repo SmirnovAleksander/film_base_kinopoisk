@@ -3,9 +3,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 
-from core.config import settings
-from core.models import db_helper, Bookmark, Film, User
-from core.schemas import BookmarkResponse, BookmarkStatusResponse, BookmarkRead, FilmRead
+from core.models import ( 
+    db_helper, 
+    Bookmark, 
+    Film, 
+    User 
+)
+from core.schemas import ( 
+    BookmarkResponse, 
+    BookmarkStatusResponse, 
+    BookmarkRead, 
+    FilmRead 
+)
 from api.api_v1.fastapi_users import current_active_user
 
 router = APIRouter(
