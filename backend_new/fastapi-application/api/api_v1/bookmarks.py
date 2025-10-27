@@ -9,10 +9,10 @@ from core.models import (
     Film, 
     User 
 )
-from core.schemas import ( 
-    BookmarkResponse, 
-    BookmarkStatusResponse, 
-    BookmarkRead, 
+from core.schemas import (
+    BookmarkResponse,
+    BookmarkStatusResponse,
+    BookmarkRead,
     FilmRead,
     BookmarkOperationResponse,
 )

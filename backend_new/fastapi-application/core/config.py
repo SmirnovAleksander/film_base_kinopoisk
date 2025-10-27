@@ -1,3 +1,4 @@
+from typing import List
 from pydantic import BaseModel
 from pydantic import PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -5,9 +6,13 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+class CorsConfig(BaseModel):
+    allowed_origins: List[str] = ["*"]
+
 class RunConfig(BaseModel):
     host: str = "0.0.0.0"
     port: int = 8000
+    debug: bool = False
 
 class ApiV1Prefix(BaseModel):
     prefix: str = "/v1"
@@ -59,6 +64,7 @@ class Settings(BaseSettings):
         env_prefix="APP_CONFIG__",
     )
     run: RunConfig = RunConfig()
+    cors: CorsConfig = CorsConfig()
     api: ApiPrefix = ApiPrefix()
     db: DataBaseConfig
     access_token: AccessToken

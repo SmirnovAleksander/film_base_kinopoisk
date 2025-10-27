@@ -42,7 +42,7 @@ __all__ = (
     "MediaTypesResponse",
     "MediaStatsResponse",
     
-    # Base schemas
+    # Base schemas (common responses)
     "OperationResponse",
     "StatusResponse",
     "ListResponse",

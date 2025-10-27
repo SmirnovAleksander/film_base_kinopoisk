@@ -9,13 +9,15 @@ from core.models import (
     Film, 
     User
 )
-from core.schemas import (
+from core.schemas.film import FilmRead
+from core.schemas.user_interactions import (
     UserFilmRatingCreate,
     UserFilmRatingUpdate,
     UserFilmRatingRead,
-    FilmRead,
     FilmAverageRatingRead,
     UserRatingsResponse,
+)
+from core.schemas.base import (
     RatingOperationResponse,
     MessageResponse,
 )

@@ -9,12 +9,12 @@ from core.models import (
     Film, 
     User 
 )
-from core.schemas import (
+from core.schemas.user_interactions import (
     CommentCreate,
     CommentUpdate,
     CommentRead,
-    CommentOperationResponse,
 )
+from core.schemas.base import CommentOperationResponse
 from api.api_v1.fastapi_users import current_active_user
 
 router = APIRouter(

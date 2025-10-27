@@ -10,13 +10,13 @@ from core.models import (
     User, 
     Genre
 )
-from core.schemas import ( 
-    UserFilmHistoryResponse, 
-    UserFilmHistoryStats, 
-    FilmRead, 
+from core.schemas.film import FilmRead
+from core.schemas.user_interactions import (
+    UserFilmHistoryResponse,
+    UserFilmHistoryStats,
     UserFilmHistoryRead,
-    MessageResponse,
 )
+from core.schemas.base import MessageResponse
 from api.api_v1.fastapi_users import current_active_user
 
 router = APIRouter(

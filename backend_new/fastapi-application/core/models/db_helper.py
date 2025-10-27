@@ -1,6 +1,7 @@
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, async_sessionmaker, AsyncSession
+from sqlalchemy import text
 
 from core.config import settings
 
@@ -30,6 +31,11 @@ class DatabaseHelper:
 
     async def dispose(self) -> None:
         await self.engine.dispose()
+
+    async def init_db(self) -> None:
+        """Инициализация БД - проверка соединения"""
+        async with self.session_factory() as session:
+            await session.execute(text("SELECT 1"))
 
     async def session_getter(self) -> AsyncGenerator[AsyncSession, None]:
         async with self.session_factory() as session:
