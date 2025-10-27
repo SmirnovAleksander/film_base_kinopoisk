@@ -6,7 +6,7 @@
 
 import sys
 import os
-from parser.kinopoisk_parser import KinopoiskParser
+from parser_utils.kinopoisk_parser import KinopoiskParser
 
 
 def main():

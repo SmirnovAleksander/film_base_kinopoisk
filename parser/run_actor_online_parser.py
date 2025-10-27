@@ -1,49 +1,49 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Скрипт для парсинга страницы отдельного фильма (онлайн)
+Скрипт для парсинга страницы актера (онлайн)
 """
 
 import sys
 import os
-from parser.film_page_parser import FilmPageParser
+from parser_utils.actor_page_parser import ActorPageParser
 
 
 def main():
     """Основная функция"""
-    print("=== Парсер страницы фильма (онлайн) ===")
+    print("=== Парсер страницы актера (онлайн) ===")
     print()
     
-    # URL для парсинга (можно изменить на нужный фильм)
-    film_url = "https://www.kinopoisk.ru/film/689/"  # 1+1
+    # URL для парсинга (можно изменить на нужного актера)
+    actor_url = "https://www.kinopoisk.ru/name/41644/"  # Омар Си
     
     try:
         # Создаем парсер
-        parser = FilmPageParser()
+        parser = ActorPageParser()
         
         # Загружаем HTML с сайта
-        print(f"Загружаем данные с {film_url}...")
+        print(f"Загружаем данные с {actor_url}...")
         print("⚠️ Это может занять некоторое время из-за защиты от ботов...")
         
-        parser.load_html_from_url(film_url)
+        parser.load_html_from_url(actor_url)
         print("✓ HTML загружен с сайта")
         
         # Извлекаем детальную информацию
-        print("Извлекаем детальную информацию о фильме...")
-        film_data = parser.extract_film_details()
+        print("Извлекаем детальную информацию об актере...")
+        actor_data = parser.extract_actor_details()
         print("✓ Информация извлечена")
         
         # Выводим результаты
-        if film_data:
-            parser.print_film_details(film_data)
+        if actor_data:
+            parser.print_actor_details(actor_data)
             
             # Сохраняем в JSON
-            output_file = 'output/online_film_details.json'
-            parser.save_to_json(film_data, output_file)
+            output_file = 'output/online_actor_details.json'
+            parser.save_to_json(actor_data, output_file)
             print(f"✓ Данные сохранены в {output_file}")
             
         else:
-            print("⚠️ Информация о фильме не найдена.")
+            print("⚠️ Информация об актере не найдена.")
             print("Возможные причины:")
             print("1. Сайт заблокировал запрос (защита от ботов)")
             print("2. Изменилась структура страницы")
@@ -51,7 +51,7 @@ def main():
             print("\nПопробуйте:")
             print("- Запустить скрипт позже")
             print("- Использовать VPN")
-            print("- Использовать локальный HTML файл (run_film_parser.py)")
+            print("- Использовать локальный HTML файл (run_actor_parser.py)")
         
     except Exception as e:
         print(f"❌ Ошибка: {e}")

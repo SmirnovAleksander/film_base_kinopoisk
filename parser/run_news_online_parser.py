@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Локальный парсер новостей Кинопоиска
-Парсит новости из сохраненного HTML файла
+Онлайн парсер новостей Кинопоиска
+Парсит новости с сайта в реальном времени
 """
 
 import os
@@ -13,46 +13,38 @@ from datetime import datetime
 # Добавляем путь к модулям парсера
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from parser.news_page_parser import NewsPageParser
+from parser_utils.news_page_parser import NewsPageParser
 
 
 def main():
-    """Основная функция локального парсера новостей"""
-    print("🚀 Запуск локального парсера новостей")
+    """Основная функция онлайн парсера новостей"""
+    print("🚀 Запуск онлайн парсера новостей")
     
-    # Путь к HTML файлу
-    html_file = "templates/news_page.html"
-    
-    # Проверяем существование файла
-    if not os.path.exists(html_file):
-        print(f"❌ HTML файл не найден: {html_file}")
-        return 1
+    # URL для парсинга новостей
+    news_url = "https://www.kinopoisk.ru/media/"
     
     try:
         # Создаем парсер
         parser = NewsPageParser()
         
-        # Загружаем HTML из файла
-        parser.load_html_from_file(html_file)
+        # Парсим новости с 5 страниц
+        news_list = parser.parse_multiple_pages(5)
         
-        if parser.soup:
-            # Парсим новости
-            news_list = parser.parse_news_list()
-            
+        if news_list:
             # Собираем все данные
             result = {
                 'news_list': news_list,
                 'parsed_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                'source_file': html_file,
+                'source_url': news_url,
                 'total_news': len(news_list)
             }
             
             # Сохраняем результат
-            filename = "output/news_local.json"
+            filename = "output/news_online.json"
             parser.save_to_json(result, filename)
             
         else:
-            print("❌ Не удалось загрузить HTML файл")
+            print("❌ Не удалось загрузить страницу")
             return 1
             
     except KeyboardInterrupt:

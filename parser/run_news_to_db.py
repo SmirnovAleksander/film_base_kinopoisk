@@ -11,7 +11,7 @@ from datetime import datetime
 # Добавляем путь к модулям парсера
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from parser.news_page_parser import NewsPageParser
+from parser_utils.news_page_parser import NewsPageParser
 from main_parser import MainParser
 
 

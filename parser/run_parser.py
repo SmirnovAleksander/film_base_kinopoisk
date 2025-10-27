@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Скрипт для парсинга страницы актера (локальный HTML)
+Скрипт для запуска парсера Кинопоиска
 """
 
 import sys
 import os
-from parser.actor_page_parser import ActorPageParser
+from parser_utils.kinopoisk_parser import KinopoiskParser
 
 
 def main():
     """Основная функция"""
-    print("=== Парсер страницы актера (локальный) ===")
+    print("=== Парсер Кинопоиска ===")
     print()
     
     # Проверяем наличие HTML файла
-    html_file = 'templates/actor_page_kinopoisk.html'
+    html_file = 'templates/all_films_kinopoisk.html'
     if not os.path.exists(html_file):
         print(f"Ошибка: Файл {html_file} не найден!")
         print("Убедитесь, что HTML файл находится в папке templates/")
@@ -23,30 +23,31 @@ def main():
     
     try:
         # Создаем парсер
-        parser = ActorPageParser()
+        parser = KinopoiskParser()
         
         # Загружаем HTML
         print("Загружаем HTML файл...")
         parser.load_html_from_file(html_file)
         print("✓ HTML файл загружен")
         
-        # Извлекаем детальную информацию
-        print("Извлекаем детальную информацию об актере...")
-        actor_data = parser.extract_actor_details()
-        print("✓ Информация извлечена")
+        # Парсим фильмы
+        print("Парсим данные о фильмах...")
+        films = parser.parse_all_films()
+        print(f"✓ Найдено фильмов: {len(films)}")
         
         # Выводим результаты
-        if actor_data:
-            parser.print_actor_details(actor_data)
+        if films:
+            print("\n=== Результаты парсинга ===")
+            parser.print_films_summary(films)
             
             # Сохраняем в JSON
-            output_file = 'output/actor_details.json'
-            parser.save_to_json(actor_data, output_file)
+            output_file = 'output/parsed_films.json'
+            parser.save_to_json(films, output_file)
             print(f"✓ Данные сохранены в {output_file}")
             
         else:
-            print("⚠️ Информация об актере не найдена.")
-            print("Возможно, структура HTML изменилась.")
+            print("⚠ Фильмы не найдены. Возможно, структура HTML изменилась.")
+            print("Попробуйте обновить HTML файл или проверить селекторы в коде.")
         
     except Exception as e:
         print(f"❌ Ошибка: {e}")

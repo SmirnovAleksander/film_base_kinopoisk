@@ -2,10 +2,10 @@ import psycopg2
 import time
 import requests
 from bs4 import BeautifulSoup
-from parser.kinopoisk_parser import KinopoiskParser
-from parser.film_page_parser import FilmPageParser
-from parser.actor_page_parser import ActorPageParser
-from parser.stills_page_parser import StillsPageParser
+from parser_utils.kinopoisk_parser import KinopoiskParser
+from parser_utils.film_page_parser import FilmPageParser
+from parser_utils.actor_page_parser import ActorPageParser
+from parser_utils.stills_page_parser import StillsPageParser
 from config import DATABASE_CONFIG, DELAYS, PARSING_CONFIG, LOGGING_CONFIG
 from image_downloader import ImageDownloader
 

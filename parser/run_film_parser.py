@@ -6,7 +6,7 @@
 
 import sys
 import os
-from parser.film_page_parser import FilmPageParser
+from parser_utils.film_page_parser import FilmPageParser
 
 
 def main():

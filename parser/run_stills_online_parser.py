@@ -7,7 +7,7 @@
 
 import os
 import json
-from parser.stills_page_parser import StillsPageParser
+from parser_utils.stills_page_parser import StillsPageParser
 
 
 def main():

@@ -180,7 +180,7 @@ cython_debug/
 .cursorindexingignore
 
 # Downloaded images
-images/
-output/
+parser/parser_utils/images/
+parser/parser_utils/output/
 
 .idea

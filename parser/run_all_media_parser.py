@@ -7,7 +7,7 @@
 
 import json
 import os
-from parser.news_page_parser import NewsPageParser
+from parser_utils.news_page_parser import NewsPageParser
 from main_parser import MainParser
 
 def main():

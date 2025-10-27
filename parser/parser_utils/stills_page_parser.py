@@ -55,7 +55,7 @@ class StillsPageParser:
     
     def _load_cookies(self, session: requests.Session):
         try:
-            cookies_file = 'parser/cookies/session.json'
+            cookies_file = 'parser_utils/cookies/session.json'
             if os.path.exists(cookies_file):
                 with open(cookies_file, 'r', encoding='utf-8') as f:
                     cookies_data = json.load(f)
