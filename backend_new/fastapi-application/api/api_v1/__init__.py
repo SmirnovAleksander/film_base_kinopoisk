@@ -4,7 +4,6 @@ from fastapi.security import HTTPBearer
 from core.config import settings
 from .auth import router as auth_router
 from .users import router as users_router
-from .messages import router as messages_router
 from .films import router as films_router
 from .bookmarks import router as bookmarks_router
 from .comments import router as comments_router
@@ -24,7 +23,6 @@ router = APIRouter(
 # Аутентификация и пользователи
 router.include_router(auth_router)
 router.include_router(users_router)
-router.include_router(messages_router)
 
 # Основной функционал
 router.include_router(films_router)

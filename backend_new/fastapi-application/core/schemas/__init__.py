@@ -35,9 +35,6 @@ __all__ = (
     "UserFilmHistoryResponse",
     "UserFilmHistoryStats",
     
-    # Message schemas
-    "MessageResponse",
-    
     # Media schemas
     "MediaRead",
     "MediaResponse",
@@ -52,6 +49,7 @@ __all__ = (
     "RatingOperationResponse",
     "BookmarkOperationResponse",
     "CommentOperationResponse",
+    "MessageResponse",
 )
 
 from .film import (
@@ -92,10 +90,6 @@ from .user_interactions import (
     UserFilmHistoryStats,
 )
 
-from .message import (
-    MessageResponse,
-)
-
 from .media import (
     MediaRead,
     MediaResponse,
@@ -111,4 +105,5 @@ from .base import (
     RatingOperationResponse,
     BookmarkOperationResponse,
     CommentOperationResponse,
+    MessageResponse,
 )

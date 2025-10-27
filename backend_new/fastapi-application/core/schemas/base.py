@@ -42,3 +42,8 @@ class CommentOperationResponse(BaseModel):
     """Response for comment operations"""
     status: str = Field(..., description="Operation status")
     id: Optional[int] = Field(None, description="Comment ID if created")
+
+
+class MessageResponse(BaseModel):
+    """Response with message"""
+    message: str = Field(..., description="Response message")
