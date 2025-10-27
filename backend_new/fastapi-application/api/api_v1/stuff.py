@@ -6,7 +6,10 @@ from core.models import (
     db_helper, 
     Stuff
 )
-from core.schemas import StuffRead
+from core.schemas import (
+    StuffRead,
+    StuffListResponse,
+)
 
 router = APIRouter(
     prefix="/stuff",
@@ -14,7 +17,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", summary="Список участников")
+@router.get("/", response_model=StuffListResponse, summary="Список участников")
 async def list_stuff(
     page: int = Query(1, ge=1, description="Номер страницы"),
     page_size: int = Query(20, ge=1, le=100, description="Размер страницы"),
@@ -41,22 +44,14 @@ async def list_stuff(
     result = await session.execute(stmt)
     stuff_list = result.scalars().all()
     
-    items = []
-    for person in stuff_list:
-        items.append({
-            "id": person.id,
-            "kinopoisk_id": person.kinopoisk_id,
-            "name": person.name,
-            "original_name": person.original_name,
-            "image": person.image,
-        })
+    items = [StuffRead.model_validate(person) for person in stuff_list]
     
-    return {
-        "items": items,
-        "page": page,
-        "page_size": page_size,
-        "total_count": total_count or 0,
-    }
+    return StuffListResponse(
+        items=items,
+        page=page,
+        page_size=page_size,
+        total_count=total_count or 0,
+    )
 
 
 @router.get("/kinopoisk/{kinopoisk_id}", response_model=StuffRead, summary="Участник по Кинопоиск ID")

@@ -14,7 +14,8 @@ from core.schemas import (
     UserFilmHistoryResponse, 
     UserFilmHistoryStats, 
     FilmRead, 
-    UserFilmHistoryRead
+    UserFilmHistoryRead,
+    MessageResponse,
 )
 from api.api_v1.fastapi_users import current_active_user
 
@@ -24,7 +25,7 @@ router = APIRouter(
 )
 
 
-@router.post("/films/{film_id}/visit", summary="Добавить фильм в историю")
+@router.post("/films/{film_id}/visit", response_model=MessageResponse, summary="Добавить фильм в историю")
 async def add_film_to_history(
     film_id: int,
     user: User = Depends(current_active_user),
@@ -76,7 +77,7 @@ async def add_film_to_history(
             await session.delete(old_record)
         await session.commit()
     
-    return {"message": "Фильм добавлен в историю посещений"}
+    return MessageResponse(message="Фильм добавлен в историю посещений")
 
 
 @router.get("/films", response_model=UserFilmHistoryResponse, summary="История посещений")
@@ -113,7 +114,7 @@ async def get_user_film_history(
     )
 
 
-@router.delete("/films", summary="Очистить историю")
+@router.delete("/films", response_model=MessageResponse, summary="Очистить историю")
 async def clear_user_film_history(
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(db_helper.session_getter),
@@ -130,10 +131,10 @@ async def clear_user_film_history(
     
     await session.commit()
     
-    return {"message": "История посещений очищена"}
+    return MessageResponse(message="История посещений очищена")
 
 
-@router.delete("/films/{film_id}", summary="Удалить фильм из истории")
+@router.delete("/films/{film_id}", response_model=MessageResponse, summary="Удалить фильм из истории")
 async def remove_film_from_history(
     film_id: int,
     user: User = Depends(current_active_user),
@@ -155,7 +156,7 @@ async def remove_film_from_history(
     await session.delete(history_record)
     await session.commit()
     
-    return {"message": "Фильм удален из истории посещений"}
+    return MessageResponse(message="Фильм удален из истории посещений")
 
 
 @router.get("/films/stats", response_model=UserFilmHistoryStats, summary="Статистика истории")

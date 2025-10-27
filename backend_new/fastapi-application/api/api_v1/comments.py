@@ -13,6 +13,7 @@ from core.schemas import (
     CommentCreate,
     CommentUpdate,
     CommentRead,
+    CommentOperationResponse,
 )
 from api.api_v1.fastapi_users import current_active_user
 
@@ -44,7 +45,7 @@ async def list_comments(
     return [CommentRead.model_validate(comment) for comment in comments]
 
 
-@router.post("/{film_id}", summary="Добавить комментарий")
+@router.post("/{film_id}", response_model=CommentOperationResponse, summary="Добавить комментарий")
 async def add_comment(
     film_id: int,
     comment_data: CommentCreate,
@@ -70,10 +71,10 @@ async def add_comment(
     await session.commit()
     await session.refresh(comment)
     
-    return {"id": comment.id, "status": "created"}
+    return CommentOperationResponse(status="created", id=comment.id)
 
 
-@router.put("/{comment_id}", summary="Редактировать комментарий")
+@router.put("/{comment_id}", response_model=CommentOperationResponse, summary="Редактировать комментарий")
 async def edit_comment(
     comment_id: int,
     comment_data: CommentUpdate,
@@ -100,10 +101,10 @@ async def edit_comment(
     
     await session.commit()
     
-    return {"status": "updated"}
+    return CommentOperationResponse(status="updated")
 
 
-@router.delete("/{comment_id}", summary="Удалить комментарий")
+@router.delete("/{comment_id}", response_model=CommentOperationResponse, summary="Удалить комментарий")
 async def delete_comment(
     comment_id: int,
     user: User = Depends(current_active_user),
@@ -124,5 +125,5 @@ async def delete_comment(
     comment.is_deleted = True
     await session.commit()
     
-    return {"status": "deleted"}
+    return CommentOperationResponse(status="deleted")
 

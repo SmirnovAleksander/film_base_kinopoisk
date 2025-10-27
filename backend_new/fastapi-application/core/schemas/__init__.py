@@ -9,6 +9,7 @@ __all__ = (
     "GenreRead",
     "CountryRead",
     "StuffRead",
+    "StuffListResponse",
     "FilmStillRead",
     "FilmWatchProviderRead",
     "SimilarFilmRead",
@@ -30,12 +31,23 @@ __all__ = (
     "UserFilmHistoryResponse",
     "UserFilmHistoryStats",
     
+    # Message schemas
+    "MessageResponse",
+    
     # Media schemas
     "MediaRead",
     "MediaResponse",
     "MediaCategoriesResponse",
     "MediaTypesResponse",
     "MediaStatsResponse",
+    
+    # Base schemas
+    "OperationResponse",
+    "StatusResponse",
+    "ListResponse",
+    "RatingOperationResponse",
+    "BookmarkOperationResponse",
+    "CommentOperationResponse",
 )
 
 from .film import (
@@ -48,6 +60,7 @@ from .film import (
     GenreRead,
     CountryRead,
     StuffRead,
+    StuffListResponse,
     FilmStillRead,
     FilmWatchProviderRead,
     SimilarFilmRead,
@@ -71,10 +84,23 @@ from .user_interactions import (
     UserFilmHistoryStats,
 )
 
+from .message import (
+    MessageResponse,
+)
+
 from .media import (
     MediaRead,
     MediaResponse,
     MediaCategoriesResponse,
     MediaTypesResponse,
     MediaStatsResponse,
+)
+
+from .base import (
+    OperationResponse,
+    StatusResponse,
+    ListResponse,
+    RatingOperationResponse,
+    BookmarkOperationResponse,
+    CommentOperationResponse,
 )

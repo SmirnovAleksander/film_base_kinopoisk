@@ -65,6 +65,14 @@ class FilmWatchProviderRead(BaseModel):
     logo: Optional[str] = None
 
 
+class StuffListResponse(BaseModel):
+    """Ответ для списка участников"""
+    items: List[StuffRead]
+    page: int
+    page_size: int
+    total_count: int
+
+
 class SimilarFilmRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     

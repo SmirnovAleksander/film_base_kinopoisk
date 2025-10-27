@@ -13,7 +13,8 @@ from core.schemas import (
     BookmarkResponse, 
     BookmarkStatusResponse, 
     BookmarkRead, 
-    FilmRead 
+    FilmRead,
+    BookmarkOperationResponse,
 )
 from api.api_v1.fastapi_users import current_active_user
 
@@ -73,7 +74,7 @@ async def list_bookmarks(
     )
 
 
-@router.post("/{film_id}", summary="Добавить фильм в закладки")
+@router.post("/{film_id}", response_model=BookmarkOperationResponse, summary="Добавить фильм в закладки")
 async def add_bookmark(
     film_id: int,
     user: User = Depends(current_active_user),
@@ -97,7 +98,7 @@ async def add_bookmark(
     existing_bookmark = existing_result.scalar_one_or_none()
     
     if existing_bookmark:
-        return {"status": "already_exists"}
+        return BookmarkOperationResponse(status="already_exists")
     
     # Создаем новую закладку
     bookmark = Bookmark(user_id=user.id, film_id=film_id)
@@ -105,10 +106,10 @@ async def add_bookmark(
     await session.commit()
     await session.refresh(bookmark)
     
-    return {"status": "added", "bookmark_id": bookmark.id}
+    return BookmarkOperationResponse(status="added", bookmark_id=bookmark.id)
 
 
-@router.delete("/{film_id}", summary="Удалить фильм из закладок")
+@router.delete("/{film_id}", response_model=BookmarkOperationResponse, summary="Удалить фильм из закладок")
 async def remove_bookmark(
     film_id: int,
     user: User = Depends(current_active_user),
@@ -123,12 +124,12 @@ async def remove_bookmark(
     bookmark = result.scalar_one_or_none()
     
     if not bookmark:
-        return {"status": "not_found"}
+        return BookmarkOperationResponse(status="not_found")
     
     await session.delete(bookmark)
     await session.commit()
     
-    return {"status": "removed"}
+    return BookmarkOperationResponse(status="removed")
 
 
 @router.get("/{film_id}/status", response_model=BookmarkStatusResponse, summary="Проверить статус закладки")

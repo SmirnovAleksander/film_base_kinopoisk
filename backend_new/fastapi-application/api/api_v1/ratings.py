@@ -16,6 +16,8 @@ from core.schemas import (
     FilmRead,
     FilmAverageRatingRead,
     UserRatingsResponse,
+    RatingOperationResponse,
+    MessageResponse,
 )
 from api.api_v1.fastapi_users import current_active_user
 
@@ -47,7 +49,7 @@ async def update_film_user_rating(session: AsyncSession, film_id: int):
         await session.commit()
 
 
-@router.get("/films/{film_id}/rating", summary="Получить рейтинг пользователя для фильма")
+@router.get("/films/{film_id}/rating", response_model=RatingOperationResponse, summary="Получить рейтинг пользователя для фильма")
 async def get_user_film_rating(
     film_id: int,
     user: User = Depends(current_active_user),
@@ -73,16 +75,16 @@ async def get_user_film_rating(
     rating = rating_result.scalar_one_or_none()
     
     if rating:
-        return {
-            "rating": rating.rating,
-            "created_at": rating.created_at,
-            "updated_at": rating.updated_at,
-        }
+        return RatingOperationResponse(
+            rating=rating.rating,
+            created_at=rating.created_at,
+            updated_at=rating.updated_at,
+        )
     else:
-        return {"rating": None}
+        return RatingOperationResponse(rating=None, created_at=None, updated_at=None)
 
 
-@router.post("/films/{film_id}/rating", summary="Установить рейтинг для фильма")
+@router.post("/films/{film_id}/rating", response_model=RatingOperationResponse, summary="Установить рейтинг для фильма")
 async def set_user_film_rating(
     film_id: int,
     rating_data: UserFilmRatingCreate,
@@ -117,11 +119,11 @@ async def set_user_film_rating(
         # Обновляем средний рейтинг фильма
         await update_film_user_rating(session, film_id)
         
-        return {
-            "rating": existing_rating.rating,
-            "created_at": existing_rating.created_at,
-            "updated_at": existing_rating.updated_at,
-        }
+        return RatingOperationResponse(
+            rating=existing_rating.rating,
+            created_at=existing_rating.created_at,
+            updated_at=existing_rating.updated_at,
+        )
     else:
         # Создаем новый рейтинг
         new_rating = UserFilmRating(
@@ -136,14 +138,14 @@ async def set_user_film_rating(
         # Обновляем средний рейтинг фильма
         await update_film_user_rating(session, film_id)
         
-        return {
-            "rating": new_rating.rating,
-            "created_at": new_rating.created_at,
-            "updated_at": new_rating.updated_at,
-        }
+        return RatingOperationResponse(
+            rating=new_rating.rating,
+            created_at=new_rating.created_at,
+            updated_at=new_rating.updated_at,
+        )
 
 
-@router.put("/films/{film_id}/rating", summary="Изменить рейтинг для фильма")
+@router.put("/films/{film_id}/rating", response_model=RatingOperationResponse, summary="Изменить рейтинг для фильма")
 async def update_user_film_rating(
     film_id: int,
     rating_data: UserFilmRatingUpdate,
@@ -183,14 +185,14 @@ async def update_user_film_rating(
     # Обновляем средний рейтинг фильма
     await update_film_user_rating(session, film_id)
     
-    return {
-        "rating": rating.rating,
-        "created_at": rating.created_at,
-        "updated_at": rating.updated_at,
-    }
+    return RatingOperationResponse(
+        rating=rating.rating,
+        created_at=rating.created_at,
+        updated_at=rating.updated_at,
+    )
 
 
-@router.delete("/films/{film_id}/rating", summary="Удалить рейтинг для фильма")
+@router.delete("/films/{film_id}/rating", response_model=MessageResponse, summary="Удалить рейтинг для фильма")
 async def delete_user_film_rating(
     film_id: int,
     user: User = Depends(current_active_user),
@@ -215,7 +217,7 @@ async def delete_user_film_rating(
     # Обновляем средний рейтинг фильма
     await update_film_user_rating(session, film_id)
     
-    return {"message": "Rating deleted successfully"}
+    return MessageResponse(message="Rating deleted successfully")
 
 
 @router.get("/films/{film_id}/rating/average", response_model=FilmAverageRatingRead, summary="Средний рейтинг фильма")
