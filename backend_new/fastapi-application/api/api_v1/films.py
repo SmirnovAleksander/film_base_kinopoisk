@@ -435,39 +435,20 @@ async def get_film_recommendations(
         total_score = genre_score + stuff_score + year_score + rating_score
 
         if total_score > 0.1:  # Минимальный порог релевантности
-            recommendations.append({
-                "id": candidate.id,
-                "kinopoisk_id": candidate.kinopoisk_id,
-                "title": candidate.title,
-                "original_title": candidate.original_title,
-                "description": candidate.description,
-                "full_description": candidate.full_description,
-                "poster": candidate.poster,
-                "year": candidate.year,
-                "tagline": candidate.tagline,
-                "ru_premiere": candidate.ru_premiere,
-                "world_premiere": candidate.world_premiere,
-                "content_rating": candidate.content_rating,
-                "is_family_friendly": candidate.is_family_friendly,
-                "duration": candidate.duration,
-                "rating_kp": candidate.rating_kp,
-                "kp_votes_count": candidate.kp_votes_count,
-                "rating_imdb": candidate.rating_imdb,
-                "imdb_votes_count": candidate.imdb_votes_count,
-                "user_rating": candidate.user_rating,
-                "user_rating_count": candidate.user_rating_count,
-                "budget": candidate.budget,
-                "usa_box_office": candidate.usa_box_office,
-                "rus_box_office": candidate.rus_box_office,
-                "relevance_score": round(total_score, 3),
-                "genre_matches": genre_matches,
-                "stuff_matches": stuff_matches
-            })
+            # Создаем объект через Pydantic валидацию
+            film_data = FilmRead.model_validate(candidate)
+            recommendation = FilmRecommendationRead(
+                **film_data.model_dump(),
+                relevance_score=round(total_score, 3),
+                genre_matches=genre_matches,
+                stuff_matches=stuff_matches
+            )
+            recommendations.append(recommendation)
 
     # Сортируем по релевантности и возвращаем топ
-    recommendations.sort(key=lambda x: x["relevance_score"], reverse=True)
+    recommendations.sort(key=lambda x: x.relevance_score, reverse=True)
 
     return FilmRecommendationsResponse(
-        items=[FilmRecommendationRead(**rec) for rec in recommendations[:limit]],
+        items=recommendations[:limit],
         total_count=len(recommendations)
     )
