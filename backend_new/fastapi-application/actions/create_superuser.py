@@ -2,6 +2,7 @@ import contextlib
 import asyncio
 from os import getenv
 
+from fastapi import BackgroundTasks
 from pydantic import EmailStr
 
 from core.authentication.user_manager import UserManager
@@ -47,7 +48,8 @@ async def create_superuser(
     )
     async with db_helper.session_factory() as session:
         async with get_users_db_context(session) as users_db:
-            async with get_user_manager_context(users_db) as user_manager:
+            background_tasks = BackgroundTasks()
+            async with get_user_manager_context(users_db, background_tasks) as user_manager:
                 return await create_user(
                     user_manager=user_manager,
                     user_create=user_create,

@@ -12,6 +12,7 @@ from .ratings import router as ratings_router
 from .history import router as history_router
 from .media import router as media_router
 from .stuff import router as stuff_router
+from .admin import router as admin_router
 
 http_bearer = HTTPBearer(auto_error=False)
 
@@ -33,3 +34,6 @@ router.include_router(ratings_router)
 router.include_router(history_router)
 router.include_router(media_router)
 router.include_router(stuff_router)
+
+# Admin функционал (требует аутентификации суперпользователя)
+router.include_router(admin_router)

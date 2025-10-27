@@ -51,13 +51,13 @@ class Film(Base, IntIdPkMixin):
     stuff: Mapped[List["Stuff"]] = relationship(
         "Stuff", secondary="film_stuff", back_populates="films"
     )
-    bookmarks: Mapped[List["Bookmark"]] = relationship("Bookmark", back_populates="film")
-    comments: Mapped[List["Comment"]] = relationship("Comment", back_populates="film")
-    ratings: Mapped[List["UserFilmRating"]] = relationship("UserFilmRating", back_populates="film")
-    history: Mapped[List["UserFilmHistory"]] = relationship("UserFilmHistory", back_populates="film")
-    stills: Mapped[List["FilmStill"]] = relationship("FilmStill", back_populates="film")
-    watch_providers: Mapped[List["FilmWatchProvider"]] = relationship("FilmWatchProvider", back_populates="film")
-    similar_films: Mapped[List["SimilarFilm"]] = relationship("SimilarFilm", back_populates="film")
+    bookmarks: Mapped[List["Bookmark"]] = relationship("Bookmark", back_populates="film", cascade="all, delete-orphan")
+    comments: Mapped[List["Comment"]] = relationship("Comment", back_populates="film", cascade="all, delete-orphan")
+    ratings: Mapped[List["UserFilmRating"]] = relationship("UserFilmRating", back_populates="film", cascade="all, delete-orphan")
+    history: Mapped[List["UserFilmHistory"]] = relationship("UserFilmHistory", back_populates="film", cascade="all, delete-orphan")
+    stills: Mapped[List["FilmStill"]] = relationship("FilmStill", back_populates="film", cascade="all, delete-orphan")
+    watch_providers: Mapped[List["FilmWatchProvider"]] = relationship("FilmWatchProvider", back_populates="film", cascade="all, delete-orphan")
+    similar_films: Mapped[List["SimilarFilm"]] = relationship("SimilarFilm", back_populates="film", cascade="all, delete-orphan")
 
 
 class Genre(Base, IntIdPkMixin):
