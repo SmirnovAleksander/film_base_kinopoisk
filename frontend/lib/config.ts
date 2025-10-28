@@ -36,7 +36,6 @@ export const FILM_FILTERS = {
 
 // Локальное хранилище ключи
 export const STORAGE_KEYS = {
-  THEME: 'film-base-theme',
   AUTH_TOKEN: 'film-base-token',
   USER_DATA: 'film-base-user',
 } as const;
