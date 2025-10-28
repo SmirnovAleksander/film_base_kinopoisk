@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useAuthStore } from '../store';
+import { useAuthStore } from '@/store';
 
 export function useAuth() {
   const {

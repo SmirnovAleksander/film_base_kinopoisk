@@ -5,7 +5,7 @@ import {
   RegisterData,
   User,
 } from '@/lib/types';
-import { API_ENDPOINTS, STORAGE_KEYS } from '../config';
+import { API_ENDPOINTS, STORAGE_KEYS } from '@/lib/config';
 
 export class AuthAPI {
   // Вход в систему (OAuth2 формат)

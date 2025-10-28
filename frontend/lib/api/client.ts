@@ -1,5 +1,5 @@
 import axios, { AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { API_CONFIG, STORAGE_KEYS } from '../config';
+import { API_CONFIG, STORAGE_KEYS } from '@/lib/config';
 import { AuthAPI } from './auth';
 
 // Создаем экземпляр axios
