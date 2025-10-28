@@ -14,6 +14,9 @@ import {
   CommentCreate,
   CommentUpdate,
   CommentOperationResponse,
+  UserFilmHistoryResponse,
+  MessageResponse,
+  UserFilmHistoryStats,
 } from '../types/api';
 import { API_ENDPOINTS, PAGINATION } from '../config';
 import { buildQueryString } from './client';
@@ -120,6 +123,45 @@ export class UserInteractionsAPI {
   // Удалить комментарий
   static async deleteComment(commentId: number): Promise<CommentOperationResponse> {
     const response = await apiClient.delete(API_ENDPOINTS.COMMENTS.DELETE(commentId));
+    return response.data;
+  }
+
+  // ========== ИСТОРИЯ ПРОСМОТРОВ ==========
+
+  // Получить историю просмотров пользователя
+  static async getUserHistory(
+    page: number = 1,
+    pageSize: number = PAGINATION.DEFAULT_PAGE_SIZE
+  ): Promise<UserFilmHistoryResponse> {
+    const params = {
+      page,
+      page_size: pageSize,
+    };
+    const response = await apiClient.get(`${API_ENDPOINTS.HISTORY.LIST}${buildQueryString(params)}`);
+    return response.data;
+  }
+
+  // Добавить фильм в историю просмотров
+  static async addFilmToHistory(filmId: number): Promise<MessageResponse> {
+    const response = await apiClient.post(API_ENDPOINTS.HISTORY.ADD_VISIT(filmId));
+    return response.data;
+  }
+
+  // Удалить фильм из истории просмотров
+  static async removeFilmFromHistory(filmId: number): Promise<MessageResponse> {
+    const response = await apiClient.delete(API_ENDPOINTS.HISTORY.REMOVE(filmId));
+    return response.data;
+  }
+
+  // Очистить всю историю
+  static async clearHistory(): Promise<MessageResponse> {
+    const response = await apiClient.delete(API_ENDPOINTS.HISTORY.CLEAR);
+    return response.data;
+  }
+
+  // Получить статистику истории
+  static async getHistoryStats(): Promise<UserFilmHistoryStats> {
+    const response = await apiClient.get(API_ENDPOINTS.HISTORY.STATS);
     return response.data;
   }
 }

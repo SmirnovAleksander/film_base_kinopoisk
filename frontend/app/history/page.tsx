@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { History, Clock, Play, Film } from 'lucide-react';
+import { History, Clock, Play, Film, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,41 +11,19 @@ import { useUserInteractionsStore } from '@/store';
 import { ROUTES } from '@/lib/config';
 
 export default function HistoryPage() {
+  const {
+    userHistory,
+    historyLoading,
+    historyTotalCount,
+    fetchUserHistory,
+    removeFilmFromHistory,
+    clearHistory,
+    isAddingToHistory
+  } = useUserInteractionsStore();
+
   useEffect(() => {
-    console.log('History page loaded');
-  }, []);
-
-  // Временные данные для демонстрации
-  const mockHistory = [
-    {
-      id: 1,
-      film_id: 123,
-      visited_at: new Date().toISOString(),
-      film: {
-        id: 123,
-        title: "Интерстеллар",
-        original_title: "Interstellar",
-        poster: "",
-        year: 2014,
-        description: "Фантастическая драма о путешествиях в космосе",
-      }
-    },
-    {
-      id: 2,
-      film_id: 456,
-      visited_at: new Date(Date.now() - 86400000).toISOString(), // вчера
-      film: {
-        id: 456,
-        title: "Начало",
-        original_title: "Inception",
-        poster: "",
-        year: 2010,
-        description: "Триллер о проникновении в сны",
-      }
-    }
-  ];
-
-  const currentHistory = mockHistory; // Временные данные
+    fetchUserHistory();
+  }, [fetchUserHistory]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -64,6 +42,24 @@ export default function HistoryPage() {
     }
   };
 
+  const handleRemoveFromHistory = async (filmId: number) => {
+    try {
+      await removeFilmFromHistory(filmId);
+    } catch (error) {
+      console.error('Ошибка при удалении из истории:', error);
+    }
+  };
+
+  const handleClearHistory = async () => {
+    if (confirm('Вы уверены, что хотите очистить всю историю просмотров?')) {
+      try {
+        await clearHistory();
+      } catch (error) {
+        console.error('Ошибка при очистке истории:', error);
+      }
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
@@ -72,25 +68,42 @@ export default function HistoryPage() {
           <div>
             <h1 className="text-3xl font-bold">История просмотров</h1>
             <p className="text-muted-foreground">
-              {currentHistory.length} фильмов просмотрено
+              {historyTotalCount} фильмов просмотрено
             </p>
           </div>
         </div>
       </div>
 
-      {/* Временное отображение без лоадера */}
-      {currentHistory.length > 0 ? (
+      {/* Индикатор загрузки */}
+      {historyLoading ? (
         <div className="space-y-4">
-          {currentHistory.map((item) => (
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <div className="flex gap-4">
+                  <Skeleton className="w-16 h-24 rounded" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-4 w-full" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : userHistory.length > 0 ? (
+        <div className="space-y-4">
+          {userHistory.map((item) => (
             <Card key={item.id} className="group hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="flex gap-4">
                   {/* Постер */}
                   <div className="w-16 h-24 bg-muted rounded flex-shrink-0">
-                    {item.film.poster ? (
-                      <img 
-                        src={item.film.poster} 
-                        alt={item.film.title}
+                    {item.film?.poster ? (
+                      <img
+                        src={item.film.poster}
+                        alt={item.film.title || 'Фильм'}
                         className="w-full h-full object-cover rounded"
                       />
                     ) : (
@@ -104,29 +117,29 @@ export default function HistoryPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
-                        <Link 
-                          href={ROUTES.FILM_DETAILS(item.film.id)}
+                        <Link
+                          href={ROUTES.FILM_DETAILS(item.film_id)}
                           className="block"
                         >
                           <h3 className="font-semibold text-lg hover:text-primary transition-colors line-clamp-1">
-                            {item.film.title}
+                            {item.film?.title || `Фильм ${item.film_id}`}
                           </h3>
                         </Link>
                         
-                        {item.film.original_title && item.film.title !== item.film.original_title && (
+                        {item.film?.original_title && item.film.title !== item.film.original_title && (
                           <p className="text-sm text-muted-foreground line-clamp-1">
                             {item.film.original_title}
                           </p>
                         )}
 
-                        {item.film.description && (
+                        {item.film?.description && (
                           <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                             {item.film.description}
                           </p>
                         )}
 
                         <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                          {item.film.year && (
+                          {item.film?.year && (
                             <span>{item.film.year}</span>
                           )}
                           <div className="flex items-center gap-1">
@@ -136,13 +149,21 @@ export default function HistoryPage() {
                         </div>
                       </div>
 
-                      {/* Кнопка действия */}
-                      <div className="flex-shrink-0">
+                      {/* Кнопки действий */}
+                      <div className="flex gap-2 flex-shrink-0">
                         <Button asChild size="sm">
-                          <Link href={ROUTES.FILM_DETAILS(item.film.id)}>
+                          <Link href={ROUTES.FILM_DETAILS(item.film_id)}>
                             <Play className="h-4 w-4 mr-2" />
                             Смотреть
                           </Link>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleRemoveFromHistory(item.film_id)}
+                          disabled={isAddingToHistory}
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -157,8 +178,8 @@ export default function HistoryPage() {
           <History className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-xl font-semibold mb-2">История пуста</h3>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Здесь будет отображаться история просмотренных фильмов. 
-            Начните смотреть фильмы, чтобы увидеть их здесь.
+            Здесь будет отображаться история просмотренных фильмов и актеров.
+            Начните смотреть фильмы и изучать профили участников, чтобы увидеть их здесь.
           </p>
           <Button asChild>
             <Link href={ROUTES.FILMS}>
@@ -169,24 +190,27 @@ export default function HistoryPage() {
         </div>
       )}
 
-      {/* Полезные ссылки */}
-      <div className="mt-12 pt-8 border-t">
-        <h3 className="text-lg font-semibold mb-4">Управление историей</h3>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm">
-            Очистить историю
-          </Button>
-          <Button variant="outline" size="sm">
-            Экспорт данных
-          </Button>
-          <Button variant="outline" size="sm">
-            Настройки приватности
-          </Button>
+      {/* Управление историей */}
+      {userHistory.length > 0 && (
+        <div className="mt-12 pt-8 border-t">
+          <h3 className="text-lg font-semibold mb-4">Управление историей</h3>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleClearHistory}
+              disabled={historyLoading || isAddingToHistory}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Очистить историю
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            История просмотров помогает нам предоставлять рекомендации и улучшать сервис.
+            Здесь отображаются фильмы и участники, которых вы посещали.
+          </p>
         </div>
-        <p className="text-xs text-muted-foreground mt-2">
-          История просмотров помогает нам предоставлять рекомендации и улучшать сервис.
-        </p>
-      </div>
+      )}
     </div>
   );
 }
