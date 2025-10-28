@@ -178,11 +178,11 @@ export default function FilmsPage() {
                 <div className="space-y-2">
                   <Label htmlFor="genre">Жанр</Label>
                   <Select
-                    value={localFilters.genre_id?.toString() || ''}
-                    onValueChange={(value) => 
+                    value={localFilters.genre_id?.toString() || 'all'}
+                    onValueChange={(value) =>
                       setLocalFilters(prev => ({
                         ...prev,
-                        genre_id: value ? parseInt(value) : undefined
+                        genre_id: value === 'all' ? undefined : parseInt(value)
                       }))
                     }
                   >
@@ -190,7 +190,7 @@ export default function FilmsPage() {
                       <SelectValue placeholder="Выберите жанр" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Все жанры</SelectItem>
+                      <SelectItem value="all">Все жанры</SelectItem>
                       {genres.map((genre) => (
                         <SelectItem key={genre.id} value={genre.id.toString()}>
                           {genre.name}
@@ -204,11 +204,11 @@ export default function FilmsPage() {
                 <div className="space-y-2">
                   <Label htmlFor="country">Страна</Label>
                   <Select
-                    value={localFilters.country_id?.toString() || ''}
-                    onValueChange={(value) => 
+                    value={localFilters.country_id?.toString() || 'all'}
+                    onValueChange={(value) =>
                       setLocalFilters(prev => ({
                         ...prev,
-                        country_id: value ? parseInt(value) : undefined
+                        country_id: value === 'all' ? undefined : parseInt(value)
                       }))
                     }
                   >
@@ -216,7 +216,7 @@ export default function FilmsPage() {
                       <SelectValue placeholder="Выберите страну" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Все страны</SelectItem>
+                      <SelectItem value="all">Все страны</SelectItem>
                       {countries.map((country) => (
                         <SelectItem key={country.id} value={country.id.toString()}>
                           {country.name}

@@ -395,8 +395,8 @@ export default function FilmDetailsPage() {
                       )}
                       <div className="flex-1">
                         <h3 className="font-semibold">
-                          <Link 
-                            href={`/stuff/${person.id}`}
+                          <Link
+                            href={ROUTES.STUFF_DETAILS(person.id)}
                             className="hover:text-blue-600 transition-colors"
                           >
                             {person.name || person.original_name}

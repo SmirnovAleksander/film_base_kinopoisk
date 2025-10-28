@@ -15,6 +15,7 @@ export const ROUTES = {
   REGISTER: '/register',
   FILMS: '/films',
   FILM_DETAILS: (id: string | number) => `/films/${id}`,
+  STUFF_DETAILS: (id: string | number) => `/stuff/${id}`,
   PROFILE: '/profile',
   BOOKMARKS: '/bookmarks',
   HISTORY: '/history',

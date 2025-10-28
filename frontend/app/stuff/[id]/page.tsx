@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Link from 'next/link';
+import { ROUTES } from '@/lib/config';
 import { StuffAPI } from '@/lib/api';
 import { Stuff } from '@/lib/types/api';
 
@@ -69,7 +70,7 @@ export default function StuffDetailsPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <Button asChild variant="ghost">
-            <Link href="/films">
+            <Link href={ROUTES.FILMS}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               К списку фильмов
             </Link>
@@ -93,7 +94,7 @@ export default function StuffDetailsPage() {
       {/* Навигация */}
       <div className="mb-8">
         <Button asChild variant="ghost">
-          <Link href="/films">
+          <Link href={ROUTES.FILMS}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             К списку фильмов
           </Link>
