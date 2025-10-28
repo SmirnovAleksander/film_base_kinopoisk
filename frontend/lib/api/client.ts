@@ -50,13 +50,13 @@ apiClient.interceptors.response.use(
         // и перенаправляем на логин
         if (typeof window !== 'undefined') {
           AuthAPI.clearAuthData();
-          window.location.href = '/(auth)/login';
+          window.location.href = '/login';
         }
       } catch (refreshError) {
         // Если произошла ошибка, очищаем cookies и перенаправляем
         if (typeof window !== 'undefined') {
           AuthAPI.clearAuthData();
-          window.location.href = '/(auth)/login';
+          window.location.href = '/login';
         }
       }
     }
@@ -76,7 +76,7 @@ export const isAuthenticated = (): boolean => {
 export const logout = (): void => {
   if (typeof window !== 'undefined') {
     AuthAPI.clearAuthData();
-    window.location.href = '/(auth)/login';
+    window.location.href = '/login';
   }
 };
 

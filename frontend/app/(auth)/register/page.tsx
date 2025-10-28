@@ -20,8 +20,6 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    first_name: '',
-    last_name: '',
     username: '',
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -50,14 +48,6 @@ export default function RegisterPage() {
       newErrors.confirmPassword = 'Пароли не совпадают';
     }
 
-    if (formData.first_name && formData.first_name.length < 2) {
-      newErrors.first_name = 'Имя должно содержать минимум 2 символа';
-    }
-
-    if (formData.last_name && formData.last_name.length < 2) {
-      newErrors.last_name = 'Фамилия должна содержать минимум 2 символа';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -76,8 +66,6 @@ export default function RegisterPage() {
         email: formData.email,
         password: formData.password,
         confirm_password: formData.confirmPassword,
-        first_name: formData.first_name || undefined,
-        last_name: formData.last_name || undefined,
         username: formData.username || undefined,
       };
       
@@ -131,40 +119,6 @@ export default function RegisterPage() {
                   {submitError}
                 </div>
               )}
-
-              {/* Имя и Фамилия */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="first_name">Имя (необязательно)</Label>
-                  <Input
-                    id="first_name"
-                    type="text"
-                    placeholder="Иван"
-                    value={formData.first_name}
-                    onChange={(e) => handleInputChange('first_name', e.target.value)}
-                    className={errors.first_name ? 'border-destructive' : ''}
-                    disabled={isLoading}
-                  />
-                  {errors.first_name && (
-                    <p className="text-sm text-destructive">{errors.first_name}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="last_name">Фамилия (необязательно)</Label>
-                  <Input
-                    id="last_name"
-                    type="text"
-                    placeholder="Петров"
-                    value={formData.last_name}
-                    onChange={(e) => handleInputChange('last_name', e.target.value)}
-                    className={errors.last_name ? 'border-destructive' : ''}
-                    disabled={isLoading}
-                  />
-                  {errors.last_name && (
-                    <p className="text-sm text-destructive">{errors.last_name}</p>
-                  )}
-                </div>
-              </div>
 
               {/* Email */}
               <div className="space-y-2">
