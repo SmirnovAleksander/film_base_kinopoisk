@@ -40,7 +40,7 @@ export default function VerifyEmailPage() {
       await AuthAPI.verifyEmail(tokenToUse);
       setMessage('Email успешно подтвержден! Вы можете войти в систему.');
       setTimeout(() => {
-        router.push('/(auth)/login');
+        router.push('/login');
       }, 3000);
     } catch (error: any) {
       console.error('Error verifying email:', error);
@@ -124,7 +124,7 @@ export default function VerifyEmailPage() {
 
               <div className="text-center">
                 <Link 
-                  href="/(auth)/login" 
+                  href="/login" 
                   className="text-sm text-blue-600 hover:text-blue-500"
                 >
                   Вернуться ко входу

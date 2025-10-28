@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { api } from "../lib/api/client";
-import { User, UserStats, CommentModeration, ModerationStats, Paginated, UserRole } from "../lib/types";
+import { User, UserStats, CommentModeration, ModerationStats, Paginated, UserRole } from "@/lib/types";
 
 type AdminState = {
   // Состояние

@@ -4,7 +4,7 @@ import {
   LoginData,
   RegisterData,
   User,
-} from '../types/api';
+} from '@/lib/types';
 import { API_ENDPOINTS, STORAGE_KEYS } from '../config';
 
 export class AuthAPI {

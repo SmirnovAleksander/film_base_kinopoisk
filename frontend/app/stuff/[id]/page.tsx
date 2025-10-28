@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Link from 'next/link';
 import { ROUTES } from '@/lib/config';
 import { StuffAPI } from '@/lib/api';
-import { Stuff } from '@/lib/types/api';
+import { Stuff } from '@/lib/types';
 
 export default function StuffDetailsPage() {
   const params = useParams();

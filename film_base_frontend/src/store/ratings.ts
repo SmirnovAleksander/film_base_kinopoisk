@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { api } from "../lib/api/client";
-import { UserRating, FilmAverageRating, UserRatingWithFilm, Paginated } from "../lib/types";
+import { UserRating, FilmAverageRating, UserRatingWithFilm, Paginated } from "@/lib/types";
 
 type RatingsState = {
   // Состояние

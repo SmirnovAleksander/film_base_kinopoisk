@@ -12,7 +12,7 @@ import {
   CommentCreate,
   CommentUpdate,
   UserFilmHistory,
-} from '../lib/types/api';
+} from '@/lib/types';
 import { PAGINATION } from '../lib/config';
 
 interface UserInteractionsState {

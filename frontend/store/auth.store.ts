@@ -5,7 +5,7 @@ import {
   User,
   LoginData,
   RegisterData,
-} from '../lib/types/api';
+} from '@/lib/types';
 import { STORAGE_KEYS } from '../lib/config';
 
 interface AuthState {

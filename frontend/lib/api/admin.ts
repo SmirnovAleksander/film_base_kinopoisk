@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import {
   Film,
   Stuff,
-} from '../types/api';
+} from '@/lib/types';
 import { API_ENDPOINTS, PAGINATION } from '../config';
 import { buildQueryString } from './client';
 

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { api } from "../lib/api/client";
-import { Actor, Paginated } from "../lib/types";
+import { Actor, Paginated } from "@/lib/types";
 
 type ActorsState = {
   // Состояние

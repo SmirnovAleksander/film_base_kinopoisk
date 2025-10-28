@@ -7,7 +7,7 @@ import {
   Country,
   FilmFilterParams,
   FilmSearchParams,
-} from '../lib/types/api';
+} from '@/lib/types';
 import { PAGINATION } from '../lib/config';
 
 interface FilmsState {

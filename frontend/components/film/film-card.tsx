@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUserInteractionsStore } from '@/store';
 import { ROUTES } from '@/lib/config';
-import { Film } from '@/lib/types/api';
+import { Film } from '@/lib/types';
 
 interface FilmCardProps {
   film: Film;

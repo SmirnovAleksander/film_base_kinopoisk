@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { MediaAPI } from '@/lib/api';
-import { Media, MediaCategoriesResponse, MediaTypesResponse, MediaStatsResponse } from '@/lib/types/api';
+import { Media, MediaCategoriesResponse, MediaTypesResponse, MediaStatsResponse } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

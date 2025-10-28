@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { api } from '../lib/api/client';
-import { FilmHistoryResponse, HistoryStats } from '../lib/types';
+import { FilmHistoryResponse, HistoryStats } from '@/lib/types';
 
 interface HistoryState {
   loading: boolean;

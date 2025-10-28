@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FilmCard, FilmCardSkeleton } from '@/components/film/film-card';
 import { useFilmsStore } from '@/store';
-import { FilmFilterParams } from '@/lib/types/api';
+import { FilmFilterParams } from '@/lib/types';
 
 export default function FilmsPage() {
   const searchParams = useSearchParams();
