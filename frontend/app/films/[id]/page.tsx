@@ -34,9 +34,11 @@ export default function FilmDetailsPage() {
   const filmId = parseInt(params.id as string);
   
   const { currentFilm, fetchFilmDetails, isLoading } = useFilmsStore();
-  const { 
-    fetchFilmComments, 
-    addComment, 
+  const {
+    fetchFilmComments,
+    addComment,
+    updateComment,
+    deleteComment,
     comments,
     bookmarkedFilmIds,
     addBookmark,
@@ -50,12 +52,20 @@ export default function FilmDetailsPage() {
   const [activeTab, setActiveTab] = useState('details');
   const [filmStuff, setFilmStuff] = useState<any[]>([]);
   const [isLoadingStuff, setIsLoadingStuff] = useState(false);
+  
+  // Состояние для редактирования комментариев
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editingContent, setEditingContent] = useState('');
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
     if (filmId) {
       fetchFilmDetails(filmId);
       fetchFilmComments(filmId);
       loadFilmStuff();
+      // Здесь можно получить информацию о текущем пользователе
+      // const user = useAuthStore.getState().user;
+      // setCurrentUser(user);
     }
   }, [filmId]);
 
@@ -79,6 +89,30 @@ export default function FilmDetailsPage() {
     setNewComment('');
   };
 
+  const handleEditComment = (commentId: number, content: string) => {
+    setEditingCommentId(commentId);
+    setEditingContent(content);
+  };
+
+  const handleSaveEdit = async (commentId: number) => {
+    if (!editingContent.trim()) return;
+
+    await updateComment(commentId, editingContent.trim());
+    setEditingCommentId(null);
+    setEditingContent('');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setEditingContent('');
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (confirm('Вы уверены, что хотите удалить этот комментарий?')) {
+      await deleteComment(commentId);
+    }
+  };
+
   const handleBookmarkToggle = async () => {
     const isBookmarked = bookmarkedFilmIds.has(filmId);
     if (isBookmarked) {
@@ -86,6 +120,11 @@ export default function FilmDetailsPage() {
     } else {
       await addBookmark(filmId);
     }
+  };
+
+  // Проверяем, может ли пользователь редактировать комментарий
+  const canEditComment = (comment: any) => {
+    return currentUser && comment.user_id === currentUser.id;
   };
 
   const isBookmarked = bookmarkedFilmIds.has(filmId);
@@ -484,15 +523,72 @@ export default function FilmDetailsPage() {
                         <span className="font-medium">
                           Пользователь #{comment.user_id}
                         </span>
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(comment.created_at).toLocaleDateString('ru-RU')}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-muted-foreground">
+                            {new Date(comment.created_at).toLocaleDateString('ru-RU')}
+                          </span>
+                          {canEditComment(comment) && !comment.is_deleted && (
+                            <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditComment(comment.id, comment.content)}
+                                disabled={editingCommentId === comment.id}
+                              >
+                                ✏️
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteComment(comment.id)}
+                                disabled={isAddingComment}
+                              >
+                                🗑️
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-muted-foreground">{comment.content}</p>
-                      {comment.is_edited && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          (изменено)
+                      
+                      {comment.is_deleted ? (
+                        <p className="text-muted-foreground italic">
+                          [Комментарий удален]
                         </p>
+                      ) : editingCommentId === comment.id ? (
+                        <div className="space-y-2">
+                          <textarea
+                            value={editingContent}
+                            onChange={(e) => setEditingContent(e.target.value)}
+                            className="w-full min-h-[80px] p-2 border rounded-md resize-none"
+                            placeholder="Редактируйте ваш комментарий..."
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleSaveEdit(comment.id)}
+                              disabled={!editingContent.trim() || isAddingComment}
+                            >
+                              Сохранить
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleCancelEdit}
+                              disabled={isAddingComment}
+                            >
+                              Отмена
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-muted-foreground">{comment.content}</p>
+                          {comment.is_edited && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              (изменено)
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
                   ))}

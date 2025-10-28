@@ -47,16 +47,18 @@ apiClient.interceptors.response.use(
 
       try {
         // Для OAuth2 нет refresh токена, поэтому просто очищаем состояние
-        // и перенаправляем на логин
+        // НЕ перенаправляем автоматически на логин - пусть UI сам решает
         if (typeof window !== 'undefined') {
           AuthAPI.clearAuthData();
-          window.location.href = '/login';
+          // Убираем автоматическое перенаправление
+          console.warn('Авторизация истекла. Требуется повторный вход.');
         }
       } catch (refreshError) {
-        // Если произошла ошибка, очищаем cookies и перенаправляем
+        // Если произошла ошибка, очищаем cookies
+        // НЕ перенаправляем автоматически
         if (typeof window !== 'undefined') {
           AuthAPI.clearAuthData();
-          window.location.href = '/login';
+          console.warn('Ошибка обновления авторизации. Требуется повторный вход.');
         }
       }
     }

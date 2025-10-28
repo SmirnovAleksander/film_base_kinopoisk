@@ -326,7 +326,7 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   addComment: async (filmId: number, content: string) => {
     set({ isAddingComment: true });
     try {
-      const commentData: CommentCreate = { content };
+      const commentData: CommentCreate = { content, film_id: filmId };
       await UserInteractionsAPI.addComment(filmId, commentData);
       
       // Обновляем локальное состояние

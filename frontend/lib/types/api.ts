@@ -279,6 +279,7 @@ export interface AuthResponse {
 // Создать комментарий
 export interface CommentCreate {
   content: string;
+  film_id: number;
 }
 
 // Обновить комментарий
