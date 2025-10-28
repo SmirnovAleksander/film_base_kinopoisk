@@ -20,18 +20,32 @@ interface FilmCardProps {
 
 export function FilmCard({ film, showActions = true, className }: FilmCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
-  const { 
-    bookmarkedFilmIds, 
-    addBookmark, 
-    removeBookmark, 
+  const [imageError, setImageError] = useState(false);
+  const {
+    bookmarkedFilmIds,
+    addBookmark,
+    removeBookmark,
     ratedFilmIds,
     getUserRating,
-    isAddingBookmark 
+    isAddingBookmark
   } = useUserInteractionsStore();
 
   const isBookmarked = bookmarkedFilmIds.has(film.id);
   const userRating = getUserRating(film.id);
   const isRated = ratedFilmIds.has(film.id);
+
+  // Проверяем валидность URL постера
+  const isValidPosterUrl = (url: string): boolean => {
+    if (!url || typeof url !== 'string') return false;
+    try {
+      new URL(url);
+      return url.startsWith('http://') || url.startsWith('https://');
+    } catch {
+      return false;
+    }
+  };
+
+  const posterUrl = film.poster && isValidPosterUrl(film.poster) ? film.poster : null;
 
   const handleBookmarkToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -42,6 +56,11 @@ export function FilmCard({ film, showActions = true, className }: FilmCardProps)
     } else {
       await addBookmark(film.id);
     }
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
+    setImageLoaded(true);
   };
 
   const getRatingColor = (rating: number) => {
@@ -58,16 +77,18 @@ export function FilmCard({ film, showActions = true, className }: FilmCardProps)
           {!imageLoaded && (
             <Skeleton className="absolute inset-0 w-full h-full" />
           )}
-          {film.poster ? (
+          {posterUrl && !imageError ? (
             <Image
-              src={film.poster}
+              src={posterUrl}
               alt={film.title || 'Без названия'}
               fill
               className={`object-cover transition-transform duration-200 group-hover:scale-105 ${
                 !imageLoaded ? 'opacity-0' : 'opacity-100'
               }`}
               onLoad={() => setImageLoaded(true)}
+              onError={handleImageError}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              unoptimized={true}
             />
           ) : (
             <div className="w-full h-full bg-muted flex items-center justify-center">
