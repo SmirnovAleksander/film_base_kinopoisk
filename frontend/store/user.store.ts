@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { UserInteractionsAPI } from '../lib/api/interactions';
+import { useAuthStore } from './auth.store';
 import {
   Bookmark,
   UserFilmRating,
@@ -183,7 +184,13 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   fetchUserRatings: async (page = 1) => {
     set({ isLoadingRatings: true, ratingsPage: page });
     try {
-      const response = await UserInteractionsAPI.getUserRatings(0, page, PAGINATION.DEFAULT_PAGE_SIZE);
+      // Получаем ID текущего пользователя из auth store
+      const { user } = useAuthStore.getState();
+      if (!user) {
+        throw new Error('Пользователь не авторизован');
+      }
+      
+      const response = await UserInteractionsAPI.getUserRatings(user.id, page, PAGINATION.DEFAULT_PAGE_SIZE);
       const ratedIds = new Set(response.items.map(rating => rating.film_id));
       
       set({
