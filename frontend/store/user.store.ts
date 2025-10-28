@@ -24,11 +24,13 @@ interface UserInteractionsState {
   userRatings: UserFilmRating[];
   ratedFilmIds: Set<number>;
   
+  // Комментарии
+  comments: Comment[];
+  
   // История просмотров
   userHistory: UserFilmHistory[];
   historyLoading: boolean;
   historyTotalCount: number;
-  historyPage: number;
   
   // Состояние загрузки
   isLoadingBookmarks: boolean;
@@ -42,6 +44,7 @@ interface UserInteractionsState {
   // Пагинация
   bookmarksPage: number;
   ratingsPage: number;
+  historyPage: number;
   bookmarksTotalCount: number;
   ratingsTotalCount: number;
 
@@ -398,6 +401,7 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   clearComments: () => {
     set({
       comments: [],
+      isLoadingComments: false,
     });
   },
 
@@ -408,7 +412,7 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
     try {
       const response = await UserInteractionsAPI.getUserHistory(page, PAGINATION.DEFAULT_PAGE_SIZE);
       set({
-        userHistory: response.history.map(item => ({
+        userHistory: response.history.map((item: any) => ({
           id: Date.now() + Math.random(),
           user_id: 0,
           film_id: item.film.id,
@@ -419,7 +423,7 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
         historyLoading: false,
       });
     } catch (error) {
-      set({ historyLoading: false });
+      set({ historyLoading: false, userHistory: [] });
       throw error;
     }
   },
