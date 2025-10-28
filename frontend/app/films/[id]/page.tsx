@@ -27,6 +27,7 @@ import { FilmCard, FilmCardSkeleton } from '@/components/film/film-card';
 import { StarRating } from '@/components/film/star-rating';
 import { useFilmsStore, useUserInteractionsStore } from '@/store';
 import { ROUTES } from '@/lib/config';
+import { FilmsAPI } from '@/lib/api';
 
 export default function FilmDetailsPage() {
   const params = useParams();
@@ -47,13 +48,28 @@ export default function FilmDetailsPage() {
 
   const [newComment, setNewComment] = useState('');
   const [activeTab, setActiveTab] = useState('details');
+  const [filmStuff, setFilmStuff] = useState<any[]>([]);
+  const [isLoadingStuff, setIsLoadingStuff] = useState(false);
 
   useEffect(() => {
     if (filmId) {
       fetchFilmDetails(filmId);
       fetchFilmComments(filmId);
+      loadFilmStuff();
     }
   }, [filmId]);
+
+  const loadFilmStuff = async () => {
+    try {
+      setIsLoadingStuff(true);
+      const stuff = await FilmsAPI.getFilmStuff(filmId);
+      setFilmStuff(stuff);
+    } catch (error) {
+      console.error('Error loading film stuff:', error);
+    } finally {
+      setIsLoadingStuff(false);
+    }
+  };
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -350,9 +366,60 @@ export default function FilmDetailsPage() {
               <CardTitle>Участники</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                Информация об участниках будет добавлена в следующей версии.
-              </p>
+              {isLoadingStuff ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="flex items-center space-x-4">
+                      <Skeleton className="h-16 w-16 rounded-full" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-48" />
+                        <Skeleton className="h-3 w-32" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : filmStuff.length > 0 ? (
+                <div className="space-y-4">
+                  {filmStuff.map((person) => (
+                    <div key={person.id} className="flex items-center space-x-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                      {person.image ? (
+                        <img
+                          src={person.image}
+                          alt={person.name || person.original_name}
+                          className="h-16 w-16 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                          <span className="text-muted-foreground text-sm">Нет фото</span>
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <h3 className="font-semibold">
+                          <Link 
+                            href={`/stuff/${person.id}`}
+                            className="hover:text-blue-600 transition-colors"
+                          >
+                            {person.name || person.original_name}
+                          </Link>
+                        </h3>
+                        {person.original_name && person.name !== person.original_name && (
+                          <p className="text-sm text-muted-foreground">{person.original_name}</p>
+                        )}
+                        {person.career && person.career.length > 0 && (
+                          <p className="text-sm text-muted-foreground">
+                            {person.career.slice(0, 3).join(', ')}
+                            {person.career.length > 3 && '...'}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">
+                  Информация об участниках не найдена.
+                </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

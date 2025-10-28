@@ -93,7 +93,7 @@ export class UserInteractionsAPI {
       page,
       page_size: pageSize,
     };
-    const response = await apiClient.get(`${API_ENDPOINTS.RATINGS.SET(0).replace('/rating', '')}/users/${userId}/ratings${buildQueryString(params)}`);
+    const response = await apiClient.get(`${API_ENDPOINTS.RATINGS.USER_RATINGS(userId)}${buildQueryString(params)}`);
     return response.data;
   }
 

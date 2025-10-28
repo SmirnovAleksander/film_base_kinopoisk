@@ -300,3 +300,113 @@ export interface RatingCreate {
 export interface RatingUpdate {
   rating: number;
 }
+
+// История просмотров ответ
+export interface UserFilmHistoryResponse {
+  history: Array<{
+    visited_at: string;
+    film: Film;
+  }>;
+  total: number;
+}
+
+// Статистика истории
+export interface UserFilmHistoryStats {
+  total_visits: number;
+  visits_7d: number;
+  visits_30d: number;
+  favorite_genre?: string;
+  favorite_genre_count: number;
+}
+
+// Сообщение ответ
+export interface MessageResponse {
+  message: string;
+}
+
+// Медиа контент ответ
+export interface MediaResponse {
+  media: Media[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
+// Категории медиа ответ
+export interface MediaCategoriesResponse {
+  categories: string[];
+}
+
+// Типы медиа ответ
+export interface MediaTypesResponse {
+  types: string[];
+}
+
+// Статистика медиа ответ
+export interface MediaStatsResponse {
+  total_media: number;
+  categories: Record<string, number>;
+  card_types: Record<string, number>;
+  content_types: Record<string, number>;
+}
+
+// Список участников ответ
+export interface StuffListResponse {
+  items: Stuff[];
+  page: number;
+  page_size: number;
+  total_count: number;
+}
+
+// Создать фильм
+export interface FilmCreate {
+  kinopoisk_id: string;
+  title?: string;
+  original_title?: string;
+  description?: string;
+  full_description?: string;
+  poster?: string;
+  year?: number;
+  tagline?: string;
+  ru_premiere?: string;
+  world_premiere?: string;
+  content_rating?: string;
+  is_family_friendly: boolean;
+  duration?: string;
+  rating_kp?: number;
+  kp_votes_count?: string;
+  rating_imdb?: number;
+  imdb_votes_count?: string;
+  budget?: string;
+  usa_box_office?: string;
+  rus_box_office?: string;
+}
+
+// Обновить фильм
+export interface FilmUpdate extends Partial<FilmCreate> {}
+
+// Создать участника
+export interface StuffCreate {
+  kinopoisk_id: string;
+  name?: string;
+  original_name?: string;
+  career?: string[];
+  ganres?: string[];
+  height?: string;
+  birthday_day_month?: string;
+  zodiac?: string;
+  age?: number;
+  birthplace?: string[];
+  spouse?: string[];
+  children?: string[];
+  total_films?: number;
+  career_start_year?: number;
+  career_end_year?: number;
+  image?: string;
+}
+
+// Обновить участника
+export interface StuffUpdate extends Partial<StuffCreate> {}

@@ -69,12 +69,6 @@ export class FilmsAPI {
     return response.data;
   }
 
-  // Получить фильм по Кинопоиск ID
-  static async getFilmByKinopoiskId(kinopoiskId: string): Promise<FilmWithDetails> {
-    const response = await apiClient.get(`${API_ENDPOINTS.FILMS.DETAILS(0).replace('/0', '')}/kinopoisk/${kinopoiskId}`);
-    return response.data;
-  }
-
   // Получить рекомендации для фильма
   static async getFilmRecommendations(
     id: number,
@@ -126,6 +120,12 @@ export class FilmsAPI {
   // Получить похожие фильмы
   static async getSimilarFilms(id: number): Promise<SimilarFilm[]> {
     const response = await apiClient.get(`${API_ENDPOINTS.FILMS.DETAILS(id)}/similar`);
+    return response.data;
+  }
+
+  // Получить фильм по Kinopoisk ID
+  static async getFilmByKinopoiskId(kinopoiskId: string): Promise<FilmWithDetails> {
+    const response = await apiClient.get(API_ENDPOINTS.FILMS.KINOPOISK_DETAILS(kinopoiskId));
     return response.data;
   }
 }
