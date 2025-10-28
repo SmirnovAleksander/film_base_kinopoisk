@@ -1,5 +1,6 @@
 import axios, { AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { API_CONFIG, STORAGE_KEYS } from '../config';
+import { AuthAPI } from './auth';
 
 // Создаем экземпляр axios
 export const apiClient = axios.create({
@@ -11,11 +12,6 @@ export const apiClient = axios.create({
 });
 
 // Типы для запросов
-interface AuthTokens {
-  access_token: string;
-  refresh_token: string;
-}
-
 interface RequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
@@ -24,7 +20,8 @@ interface RequestConfig extends InternalAxiosRequestConfig {
 apiClient.interceptors.request.use(
   (config: RequestConfig) => {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      // Используем AuthAPI для получения токена из cookies
+      const token = AuthAPI.getAuthToken();
       if (token && !config.headers?.Authorization) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -49,29 +46,16 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Пытаемся обновить токен
-        const refreshToken = localStorage.getItem(`${STORAGE_KEYS.AUTH_TOKEN}_refresh`);
-        if (refreshToken) {
-          const response = await axios.post(`${API_CONFIG.baseURL}/auth/refresh`, {
-            refresh_token: refreshToken,
-          });
-
-          const { access_token } = response.data;
-          localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, access_token);
-          
-          // Обновляем токен в оригинальном запросе
-          if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${access_token}`;
-          }
-          
-          return apiClient(originalRequest);
+        // Для OAuth2 нет refresh токена, поэтому просто очищаем состояние
+        // и перенаправляем на логин
+        if (typeof window !== 'undefined') {
+          AuthAPI.clearAuthData();
+          window.location.href = '/(auth)/login';
         }
       } catch (refreshError) {
-        // Если не удалось обновить токен, очищаем localStorage и перенаправляем на логин
+        // Если произошла ошибка, очищаем cookies и перенаправляем
         if (typeof window !== 'undefined') {
-          localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-          localStorage.removeItem(`${STORAGE_KEYS.AUTH_TOKEN}_refresh`);
-          localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+          AuthAPI.clearAuthData();
           window.location.href = '/(auth)/login';
         }
       }
@@ -84,16 +68,14 @@ apiClient.interceptors.response.use(
 // Функция для проверки, авторизован ли пользователь
 export const isAuthenticated = (): boolean => {
   if (typeof window === 'undefined') return false;
-  const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+  const token = AuthAPI.getAuthToken();
   return !!token;
 };
 
 // Функция для выхода
 export const logout = (): void => {
   if (typeof window !== 'undefined') {
-    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-    localStorage.removeItem(`${STORAGE_KEYS.AUTH_TOKEN}_refresh`);
-    localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+    AuthAPI.clearAuthData();
     window.location.href = '/(auth)/login';
   }
 };

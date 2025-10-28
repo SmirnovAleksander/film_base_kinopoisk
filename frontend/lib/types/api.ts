@@ -2,18 +2,13 @@
  * TypeScript типы для API
  */
 
-// Пользователь
+// Пользователь (соответствует fastapi-users BaseUser схеме)
 export interface User {
   id: number;
   email: string;
-  username?: string;
-  first_name?: string;
-  last_name?: string;
   is_active: boolean;
   is_verified: boolean;
   is_superuser: boolean;
-  created_at: string;
-  updated_at: string;
 }
 
 // Фильм

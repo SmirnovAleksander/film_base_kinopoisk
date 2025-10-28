@@ -11,13 +11,12 @@ import { STORAGE_KEYS } from '../lib/config';
 interface AuthState {
   user: User | null;
   token: string | null;
-  refreshToken: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   
   // Действия
   login: (data: LoginData) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
+  register: (data: RegisterData) => Promise<User>;
   logout: () => Promise<void>;
   getCurrentUser: () => Promise<void>;
   updateUser: (userData: Partial<User>) => Promise<void>;
@@ -30,27 +29,35 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       token: null,
-      refreshToken: null,
       isLoading: false,
       isAuthenticated: false,
 
       login: async (data: LoginData) => {
         set({ isLoading: true });
         try {
-          const response = await AuthAPI.login(data);
-          const { access_token, refresh_token, user } = response;
+          // OAuth2 вход - получаем только access_token
+          const { access_token, token_type } = await AuthAPI.login(data);
+          console.log('🔍 Login response:', { access_token: access_token.substring(0, 20) + '...', token_type });
+          
+          // Сначала сохраняем токен в cookies
+          AuthAPI.setAuthData(access_token, { id: 0, email: '', is_active: true, is_verified: false, is_superuser: false });
+          
+          // Теперь получаем данные пользователя
+          const user = await AuthAPI.getCurrentUser();
+          console.log('🔍 User data:', user);
 
-          // Сохраняем токены в localStorage
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, access_token);
-            localStorage.setItem(`${STORAGE_KEYS.AUTH_TOKEN}_refresh`, refresh_token);
-            localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
-          }
+          // Обновляем cookies с реальными данными пользователя
+          AuthAPI.setAuthData(access_token, user);
+          
+          // Проверяем, что данные сохранились
+          const savedToken = AuthAPI.getAuthToken();
+          const savedUser = AuthAPI.getUserData();
+          console.log('🔍 Saved token:', savedToken ? savedToken.substring(0, 20) + '...' : 'null');
+          console.log('🔍 Saved user:', savedUser);
 
           set({
             user,
             token: access_token,
-            refreshToken: refresh_token,
             isAuthenticated: true,
             isLoading: false,
           });
@@ -63,23 +70,11 @@ export const useAuthStore = create<AuthState>()(
       register: async (data: RegisterData) => {
         set({ isLoading: true });
         try {
-          const response = await AuthAPI.register(data);
-          const { access_token, refresh_token, user } = response;
-
-          // Сохраняем токены в localStorage
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, access_token);
-            localStorage.setItem(`${STORAGE_KEYS.AUTH_TOKEN}_refresh`, refresh_token);
-            localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
-          }
-
-          set({
-            user,
-            token: access_token,
-            refreshToken: refresh_token,
-            isAuthenticated: true,
-            isLoading: false,
-          });
+          const user = await AuthAPI.register(data);
+          
+          // После регистрации нужно войти в систему
+          set({ isLoading: false });
+          return user;
         } catch (error) {
           set({ isLoading: false });
           throw error;
@@ -94,17 +89,12 @@ export const useAuthStore = create<AuthState>()(
           // Игнорируем ошибку выхода, все равно очищаем локальное состояние
           console.warn('Logout API error:', error);
         } finally {
-          // Очищаем localStorage
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-            localStorage.removeItem(`${STORAGE_KEYS.AUTH_TOKEN}_refresh`);
-            localStorage.removeItem(STORAGE_KEYS.USER_DATA);
-          }
+          // Очищаем данные через AuthAPI
+          AuthAPI.clearAuthData();
 
           set({
             user: null,
             token: null,
-            refreshToken: null,
             isAuthenticated: false,
             isLoading: false,
           });
@@ -112,7 +102,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       getCurrentUser: async () => {
-        const { token } = get();
+        const token = AuthAPI.getAuthToken();
         if (!token) {
           throw new Error('No token available');
         }
@@ -121,14 +111,13 @@ export const useAuthStore = create<AuthState>()(
         try {
           const user = await AuthAPI.getCurrentUser();
           
-          // Обновляем данные пользователя в localStorage
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
-          }
+          // Обновляем данные в cookies
+          AuthAPI.setAuthData(token, user);
 
           set({
             user,
             isAuthenticated: true,
+            token,
             isLoading: false,
           });
         } catch (error) {
@@ -151,9 +140,10 @@ export const useAuthStore = create<AuthState>()(
         try {
           const updatedUser = await AuthAPI.updateProfile(userData);
           
-          // Обновляем данные пользователя в localStorage
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(updatedUser));
+          // Обновляем данные в cookies
+          const token = AuthAPI.getAuthToken();
+          if (token) {
+            AuthAPI.setAuthData(token, updatedUser);
           }
 
           set({
@@ -167,17 +157,12 @@ export const useAuthStore = create<AuthState>()(
       },
 
       clearAuth: () => {
-        // Очищаем localStorage
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-          localStorage.removeItem(`${STORAGE_KEYS.AUTH_TOKEN}_refresh`);
-          localStorage.removeItem(STORAGE_KEYS.USER_DATA);
-        }
+        // Очищаем данные через AuthAPI
+        AuthAPI.clearAuthData();
 
         set({
           user: null,
           token: null,
-          refreshToken: null,
           isAuthenticated: false,
           isLoading: false,
         });
@@ -192,7 +177,6 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         user: state.user,
         token: state.token,
-        refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
     }
