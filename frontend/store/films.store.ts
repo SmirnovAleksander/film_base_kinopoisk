@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { FilmsAPI } from '../lib/api/films';
+import { FilmsAPI } from '@/lib/api';
 import {
   Film,
   FilmWithDetails,

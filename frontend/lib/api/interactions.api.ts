@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient } from './client.api';
 import {
   Bookmark,
   BookmarkResponse,
@@ -19,7 +19,7 @@ import {
   UserFilmHistoryStats,
 } from '@/lib/types';
 import { API_ENDPOINTS, PAGINATION } from '@/lib/config';
-import { buildQueryString } from './client';
+import { buildQueryString } from './client.api';
 
 export class UserInteractionsAPI {
   // ========== ЗАКЛАДКИ ==========

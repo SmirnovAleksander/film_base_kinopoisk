@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/use-auth';
 import { ROUTES } from '@/lib/config';
-import { handleApiError } from '@/lib/api/client';
+import { handleApiError } from '@/lib/api';
 
 export default function LoginPage() {
   const router = useRouter();

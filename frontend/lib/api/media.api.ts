@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient } from './client.api';
 import {
   Media,
   MediaResponse,
@@ -7,7 +7,7 @@ import {
   MediaStatsResponse,
 } from '@/lib/types';
 import { API_ENDPOINTS, PAGINATION } from '@/lib/config';
-import { buildQueryString } from './client';
+import { buildQueryString } from './client.api';
 
 export class MediaAPI {
   // Получить список медиа контента

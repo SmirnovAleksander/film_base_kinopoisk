@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
 import { ROUTES } from '@/lib/config';
-import { handleApiError } from '@/lib/api/client';
+import { handleApiError } from '@/lib/api';
 
 export default function RegisterPage() {
   const router = useRouter();

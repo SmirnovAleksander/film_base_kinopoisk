@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { UserInteractionsAPI } from '../lib/api/interactions';
+import { UserInteractionsAPI } from '@/lib/api';
 import { useAuthStore } from './auth.store';
 import {
   Bookmark,

@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient } from './client.api';
 import {
   UserFilmHistory,
   UserFilmHistoryResponse,
@@ -6,7 +6,7 @@ import {
   MessageResponse,
 } from '@/lib/types';
 import { API_ENDPOINTS, PAGINATION } from '@/lib/config';
-import { buildQueryString } from './client';
+import { buildQueryString } from './client.api';
 
 export class HistoryAPI {
   // Добавить фильм в историю посещений

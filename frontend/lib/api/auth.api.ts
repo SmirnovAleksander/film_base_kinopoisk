@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient } from './client.api';
 import Cookies from 'js-cookie';
 import {
   LoginData,

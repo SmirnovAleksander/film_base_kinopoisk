@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AuthAPI } from '../lib/api/auth';
+import { AuthAPI } from '@/lib/api';
 import {
   User,
   LoginData,

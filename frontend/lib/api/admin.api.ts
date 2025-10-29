@@ -1,10 +1,10 @@
-import { apiClient } from './client';
+import { apiClient } from './client.api';
 import {
   Film,
   Stuff,
 } from '@/lib/types';
 import { API_ENDPOINTS, PAGINATION } from '@/lib/config';
-import { buildQueryString } from './client';
+import { buildQueryString } from './client.api';
 
 export class AdminAPI {
   // ========== УПРАВЛЕНИЕ ФИЛЬМАМИ ==========

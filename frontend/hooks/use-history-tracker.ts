@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useUserInteractionsStore } from '@/store';
 import { useAuthStore } from '@/store';
-import { isAuthenticated } from '@/lib/api/client';
+import { isAuthenticated } from '@/lib/api';
 
 export const useHistoryTracker = () => {
   const pathname = usePathname();
