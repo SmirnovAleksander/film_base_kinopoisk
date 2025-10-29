@@ -13,8 +13,8 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
             gcTime: 10 * 60 * 1000, // 10 минут (было cacheTime)
             retry: (failureCount, error: any) => {
               // Не повторяем запросы при 401, 403, 404
-              if (error?.response?.status === 401 || 
-                  error?.response?.status === 403 || 
+              if (error?.response?.status === 401 ||
+                  error?.response?.status === 403 ||
                   error?.response?.status === 404) {
                 return false;
               }
@@ -24,6 +24,13 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
           },
           mutations: {
             retry: false,
+            onError: (error: any) => {
+              // Логирование ошибок мутаций
+              console.error('Mutation error:', error);
+            },
+            onSuccess: () => {
+              console.log('Mutation successful');
+            },
           },
         },
       })
