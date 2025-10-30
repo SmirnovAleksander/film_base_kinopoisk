@@ -1,136 +1,96 @@
-// Типы для фильмов и связанных с ними данных
+// Типы для фильмов
 
-// Базовые типы фильмов
 export interface Film {
   kinopoisk_id: string;
-  title?: string;
-  original_title?: string;
-  description?: string;
-  full_description?: string;
-  poster?: string;
-  year?: number;
-  tagline?: string;
-  ru_premiere?: string;
-  world_premiere?: string;
-  content_rating?: string;
+  title?: string | null;
+  original_title?: string | null;
+  description?: string | null;
+  full_description?: string | null;
+  poster?: string | null;
+  year?: number | null;
+  tagline?: string | null;
+  ru_premiere?: string | null;
+  world_premiere?: string | null;
+  content_rating?: string | null;
   is_family_friendly: boolean;
-  duration?: string;
-  rating_kp?: number;
-  kp_votes_count?: string;
-  rating_imdb?: number;
-  imdb_votes_count?: string;
-  user_rating?: number;
+  duration?: string | null;
+  rating_kp?: number | null;
+  kp_votes_count?: string | null;
+  rating_imdb?: number | null;
+  imdb_votes_count?: string | null;
+  user_rating?: number | null;
   user_rating_count: number;
-  budget?: string;
-  usa_box_office?: string;
-  rus_box_office?: string;
-}
-
-// Фильм с подробной информацией
-export interface FilmWithDetails extends Film {
+  budget?: string | null;
+  usa_box_office?: string | null;
+  rus_box_office?: string | null;
   id: number;
-  genres?: Genre[];
-  countries?: Country[];
 }
 
-// Фильм с рекомендательной информацией
-export interface FilmRecommendation extends FilmWithDetails {
+export interface FilmCreate {
+  kinopoisk_id: string;
+  title?: string | null;
+  original_title?: string | null;
+  description?: string | null;
+  full_description?: string | null;
+  poster?: string | null;
+  year?: number | null;
+  tagline?: string | null;
+  ru_premiere?: string | null;
+  world_premiere?: string | null;
+  content_rating?: string | null;
+  is_family_friendly?: boolean;
+  duration?: string | null;
+  rating_kp?: number | null;
+  kp_votes_count?: string | null;
+  rating_imdb?: number | null;
+  imdb_votes_count?: string | null;
+  user_rating?: number | null;
+  user_rating_count?: number;
+  budget?: string | null;
+  usa_box_office?: string | null;
+  rus_box_office?: string | null;
+}
+
+export interface FilmUpdate {
+  title?: string | null;
+  original_title?: string | null;
+  description?: string | null;
+  full_description?: string | null;
+  poster?: string | null;
+  year?: number | null;
+  tagline?: string | null;
+  ru_premiere?: string | null;
+  world_premiere?: string | null;
+  content_rating?: string | null;
+  is_family_friendly?: boolean | null;
+  duration?: string | null;
+  rating_kp?: number | null;
+  kp_votes_count?: string | null;
+  rating_imdb?: number | null;
+  imdb_votes_count?: string | null;
+  user_rating?: number | null;
+  user_rating_count?: number | null;
+  budget?: string | null;
+  usa_box_office?: string | null;
+  rus_box_office?: string | null;
+}
+
+export interface FilmWithDetails extends Film {
+  genres: Genre[];
+  countries: Country[];
+}
+
+export interface FilmRecommendation extends Film {
   relevance_score: number;
   genre_matches: number;
   stuff_matches: number;
 }
 
-// Похожий фильм
-export interface SimilarFilm {
-  id: number;
-  similar_film_id: string;
-  similar_film_title: string;
-  similar_film_year?: string;
-  similar_film_genres?: string[] | null;
-  similar_film_poster?: string | null;
-  similar_film_rating?: string | null;
+export interface FilmRecommendationsResponse {
+  items: FilmRecommendation[];
+  total_count: number;
 }
 
-// Провайдер для просмотра фильма
-export interface FilmWatchProvider {
-  id: number;
-  name: string;
-  url: string;
-  logo?: string | null;
-}
-
-// Схема для создания фильма
-export interface FilmCreate {
-  kinopoisk_id: string;
-  title?: string;
-  original_title?: string;
-  description?: string;
-  full_description?: string;
-  poster?: string;
-  year?: number;
-  tagline?: string;
-  ru_premiere?: string;
-  world_premiere?: string;
-  content_rating?: string;
-  is_family_friendly?: boolean;
-  duration?: string;
-  rating_kp?: number;
-  kp_votes_count?: string;
-  rating_imdb?: number;
-  imdb_votes_count?: string;
-  user_rating?: number;
-  user_rating_count?: number;
-  budget?: string;
-  usa_box_office?: string;
-  rus_box_office?: string;
-}
-
-// Схема для обновления фильма
-export interface FilmUpdate {
-  title?: string;
-  original_title?: string;
-  description?: string;
-  full_description?: string;
-  poster?: string;
-  year?: number;
-  tagline?: string;
-  ru_premiere?: string;
-  world_premiere?: string;
-  content_rating?: string;
-  is_family_friendly?: boolean;
-  duration?: string;
-  rating_kp?: number;
-  kp_votes_count?: string;
-  rating_imdb?: number;
-  imdb_votes_count?: string;
-  user_rating?: number;
-  user_rating_count?: number;
-  budget?: string;
-  usa_box_office?: string;
-  rus_box_office?: string;
-}
-
-// Жанр фильма
-export interface Genre {
-  name: string;
-  id: number;
-}
-
-// Страна
-export interface Country {
-  name: string;
-  id: number;
-}
-
-// Средний рейтинг фильма
-export interface FilmAverageRating {
-  average_rating?: number | null;
-  total_ratings: number;
-  min_rating?: number | null;
-  max_rating?: number | null;
-}
-
-// Поисковый ответ для фильмов
 export interface FilmSearchResponse {
   items: Film[];
   page: number;
@@ -138,31 +98,68 @@ export interface FilmSearchResponse {
   total_count: number;
 }
 
-// Ответ для рекомендаций фильмов
-export interface FilmRecommendationsResponse {
-  items: FilmRecommendation[];
+export interface FilmWatchProvider {
+  id: number;
+  name: string;
+  url: string;
+  logo?: string | null;
+}
+
+export interface SimilarFilm {
+  id: number;
+  similar_film_id: string;
+  similar_film_title: string;
+  similar_film_year?: string | null;
+  similar_film_genres?: string[] | null;
+  similar_film_poster?: string | null;
+  similar_film_rating?: string | null;
+}
+
+export interface FilmAverageRating {
+  average_rating?: number | null;
+  total_ratings: number;
+  min_rating?: number | null;
+  max_rating?: number | null;
+}
+
+export interface UserFilmRatingCreate {
+  rating: number;
+  film_id: number;
+}
+
+export interface UserFilmRatingUpdate {
+  rating: number;
+}
+
+export interface UserFilmRating {
+  rating: number;
+  id: number;
+  user_id: number;
+  film_id: number;
+  created_at: string;
+  updated_at: string;
+  film?: Film | null;
+}
+
+export interface UserRatingsResponse {
+  items: UserFilmRating[];
+  page: number;
+  page_size: number;
   total_count: number;
 }
 
-// Параметры поиска фильмов
-export interface FilmSearchParams {
-  query: string;
-  lang?: string;
-  page?: number;
-  page_size?: number;
+export interface RatingOperationResponse {
+  rating?: number | null;
+  created_at: string;
+  updated_at: string;
 }
 
-// Параметры фильтрации фильмов
-export interface FilmFilterParams {
-  genre_id?: number;
-  country_id?: number;
-  start_year?: number;
-  end_year?: number;
-  title?: string;
-  lang?: string;
-  source?: string;
-  min_rating?: number;
-  max_rating?: number;
-  page?: number;
-  page_size?: number;
+export interface Genre {
+  name: string;
+  id: number;
+}
+
+export interface Country {
+  name: string;
+  id: number;
 }

@@ -1,36 +1,36 @@
-// Типы для авторизации и пользователей
+// Типы для аутентификации
 
-// Ответ сервера с токеном
 export interface BearerResponse {
   access_token: string;
   token_type: string;
 }
 
-// Данные для входа в систему
-export interface LoginData {
-  email: string;
-  password: string;
-}
-
-// Данные для регистрации
-export interface RegisterData {
-  email: string;
-  password: string;
-}
-
-// Схема пользователя
-export interface User {
-  id: number;
-  email: string;
-  is_active: boolean;
-  is_superuser: boolean;
-  is_verified: boolean;
+export interface BodyAuthLogin {
+  grant_type?: string;
   username: string;
-  first_name?: string;
-  last_name?: string;
+  password: string;
+  scope?: string;
+  client_id?: string | null;
+  client_secret?: string | null;
 }
 
-// Схема для создания пользователя
+export interface BodyResetForgotPassword {
+  email: string;
+}
+
+export interface BodyResetResetPassword {
+  token: string;
+  password: string;
+}
+
+export interface BodyVerifyRequestToken {
+  email: string;
+}
+
+export interface BodyVerifyVerify {
+  token: string;
+}
+
 export interface UserCreate {
   email: string;
   password: string;
@@ -38,70 +38,30 @@ export interface UserCreate {
   is_superuser?: boolean;
   is_verified?: boolean;
   username: string;
-  first_name?: string;
-  last_name?: string;
+  first_name?: string | null;
+  last_name?: string | null;
 }
 
-// Схема для обновления пользователя
-export interface UserUpdate {
-  password?: string;
-  email?: string;
-  is_active?: boolean;
-  is_superuser?: boolean;
-  is_verified?: boolean;
-  username?: string;
-  first_name?: string;
-  last_name?: string;
-}
-
-// Данные для сброса пароля
-export interface ResetPasswordData {
-  token: string;
-  password: string;
-}
-
-// Данные для запроса восстановления пароля
-export interface ForgotPasswordData {
+export interface User {
+  id: number;
   email: string;
-}
-
-// Данные для запроса верификации email
-export interface VerifyRequestData {
-  email: string;
-}
-
-// Данные для подтверждения email
-export interface VerifyData {
-  token: string;
-}
-
-// Схема тела запроса для OAuth2 login
-export interface OAuthLoginBody {
-  grant_type: string | null;
+  is_active: boolean;
+  is_superuser: boolean;
+  is_verified: boolean;
   username: string;
-  password: string;
-  scope: string;
-  client_id: string | null;
-  client_secret: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
-// Схема тела запроса для сброса пароля
-export interface ResetPasswordBody {
-  token: string;
-  password: string;
-}
-
-// Схема тела запроса для восстановления пароля
-export interface ForgotPasswordBody {
-  email: string;
-}
-
-// Схема тела запроса для запроса верификации
-export interface VerifyRequestTokenBody {
-  email: string;
-}
-
-// Схема тела запроса для подтверждения
-export interface VerifyBody {
-  token: string;
+export interface UserUpdate {
+  password?: string | null;
+  email?: string | null;
+  is_active?: boolean | null;
+  is_superuser?: boolean | null;
+  is_verified?: boolean | null;
+  username?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
 }

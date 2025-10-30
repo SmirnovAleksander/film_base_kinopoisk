@@ -1,10 +1,9 @@
-// Типы для участников (актеров, режиссеров и другого персонала)
+// Типы для участников/актеров
 
-// Участник фильма (актер, режиссер и т.д.)
 export interface Stuff {
   kinopoisk_id: string;
-  name?: string;
-  original_name?: string;
+  name?: string | null;
+  original_name?: string | null;
   career?: string[] | null;
   ganres?: string[] | null;
   height?: string | null;
@@ -21,11 +20,10 @@ export interface Stuff {
   id: number;
 }
 
-// Схема для создания участника
 export interface StuffCreate {
   kinopoisk_id: string;
-  name?: string;
-  original_name?: string;
+  name?: string | null;
+  original_name?: string | null;
   career?: string[] | null;
   ganres?: string[] | null;
   height?: string | null;
@@ -41,10 +39,9 @@ export interface StuffCreate {
   image?: string | null;
 }
 
-// Схема для обновления участника
 export interface StuffUpdate {
-  name?: string;
-  original_name?: string;
+  name?: string | null;
+  original_name?: string | null;
   career?: string[] | null;
   ganres?: string[] | null;
   height?: string | null;
@@ -60,7 +57,6 @@ export interface StuffUpdate {
   image?: string | null;
 }
 
-// Ответ для списка участников
 export interface StuffListResponse {
   items: Stuff[];
   page: number;
