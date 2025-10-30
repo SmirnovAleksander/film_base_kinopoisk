@@ -95,7 +95,7 @@ export default function HistoryPage() {
       ) : userHistory.length > 0 ? (
         <div className="space-y-4">
           {userHistory.map((item) => (
-            <Card key={item.id} className="group hover:shadow-md transition-shadow">
+            <Card key={`${item.film.id}-${item.visited_at}`} className="group hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="flex gap-4">
                   {/* Постер */}
@@ -118,11 +118,11 @@ export default function HistoryPage() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <Link
-                          href={ROUTES.FILM_DETAILS(item.film_id)}
+                          href={ROUTES.FILM_DETAILS(item.film.id)}
                           className="block"
                         >
                           <h3 className="font-semibold text-lg hover:text-primary transition-colors line-clamp-1">
-                            {item.film?.title || `Фильм ${item.film_id}`}
+                            {item.film?.title || `Фильм ${item.film.id}`}
                           </h3>
                         </Link>
                         
@@ -152,7 +152,7 @@ export default function HistoryPage() {
                       {/* Кнопки действий */}
                       <div className="flex gap-2 flex-shrink-0">
                         <Button asChild size="sm">
-                          <Link href={ROUTES.FILM_DETAILS(item.film_id)}>
+                          <Link href={ROUTES.FILM_DETAILS(item.film.id)}>
                             <Play className="h-4 w-4 mr-2" />
                             Смотреть
                           </Link>
@@ -160,7 +160,7 @@ export default function HistoryPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleRemoveFromHistory(item.film_id)}
+                          onClick={() => handleRemoveFromHistory(item.film.id)}
                           disabled={isAddingToHistory}
                         >
                           <Trash2 className="h-4 w-4" />

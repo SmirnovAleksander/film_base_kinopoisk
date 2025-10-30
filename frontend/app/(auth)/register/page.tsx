@@ -65,8 +65,7 @@ export default function RegisterPage() {
       const registerData = {
         email: formData.email,
         password: formData.password,
-        confirm_password: formData.confirmPassword,
-        username: formData.username || undefined,
+        username: formData.username,
       };
       
       await register(registerData);

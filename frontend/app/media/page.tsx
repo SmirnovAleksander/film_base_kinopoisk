@@ -178,7 +178,7 @@ export default function MediaPage() {
                         {item.image ? (
                           <img
                             src={item.image}
-                            alt={item.title}
+                            alt={item.title || 'Медиа'}
                             className="object-cover rounded-md w-full h-48"
                           />
                         ) : (
@@ -206,7 +206,7 @@ export default function MediaPage() {
                         )}
                         
                         <p className="text-sm text-gray-600">
-                          Комментариев: {item.comments_count}
+                          Дата создания: {new Date(item.parsed_at).toLocaleDateString()}
                         </p>
                         
                         {item.date && (

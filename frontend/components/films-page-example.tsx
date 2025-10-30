@@ -1,17 +1,16 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useFilms, useSearchFilms, useFilterFilms } from '@/hooks/use-films-query';
-import { useCurrentUser, useLogin, useLogout } from '@/hooks/use-auth-query';
-import { useAddBookmark, useBookmarkStatus } from '@/hooks/use-interactions-query';
-import { FilmSearchParams, FilmFilterParams } from '@/lib/types';
+import { useState } from 'react';
+import { useFilmsStore } from '@/store';
+import { Film, FilmSearchParams, FilmFilterParams } from '@/lib/types';
+import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, Filter, Heart } from 'lucide-react';
+import { Search, Filter, Film as FilmIcon } from 'lucide-react';
 
 export function FilmsPage() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -20,91 +19,62 @@ export function FilmsPage() {
   const [filterParams, setFilterParams] = useState<FilmFilterParams | null>(null);
   const [activeTab, setActiveTab] = useState('all');
 
-  // React Query хуки
-  const { data: filmsData, isLoading: filmsLoading, error: filmsError } = useFilms(currentPage, pageSize);
-  const { data: searchData, isLoading: searchLoading } = useSearchFilms(searchParams);
-  const { data: filterData, isLoading: filterLoading } = useFilterFilms(filterParams);
-  const { data: currentUser } = useCurrentUser();
-  const loginMutation = useLogin();
-  const logoutMutation = useLogout();
+  // Store состояние
+  const {
+    films,
+    isLoading: filmsLoading,
+    totalCount,
+    fetchFilms,
+    searchFilms: searchFilmsAction,
+    filterFilms: filterFilmsAction,
+  } = useFilmsStore();
 
-  // Выбираем данные в зависимости от активной вкладки
-  const { data: currentData, isLoading } = useMemo(() => {
-    switch (activeTab) {
-      case 'search':
-        return { data: searchData, isLoading: searchLoading };
-      case 'filter':
-        return { data: filterData, isLoading: filterLoading };
-      default:
-        return { data: filmsData, isLoading: filmsLoading };
-    }
-  }, [activeTab, filmsData, searchData, filterData, filmsLoading, searchLoading, filterLoading]);
+  const { user: currentUser } = useAuth();
 
   const handleSearch = (query: string, lang: string = 'ru') => {
     if (query.trim()) {
       setSearchParams({ query, lang, page: 1 });
       setCurrentPage(1);
       setActiveTab('search');
+      searchFilmsAction({ query, lang, page: 1, page_size: pageSize });
     }
   };
 
   const handleFilter = (params: Partial<FilmFilterParams>) => {
-    const newParams = { ...params, page: 1 };
+    const newParams = { ...params, page: 1, page_size: pageSize };
     setFilterParams(newParams);
     setCurrentPage(1);
     setActiveTab('filter');
+    filterFilmsAction(newParams);
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     
-    if (searchParams) {
-      setSearchParams({ ...searchParams, page });
-    } else if (filterParams) {
-      setFilterParams({ ...filterParams, page });
+    if (activeTab === 'search' && searchParams) {
+      const newParams = { ...searchParams, page, page_size: pageSize };
+      searchFilmsAction(newParams);
+    } else if (activeTab === 'filter' && filterParams) {
+      const newParams = { ...filterParams, page, page_size: pageSize };
+      filterFilmsAction(newParams);
+    } else {
+      fetchFilms(page);
     }
   };
 
-  const handleLogin = async (email: string, password: string) => {
-    try {
-      await loginMutation.mutateAsync({ email, password });
-    } catch (error) {
-      console.error('Login failed:', error);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logoutMutation.mutateAsync();
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
-
-  const FilmComponent = ({ film }: { film: any }) => {
-    const { data: bookmarkStatus } = useBookmarkStatus(film.id);
-    const addBookmarkMutation = useAddBookmark();
-
-    const handleToggleBookmark = () => {
-      if (bookmarkStatus) {
-        // removeBookmark().mutate(film.id);
-      } else {
-        addBookmarkMutation.mutate(film.id);
-      }
-    };
-
+  const FilmComponent = ({ film }: { film: Film }) => {
     return (
       <Card className="p-4">
         <div className="flex gap-4">
           <img 
-            src={film.poster} 
-            alt={film.title} 
+            src={film.poster || '/placeholder.jpg'} 
+            alt={film.title || 'Без названия'} 
             className="w-24 h-36 object-cover rounded"
           />
           <div className="flex-1">
             <h3 className="text-lg font-semibold">{film.title}</h3>
             <p className="text-sm text-muted-foreground">{film.original_title}</p>
-            <p className="text-sm mt-2">{film.description}</p>
+            <p className="text-sm mt-2 line-clamp-2">{film.description}</p>
             
             <div className="flex items-center gap-2 mt-2">
               {film.rating_kp && (
@@ -112,17 +82,11 @@ export function FilmsPage() {
                   КП: {film.rating_kp}
                 </span>
               )}
-            </div>
-
-            <div className="flex gap-2 mt-4">
-              <Button
-                size="sm"
-                variant={bookmarkStatus ? "default" : "outline"}
-                onClick={handleToggleBookmark}
-                disabled={!currentUser}
-              >
-                <Heart className={`w-4 h-4 ${bookmarkStatus ? 'fill-current' : ''}`} />
-              </Button>
+              {film.year && (
+                <span className="text-sm text-muted-foreground">
+                  {film.year}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -130,19 +94,12 @@ export function FilmsPage() {
     );
   };
 
-  if (filmsError) {
-    return (
-      <div className="container mx-auto p-4">
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-center text-red-500">
-              Ошибка загрузки фильмов: {filmsError.message}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Убрал обработку ошибок, так как в store нет поля error
+
+  const currentData = {
+    items: films,
+    total_count: totalCount,
+  };
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -153,14 +110,9 @@ export function FilmsPage() {
         {currentUser ? (
           <div className="flex items-center gap-4">
             <span>Привет, {currentUser.email}</span>
-            <Button onClick={handleLogout} variant="outline" size="sm">
-              Выйти
-            </Button>
           </div>
         ) : (
-          <Button onClick={() => handleLogin('test@example.com', 'password')} size="sm">
-            Войти
-          </Button>
+          <span className="text-muted-foreground">Войдите для персонализации</span>
         )}
       </div>
 
@@ -174,7 +126,7 @@ export function FilmsPage() {
 
         <TabsContent value="all" className="space-y-4">
           {/* Список всех фильмов */}
-          {isLoading ? (
+          {filmsLoading ? (
             <div className="grid gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} className="h-32 w-full" />
@@ -183,7 +135,7 @@ export function FilmsPage() {
           ) : (
             <>
               <div className="grid gap-4">
-                {currentData?.items?.map((film) => (
+                {currentData.items?.map((film) => (
                   <FilmComponent key={film.id} film={film} />
                 ))}
               </div>
@@ -233,7 +185,7 @@ export function FilmsPage() {
           </Card>
 
           {/* Результаты поиска */}
-          {isLoading ? (
+          {filmsLoading ? (
             <div className="grid gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} className="h-32 w-full" />
@@ -241,7 +193,7 @@ export function FilmsPage() {
             </div>
           ) : (
             <div className="grid gap-4">
-              {currentData?.items?.map((film) => (
+              {currentData.items?.map((film) => (
                 <FilmComponent key={film.id} film={film} />
               ))}
             </div>
@@ -278,7 +230,7 @@ export function FilmsPage() {
           </Card>
 
           {/* Результаты фильтрации */}
-          {isLoading ? (
+          {filmsLoading ? (
             <div className="grid gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} className="h-32 w-full" />
@@ -286,7 +238,7 @@ export function FilmsPage() {
             </div>
           ) : (
             <div className="grid gap-4">
-              {currentData?.items?.map((film) => (
+              {currentData.items?.map((film) => (
                 <FilmComponent key={film.id} film={film} />
               ))}
             </div>
