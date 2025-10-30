@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { Heart, Trash2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useUserInteractionsStore } from '@/store';
 import { FilmCard } from '@/components/film/film-card';
 import { ROUTES } from '@/lib/config';
@@ -52,17 +51,7 @@ export default function BookmarksPage() {
         </div>
       </div>
 
-      {isLoadingBookmarks ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className="aspect-[2/3] w-full" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-3 w-1/2" />
-            </div>
-          ))}
-        </div>
-      ) : bookmarks.length > 0 ? (
+      {bookmarks.length > 0 ? (
         <div className="space-y-8">
           {/* Список закладок */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">

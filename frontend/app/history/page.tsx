@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { History, Clock, Play, Film, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useUserInteractionsStore } from '@/store';
 import { ROUTES } from '@/lib/config';
@@ -74,25 +73,7 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      {/* Индикатор загрузки */}
-      {historyLoading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Card key={i}>
-              <CardContent className="p-4">
-                <div className="flex gap-4">
-                  <Skeleton className="w-16 h-24 rounded" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-6 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                    <Skeleton className="h-4 w-full" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : userHistory.length > 0 ? (
+      {userHistory.length > 0 ? (
         <div className="space-y-4">
           {userHistory.map((item) => (
             <Card key={`${item.film.id}-${item.visited_at}`} className="group hover:shadow-md transition-shadow">
