@@ -39,7 +39,11 @@ export const useAuthStore = create<AuthState>()(
           const { access_token, token_type } = await AuthAPI.login(data);
           console.log('🔍 Login response:', { access_token: access_token.substring(0, 20) + '...', token_type });
           
-          // Получаем данные пользователя
+          // КРИТИЧНО: Сначала сохраняем токен в cookies
+          // Без этого getCurrentUser() не сможет аутентифицироваться
+          AuthAPI.setAuthData(access_token, {} as User);
+          
+          // Теперь получаем данные пользователя с валидным токеном
           const user = await AuthAPI.getCurrentUser();
           console.log('🔍 User data:', user);
 
@@ -60,6 +64,8 @@ export const useAuthStore = create<AuthState>()(
           });
         } catch (error) {
           set({ isLoading: false });
+          // Очищаем частичные данные в случае ошибки
+          AuthAPI.clearAuthData();
           throw error;
         }
       },
@@ -101,6 +107,8 @@ export const useAuthStore = create<AuthState>()(
       getCurrentUser: async () => {
         const token = AuthAPI.getAuthToken();
         if (!token) {
+          console.warn('getCurrentUser: No token available');
+          get().clearAuth();
           throw new Error('No token available');
         }
 
@@ -119,10 +127,16 @@ export const useAuthStore = create<AuthState>()(
           });
         } catch (error) {
           set({ isLoading: false });
-          // Если ошибка авторизации, очищаем состояние
+          
+          // Если ошибка авторизации (401), очищаем состояние
           if ((error as any)?.response?.status === 401) {
+            console.warn('getCurrentUser: Token expired or invalid, clearing auth');
             get().clearAuth();
+          } else {
+            // Для других ошибок логируем, но не очищаем состояние
+            console.error('getCurrentUser error:', error);
           }
+          
           throw error;
         }
       },

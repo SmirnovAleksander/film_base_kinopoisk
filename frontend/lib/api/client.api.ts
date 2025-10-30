@@ -47,20 +47,25 @@ apiClient.interceptors.response.use(
 
       try {
         // Для OAuth2 нет refresh токена, поэтому просто очищаем состояние
-        // НЕ перенаправляем автоматически на логин - пусть UI сам решает
         if (typeof window !== 'undefined') {
           AuthAPI.clearAuthData();
-          // Убираем автоматическое перенаправление
-          console.warn('Авторизация истекла. Требуется повторный вход.');
+          console.warn('🔑 Авторизация истекла. Требуется повторный вход.');
+          
+          // Отправляем кастомное событие для уведомления UI
+          window.dispatchEvent(new CustomEvent('auth:expired', {
+            detail: { message: 'Сессия истекла. Пожалуйста, войдите снова.' }
+          }));
         }
       } catch (refreshError) {
-        // Если произошла ошибка, очищаем cookies
-        // НЕ перенаправляем автоматически
+        // Если произошла ошибка при очистке
         if (typeof window !== 'undefined') {
           AuthAPI.clearAuthData();
-          console.warn('Ошибка обновления авторизации. Требуется повторный вход.');
+          console.error('❌ Ошибка при очистке авторизации:', refreshError);
         }
       }
+    } else if (error.response?.status === 401) {
+      // Вторая попытка с тем же токеном - логируем, но не очищаем повторно
+      console.warn('🔑 Повторная ошибка 401 для:', originalRequest?.url);
     }
 
     return Promise.reject(error);

@@ -3,18 +3,19 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { 
-  Search, 
-  Film, 
-  Heart, 
-  History, 
-  User, 
-  LogOut, 
-  Menu, 
-  Sun, 
-  Moon, 
+import {
+  Search,
+  Film,
+  Heart,
+  History,
+  User,
+  LogOut,
+  Menu,
+  Sun,
+  Moon,
   Monitor,
-  Settings
+  Settings,
+  Image
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,6 +60,7 @@ export function Header() {
 
   const navigation = [
     { name: 'Фильмы', href: ROUTES.FILMS, icon: Film },
+    { name: 'Медиа', href: ROUTES.MEDIA, icon: Image },
     { name: 'Закладки', href: ROUTES.BOOKMARKS, icon: Heart, requireAuth: true },
     { name: 'История', href: ROUTES.HISTORY, icon: History, requireAuth: true },
   ];
