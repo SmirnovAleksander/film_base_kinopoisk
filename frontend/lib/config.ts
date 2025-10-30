@@ -58,6 +58,7 @@ export const API_ENDPOINTS = {
     UPDATE: '/users/me',
     GET_BY_ID: (id: number) => `/users/${id}`,
     UPDATE_BY_ID: (id: number) => `/users/${id}`,
+    DELETE_BY_ID: (id: number) => `/users/${id}`,
   },
   FILMS: {
     LIST: '/films',
@@ -127,4 +128,6 @@ export const API_ENDPOINTS = {
       DELETE: (id: number) => `/admin/stuff/${id}`,
     },
   },
+  // Дополнительные endpoint'ы (необязательные)
+  HEALTH: '/health',
 } as const;
