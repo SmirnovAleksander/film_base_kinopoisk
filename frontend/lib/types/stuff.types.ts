@@ -63,3 +63,6 @@ export interface StuffListResponse {
   page_size: number;
   total_count: number;
 }
+
+// Алиас для совместимости с API
+export type StuffResponse = StuffListResponse;

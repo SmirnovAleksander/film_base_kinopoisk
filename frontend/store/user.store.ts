@@ -12,6 +12,7 @@ import {
   CommentCreate,
   CommentUpdate,
   UserFilmHistory,
+  UserFilmRatingCreate,
 } from '@/lib/types';
 import { PAGINATION } from '../lib/config';
 
@@ -229,7 +230,7 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   setFilmRating: async (filmId: number, rating: number) => {
     set({ isAddingRating: true });
     try {
-      const ratingData: RatingCreate = { rating };
+      const ratingData: UserFilmRatingCreate = { rating, film_id: filmId };
       await UserInteractionsAPI.setFilmRating(filmId, ratingData);
       
       // Обновляем локальное состояние
@@ -413,9 +414,6 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
       const response = await UserInteractionsAPI.getUserHistory(page, PAGINATION.DEFAULT_PAGE_SIZE);
       set({
         userHistory: response.history.map((item: any) => ({
-          id: Date.now() + Math.random(),
-          user_id: 0,
-          film_id: item.film.id,
           visited_at: item.visited_at,
           film: item.film
         })),
@@ -436,10 +434,11 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
       // Обновляем локальное состояние
       const { userHistory } = get();
       const newHistoryItem: UserFilmHistory = {
-        id: Date.now(),
-        user_id: 0,
-        film_id: filmId,
         visited_at: new Date().toISOString(),
+        film: {
+          id: filmId,
+          // Базовые поля фильма - можно дополнить при необходимости
+        } as any,
       };
       
       set({
@@ -458,7 +457,7 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
       await UserInteractionsAPI.removeFilmFromHistory(filmId);
       
       const { userHistory } = get();
-      const updatedHistory = userHistory.filter(item => item.film_id !== filmId);
+      const updatedHistory = userHistory.filter(item => item.film.id !== filmId);
       
       set({
         userHistory: updatedHistory,

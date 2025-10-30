@@ -1,7 +1,7 @@
 import { apiClient } from './client.api';
 import {
   Stuff,
-  StuffListResponse,
+  StuffResponse,
 } from '@/lib/types';
 import { API_ENDPOINTS, PAGINATION } from '@/lib/config';
 import { buildQueryString } from './client.api';
@@ -11,7 +11,7 @@ export class StuffAPI {
   static async getStuff(
     page: number = 1,
     pageSize: number = PAGINATION.DEFAULT_PAGE_SIZE
-  ): Promise<StuffListResponse> {
+  ): Promise<StuffResponse> {
     const params = {
       page,
       page_size: pageSize,

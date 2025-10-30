@@ -38,7 +38,7 @@ export interface FilmCreate {
   ru_premiere?: string | null;
   world_premiere?: string | null;
   content_rating?: string | null;
-  is_family_friendly?: boolean;
+  is_family_friendly?: boolean | null;
   duration?: string | null;
   rating_kp?: number | null;
   kp_votes_count?: string | null;

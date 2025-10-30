@@ -1,9 +1,6 @@
 // Типы для истории просмотров
 
 export interface UserFilmHistory {
-  id: number;
-  user_id: number;
-  film_id: number;
   visited_at: string;
   film: Film;
 }
