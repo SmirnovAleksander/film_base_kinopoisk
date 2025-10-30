@@ -2,7 +2,7 @@ import { apiClient } from './client.api';
 import {
   Bookmark,
   BookmarkResponse,
-  BookmarkStatus,
+  BookmarkStatusResponse,
   BookmarkOperationResponse,
   UserFilmRating,
   UserRatingsResponse,
@@ -50,7 +50,7 @@ export class UserInteractionsAPI {
   }
 
   // Проверить статус закладки
-  static async getBookmarkStatus(filmId: number): Promise<BookmarkStatus> {
+  static async getBookmarkStatus(filmId: number): Promise<BookmarkStatusResponse> {
     const response = await apiClient.get(API_ENDPOINTS.BOOKMARKS.STATUS(filmId));
     return response.data;
   }

@@ -57,12 +57,9 @@ export interface StuffUpdate {
   image?: string | null;
 }
 
-export interface StuffListResponse {
+export interface StuffResponse {
   items: Stuff[];
   page: number;
   page_size: number;
   total_count: number;
 }
-
-// Алиас для совместимости с API
-export type StuffResponse = StuffListResponse;
