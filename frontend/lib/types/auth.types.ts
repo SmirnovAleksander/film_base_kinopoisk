@@ -65,3 +65,17 @@ export interface UserUpdate {
   first_name?: string | null;
   last_name?: string | null;
 }
+
+// Типы для форм входа и регистрации
+export interface LoginData {
+  email: string;
+  password: string;
+}
+
+export interface RegisterData {
+  email: string;
+  password: string;
+  username: string;
+  first_name?: string;
+  last_name?: string;
+}

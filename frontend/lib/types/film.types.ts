@@ -141,6 +141,10 @@ export interface UserFilmRating {
   film?: Film | null;
 }
 
+// Алиасы для совместимости
+export type RatingCreate = UserFilmRatingCreate;
+export type RatingUpdate = UserFilmRatingUpdate;
+
 export interface UserRatingsResponse {
   items: UserFilmRating[];
   page: number;
@@ -162,4 +166,21 @@ export interface Genre {
 export interface Country {
   name: string;
   id: number;
+}
+
+// Параметры поиска и фильтрации фильмов
+export interface FilmSearchParams {
+  query?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export interface FilmFilterParams {
+  genre?: string;
+  year?: number;
+  rating_kp_min?: number;
+  rating_kp_max?: number;
+  country?: string;
+  page?: number;
+  page_size?: number;
 }
