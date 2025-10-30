@@ -7,12 +7,11 @@ import {
   Comment,
   BookmarkResponse,
   UserRatingsResponse,
-  RatingCreate,
-  RatingUpdate,
+  UserFilmRatingCreate,
   CommentCreate,
   CommentUpdate,
   UserFilmHistory,
-  UserFilmRatingCreate,
+  UserFilmHistoryResponse,
 } from '@/lib/types';
 import { PAGINATION } from '../lib/config';
 
@@ -140,10 +139,9 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
       const updatedBookmarkedIds = new Set(bookmarkedFilmIds);
       updatedBookmarkedIds.add(filmId);
       
-      // Добавляем закладку в список (можно запросить детали фильма отдельно)
-      // Для простоты добавляем только ID, детали можно получить по запросу
+      // Добавляем закладку в список
       const newBookmark: Bookmark = {
-        id: Date.now(), // Временный ID
+        id: Date.now(),
         user_id: 0,
         film_id: filmId,
         created_at: new Date().toISOString(),
@@ -245,7 +243,7 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
         userRatings[existingRatingIndex].updated_at = new Date().toISOString();
       } else {
         const newRating: UserFilmRating = {
-          id: Date.now(), // Временный ID
+          id: Date.now(),
           user_id: 0,
           film_id: filmId,
           rating,
@@ -333,7 +331,7 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
       // Обновляем локальное состояние
       const { comments } = get();
       const newComment: Comment = {
-        id: Date.now(), // Временный ID
+        id: Date.now(),
         user_id: 0,
         film_id: filmId,
         content,
@@ -411,12 +409,9 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   fetchUserHistory: async (page = 1) => {
     set({ historyLoading: true, historyPage: page });
     try {
-      const response = await UserInteractionsAPI.getUserHistory(page, PAGINATION.DEFAULT_PAGE_SIZE);
+      const response: UserFilmHistoryResponse = await UserInteractionsAPI.getUserHistory(page, PAGINATION.DEFAULT_PAGE_SIZE);
       set({
-        userHistory: response.history.map((item: any) => ({
-          visited_at: item.visited_at,
-          film: item.film
-        })),
+        userHistory: response.history,
         historyTotalCount: response.total,
         historyLoading: false,
       });
@@ -437,7 +432,6 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
         visited_at: new Date().toISOString(),
         film: {
           id: filmId,
-          // Базовые поля фильма - можно дополнить при необходимости
         } as any,
       };
       

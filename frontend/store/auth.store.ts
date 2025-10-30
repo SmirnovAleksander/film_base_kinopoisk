@@ -39,10 +39,7 @@ export const useAuthStore = create<AuthState>()(
           const { access_token, token_type } = await AuthAPI.login(data);
           console.log('🔍 Login response:', { access_token: access_token.substring(0, 20) + '...', token_type });
           
-          // Сначала сохраняем токен в cookies
-          AuthAPI.setAuthData(access_token, { id: 0, email: '', is_active: true, is_verified: false, is_superuser: false });
-          
-          // Теперь получаем данные пользователя
+          // Получаем данные пользователя
           const user = await AuthAPI.getCurrentUser();
           console.log('🔍 User data:', user);
 
