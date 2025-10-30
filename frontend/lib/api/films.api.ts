@@ -1,11 +1,9 @@
 import { apiClient } from './client.api';
-import {
+import type {
   Film,
   FilmWithDetails,
   Genre,
   Country,
-  Stuff,
-  FilmStill,
   FilmWatchProvider,
   SimilarFilm,
   FilmRecommendation,
@@ -13,8 +11,8 @@ import {
   FilmRecommendationsResponse,
   FilmFilterParams,
   FilmSearchParams,
-  PaginatedResponse,
 } from '@/lib/types';
+import type { Stuff } from '@/lib/types';
 import { API_ENDPOINTS, PAGINATION } from '@/lib/config';
 import { buildQueryString } from './client.api';
 
