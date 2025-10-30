@@ -33,6 +33,9 @@ export class AuthAPI {
     const response = await apiClient.post(API_ENDPOINTS.AUTH.REGISTER, {
       email: data.email,
       password: data.password,
+      username: data.username,
+      first_name: data.first_name,
+      last_name: data.last_name,
     });
     return response.data;
   }

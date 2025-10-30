@@ -21,6 +21,8 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: '',
     username: '',
+    first_name: '',
+    last_name: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -48,6 +50,18 @@ export default function RegisterPage() {
       newErrors.confirmPassword = 'Пароли не совпадают';
     }
 
+    if (!formData.username) {
+      newErrors.username = 'Имя пользователя обязательно';
+    }
+
+    if (formData.first_name && formData.first_name.length < 2) {
+      newErrors.first_name = 'Имя должно содержать минимум 2 символа';
+    }
+
+    if (formData.last_name && formData.last_name.length < 2) {
+      newErrors.last_name = 'Фамилия должна содержать минимум 2 символа';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -66,6 +80,8 @@ export default function RegisterPage() {
         email: formData.email,
         password: formData.password,
         username: formData.username,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
       };
       
       await register(registerData);
@@ -119,6 +135,40 @@ export default function RegisterPage() {
                 </div>
               )}
 
+              {/* Имя и Фамилия */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="first_name">Имя (необязательно)</Label>
+                  <Input
+                    id="first_name"
+                    type="text"
+                    placeholder="Иван"
+                    value={formData.first_name}
+                    onChange={(e) => handleInputChange('first_name', e.target.value)}
+                    className={errors.first_name ? 'border-destructive' : ''}
+                    disabled={isLoading}
+                  />
+                  {errors.first_name && (
+                    <p className="text-sm text-destructive">{errors.first_name}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="last_name">Фамилия (необязательно)</Label>
+                  <Input
+                    id="last_name"
+                    type="text"
+                    placeholder="Петров"
+                    value={formData.last_name}
+                    onChange={(e) => handleInputChange('last_name', e.target.value)}
+                    className={errors.last_name ? 'border-destructive' : ''}
+                    disabled={isLoading}
+                  />
+                  {errors.last_name && (
+                    <p className="text-sm text-destructive">{errors.last_name}</p>
+                  )}
+                </div>
+              </div>
+
               {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -139,9 +189,9 @@ export default function RegisterPage() {
                 )}
               </div>
 
-              {/* Имя пользователя (необязательно) */}
+              {/* Имя пользователя */}
               <div className="space-y-2">
-                <Label htmlFor="username">Имя пользователя (необязательно)</Label>
+                <Label htmlFor="username">Имя пользователя</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -150,10 +200,13 @@ export default function RegisterPage() {
                     placeholder="username"
                     value={formData.username}
                     onChange={(e) => handleInputChange('username', e.target.value)}
-                    className="pl-10"
+                    className={`pl-10 ${errors.username ? 'border-destructive' : ''}`}
                     disabled={isLoading}
                   />
                 </div>
+                {errors.username && (
+                  <p className="text-sm text-destructive">{errors.username}</p>
+                )}
               </div>
 
               {/* Пароль */}
