@@ -104,12 +104,11 @@ class MainParser:
             """
             CREATE TABLE IF NOT EXISTS media (
                 id SERIAL PRIMARY KEY,
-                url VARCHAR(500) UNIQUE NOT NULL,
-                title VARCHAR(1000) NOT NULL,
+                url VARCHAR(500) UNIQUE,
+                title VARCHAR(1000),
                 image VARCHAR(1000),
                 category VARCHAR(100),
                 date VARCHAR(100),
-                comments_count INTEGER DEFAULT 0,
                 card_type VARCHAR(20),
                 type VARCHAR(20) DEFAULT 'news',
                 parsed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -710,12 +709,11 @@ class MainParser:
                 if cursor.fetchone():
                     # Обновляем существующий медиа контент
                     cursor.execute("""
-                        UPDATE media SET 
+                        UPDATE media SET
                             title = %s,
                             image = %s,
                             category = %s,
                             date = %s,
-                            comments_count = %s,
                             card_type = %s,
                             type = %s,
                             parsed_at = CURRENT_TIMESTAMP
@@ -725,7 +723,6 @@ class MainParser:
                         media_item.get('image'),
                         media_item.get('category'),
                         media_item.get('date'),
-                        int(media_item.get('comments_count', 0)) if media_item.get('comments_count') else 0,
                         media_item.get('card_type'),
                         media_item.get('type', 'news'),
                         media_item.get('url')
@@ -733,15 +730,14 @@ class MainParser:
                 else:
                     # Вставляем новый медиа контент
                     cursor.execute("""
-                        INSERT INTO media (url, title, image, category, date, comments_count, card_type, type)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        INSERT INTO media (url, title, image, category, date, card_type, type)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
                     """, (
                         media_item.get('url'),
                         media_item.get('title'),
                         media_item.get('image'),
                         media_item.get('category'),
                         media_item.get('date'),
-                        int(media_item.get('comments_count', 0)) if media_item.get('comments_count') else 0,
                         media_item.get('card_type'),
                         media_item.get('type', 'news')
                     ))

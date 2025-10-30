@@ -378,11 +378,6 @@ class NewsPageParser:
             if date_elem:
                 news_data['date'] = date_elem.get_text(strip=True)
             
-            # Количество комментариев
-            comments_elem = article.find('a', class_='Nxic94PV8UPzGMYwQMWo')
-            if comments_elem:
-                news_data['comments_count'] = comments_elem.get_text(strip=True)
-            
             news_data['card_type'] = 'regular'
             
         except Exception as e:
@@ -426,11 +421,6 @@ class NewsPageParser:
             date_elem = article.find('span', class_='post-feature-card__published-date')
             if date_elem:
                 news_data['date'] = date_elem.get_text(strip=True)
-            
-            # Количество комментариев
-            comments_elem = article.find('a', class_='post-feature-card__number-of-comments')
-            if comments_elem:
-                news_data['comments_count'] = comments_elem.get_text(strip=True)
             
             news_data['card_type'] = 'feature'
             
