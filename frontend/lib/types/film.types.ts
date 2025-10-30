@@ -171,16 +171,26 @@ export interface Country {
 // Параметры поиска и фильтрации фильмов
 export interface FilmSearchParams {
   query?: string;
+  lang?: string;
   page?: number;
   page_size?: number;
 }
 
 export interface FilmFilterParams {
   genre?: string;
+  genre_id?: number;
+  country?: string;
+  country_id?: number;
   year?: number;
+  start_year?: number;
+  end_year?: number;
+  title?: string;
   rating_kp_min?: number;
   rating_kp_max?: number;
-  country?: string;
+  min_rating?: number;
+  max_rating?: number;
+  lang?: string;
+  source?: string;
   page?: number;
   page_size?: number;
 }

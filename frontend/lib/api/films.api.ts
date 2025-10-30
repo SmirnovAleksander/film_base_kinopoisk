@@ -45,15 +45,20 @@ export class FilmsAPI {
   // Фильтрация фильмов
   static async filterFilms(params: FilmFilterParams): Promise<FilmSearchResponse> {
     const queryParams = {
+      genre: params.genre,
       genre_id: params.genre_id,
+      country: params.country,
       country_id: params.country_id,
+      year: params.year,
       start_year: params.start_year,
       end_year: params.end_year,
       title: params.title,
-      lang: params.lang || 'ru',
-      source: params.source || 'kp',
+      rating_kp_min: params.rating_kp_min,
+      rating_kp_max: params.rating_kp_max,
       min_rating: params.min_rating,
       max_rating: params.max_rating,
+      lang: params.lang || 'ru',
+      source: params.source || 'kp',
       page: params.page || 1,
       page_size: params.page_size || PAGINATION.DEFAULT_PAGE_SIZE,
     };
@@ -125,5 +130,14 @@ export class FilmsAPI {
   static async getFilmByKinopoiskId(kinopoiskId: string): Promise<FilmWithDetails> {
     const response = await apiClient.get(API_ENDPOINTS.FILMS.KINOPOISK_DETAILS(kinopoiskId));
     return response.data;
+  }
+
+  // Получить кадры и постеры фильма (обновленный метод)
+  static async getFilmMedia(id: number): Promise<{ stills: any[]; wall: any[] }> {
+    const response = await apiClient.get(API_ENDPOINTS.FILMS.STILL(id));
+    return {
+      stills: response.data.stills || [],
+      wall: response.data.wall || response.data.posters || [],
+    };
   }
 }
