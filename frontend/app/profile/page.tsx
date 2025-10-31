@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useUserInteractionsStore } from '@/store';
-import { Mail, User } from 'lucide-react';
+import { Calendar, Mail, User } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, updateUser, isLoading } = useAuth();
@@ -54,7 +54,7 @@ export default function ProfilePage() {
               <div className="flex-1">
                 <div>
                   <div className="flex items-center gap-4 mb-4">
-                    <h1 className="text-3xl font-bold">{user.email}</h1>
+                    <h1 className="text-3xl font-bold">{user.username}</h1>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
@@ -62,6 +62,21 @@ export default function ProfilePage() {
                       <Mail className="h-4 w-4" />
                       <span>{user.email}</span>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      <span>Создан: {new Date(user.created_at).toLocaleDateString('ru-RU')}</span>
+                    </div>
+                    {user.first_name?.trim() || user.last_name?.trim() ? (
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        <span>
+                          {user.first_name?.trim() && user.last_name?.trim()
+                            ? `${user.first_name.trim()} ${user.last_name.trim()}`
+                            : user.first_name?.trim() || user.last_name?.trim()
+                          }
+                        </span>
+                      </div>
+                    ) : null}
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4" />
                       <span>ID: {user.id}</span>
@@ -137,14 +152,42 @@ export default function ProfilePage() {
             {userRatings.length > 0 ? (
               <div className="space-y-4">
                 {userRatings.slice(0, 10).map((rating) => (
-                  <div key={rating.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">Фильм ID: {rating.film_id}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Оценка: {rating.rating}/10
-                      </p>
+                  <div key={rating.id} className="flex items-center gap-4 p-3 border rounded-lg">
+                    {/* Миниатюра фильма */}
+                    <div className="w-16 h-20 bg-muted rounded-md overflow-hidden flex-shrink-0">
+                      {rating.film?.poster ? (
+                        <img
+                          src={rating.film.poster}
+                          alt={rating.film.title || 'Постер фильма'}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-xs text-muted-foreground">Постер</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="text-right">
+                    
+                    {/* Информация о фильме */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">
+                        {rating.film?.title || `Фильм #${rating.film_id}`}
+                      </p>
+                      {rating.film?.year && (
+                        <p className="text-sm text-muted-foreground">
+                          {rating.film.year}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-sm font-medium">
+                          Оценка: {rating.rating}/10
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Дата оценки */}
+                    <div className="text-right flex-shrink-0">
                       <p className="text-sm text-muted-foreground">
                         {new Date(rating.created_at).toLocaleDateString('ru-RU')}
                       </p>
