@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUserInteractionsStore } from '@/store';
 import { ROUTES } from '@/lib/config';
+import { formatDuration } from '@/lib/utils';
 import { Film } from '@/lib/types';
 
 interface FilmCardProps {
@@ -70,7 +71,7 @@ export function FilmCard({ film, showActions = true, className }: FilmCardProps)
   };
 
   return (
-    <Card className={`group overflow-hidden transition-all duration-200 hover:shadow-lg ${className}`}>
+    <Card className={`group overflow-hidden transition-all duration-200 pt-0 hover:shadow-lg ${className}`}>
       <Link href={ROUTES.FILM_DETAILS(film.id)} className="block">
         {/* Постер фильма */}
         <div className="relative aspect-[2/3] overflow-hidden">
@@ -102,11 +103,6 @@ export function FilmCard({ film, showActions = true, className }: FilmCardProps)
               <Badge variant="secondary" className="bg-background/80 backdrop-blur">
                 <Star className="w-3 h-3 mr-1" />
                 <span className="text-xs font-medium">{film.rating_kp}</span>
-              </Badge>
-            )}
-            {userRating && (
-              <Badge variant="default" className="bg-yellow-500/80 backdrop-blur">
-                <span className="text-xs font-medium">{userRating}</span>
               </Badge>
             )}
           </div>
@@ -149,7 +145,7 @@ export function FilmCard({ film, showActions = true, className }: FilmCardProps)
             {film.duration && (
               <div className="flex items-center gap-1">
                 <Eye className="w-3 h-3" />
-                <span>{film.duration}</span>
+                <span>{formatDuration(film.duration)}</span>
               </div>
             )}
           </div>
@@ -158,14 +154,24 @@ export function FilmCard({ film, showActions = true, className }: FilmCardProps)
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {film.rating_kp && (
-                <span className={`text-sm font-medium ${getRatingColor(film.rating_kp)}`}>
-                  {film.rating_kp}
-                </span>
+                <div className="flex items-center gap-1">
+                  <Badge variant="outline">
+                    KP
+                    <span className={`text-sm font-medium ${getRatingColor(film.rating_kp)}`}>
+                      {film.rating_kp}
+                    </span>
+                  </Badge>
+                </div>
               )}
               {film.rating_imdb && (
-                <span className={`text-sm font-medium ${getRatingColor(film.rating_imdb)}`}>
-                  {film.rating_imdb}
-                </span>
+                <div className="flex items-center gap-1">
+                  <Badge variant="outline">
+                    IMDb
+                    <span className={`text-sm font-medium ${getRatingColor(film.rating_imdb)}`}>
+                      {film.rating_imdb}
+                    </span>
+                  </Badge>
+                </div>
               )}
             </div>
 
@@ -173,15 +179,17 @@ export function FilmCard({ film, showActions = true, className }: FilmCardProps)
             {isRated && (
               <div className="flex items-center gap-1">
                 <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                <span className="text-xs text-yellow-600">{userRating}</span>
+                <Badge variant="default" className="text-xs px-1 py-0 bg-yellow-500 text-white">
+                  {userRating}
+                </Badge>
               </div>
             )}
           </div>
 
           {/* Описание */}
-          {film.description && (
+          {(film.description || film.full_description) && (
             <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
-              {film.description}
+              {film.description || film.full_description}
             </p>
           )}
         </CardContent>

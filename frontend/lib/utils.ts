@@ -64,9 +64,9 @@ export function formatRelativeDate(date: Date): string {
 }
 
 /**
- * Форматирование продолжительности
+ * Форматирование продолжительности в минутах
  */
-export function formatDuration(minutes: number): string {
+export function formatDurationMinutes(minutes: number): string {
   if (minutes < 60) {
     return `${minutes} мин`;
   }
@@ -79,6 +79,64 @@ export function formatDuration(minutes: number): string {
   }
   
   return `${hours} ч ${remainingMinutes} мин`;
+}
+
+/**
+ * Форматирование продолжительности из строки (например, "120 мин", "2 ч 30 мин", "90")
+ */
+export function formatDuration(duration: string | null | undefined): string {
+  if (!duration || typeof duration !== 'string') {
+    return '';
+  }
+
+  // Очищаем строку от лишних символов и приводим к нижнему регистру
+  const cleanDuration = duration.trim().toLowerCase();
+  
+  // Если строка содержит только цифры, считаем что это минуты
+  if (/^\d+$/.test(cleanDuration)) {
+    const minutes = parseInt(cleanDuration, 10);
+    return formatDurationMinutes(minutes);
+  }
+  
+  // Извлекаем минуты из различных форматов
+  // Форматы: "120 мин", "2 ч 30 мин", "2h 30m", "2:30"
+  let minutes = 0;
+  
+  // Формат "часы:минуты" (например "2:30")
+  const timeMatch = cleanDuration.match(/(\d+):(\d+)/);
+  if (timeMatch) {
+    const hours = parseInt(timeMatch[1], 10);
+    const mins = parseInt(timeMatch[2], 10);
+    minutes = hours * 60 + mins;
+  } else {
+    // Формат "X ч Y мин" или "Xh Ym" или "X hours Y minutes"
+    const hourMinuteMatch = cleanDuration.match(/(\d+)\s*(?:ч|ч\.|h|hours?)\s*(\d+)?\s*(?:мин|м\.|m|minutes?)?/);
+    if (hourMinuteMatch) {
+      const hours = parseInt(hourMinuteMatch[1], 10);
+      const mins = hourMinuteMatch[2] ? parseInt(hourMinuteMatch[2], 10) : 0;
+      minutes = hours * 60 + mins;
+    } else {
+      // Формат "X мин" или "Xm" или "X минут"
+      const minuteOnlyMatch = cleanDuration.match(/(\d+)\s*(?:мин|м\.|m|minutes?)/);
+      if (minuteOnlyMatch) {
+        minutes = parseInt(minuteOnlyMatch[1], 10);
+      } else {
+        // Если ничего не нашли, пробуем извлечь любое число
+        const anyNumberMatch = cleanDuration.match(/(\d+)/);
+        if (anyNumberMatch) {
+          minutes = parseInt(anyNumberMatch[1], 10);
+        }
+      }
+    }
+  }
+  
+  // Если удалось извлечь минуты, форматируем их
+  if (minutes > 0) {
+    return formatDurationMinutes(minutes);
+  }
+  
+  // Если не удалось извлечь, возвращаем исходную строку с небольшой очисткой
+  return duration.trim() || '';
 }
 
 /**
