@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useUserInteractionsStore } from '@/store';
-import { FilmCard, FilmCardSkeleton } from '@/components/film/film-card';
 import { Mail, User } from 'lucide-react';
 
 export default function ProfilePage() {

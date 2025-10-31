@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Play, Star, TrendingUp, Film, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FilmCard, FilmCardSkeleton } from '@/components/film/film-card';
+import { FilmCard, FilmCardSkeleton } from '@/components/film/FilmCard';
 import { useAuth } from '@/hooks/use-auth';
 import { useFilmsStore } from '@/store';
 import { ROUTES } from '@/lib/config';

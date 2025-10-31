@@ -6,7 +6,7 @@ import { Heart, Trash2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUserInteractionsStore } from '@/store';
-import { FilmCard } from '@/components/film/film-card';
+import { FilmCard } from '@/components/film/FilmCard';
 import { ROUTES } from '@/lib/config';
 
 export default function BookmarksPage() {

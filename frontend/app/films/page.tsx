@@ -9,9 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { FilmCard, FilmCardSkeleton } from '@/components/film/film-card';
+import { FilmCard, FilmCardSkeleton } from '@/components/film';
 import { useFilmsStore } from '@/store';
 import { FilmFilterParams } from '@/lib/types';
 
