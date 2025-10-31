@@ -9,6 +9,15 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { FilmCard, FilmCardSkeleton } from '@/components/film';
 import { useFilmsStore } from '@/store';
 import { FilmFilterParams } from '@/lib/types';
@@ -376,49 +385,126 @@ export default function FilmsPage() {
 
             {/* Пагинация */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  Предыдущая
-                </Button>
-                
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e: React.MouseEvent) => {
+                        e.preventDefault();
+                        if (currentPage > 1) {
+                          handlePageChange(currentPage - 1);
+                        }
+                      }}
+                    />
+                  </PaginationItem>
+                  
+                  {(() => {
+                    const pageNumbers = [];
+                    const showPages = Math.min(7, totalPages);
+                    
+                    if (totalPages <= showPages) {
+                      // Показываем все страницы если их мало
+                      for (let i = 1; i <= totalPages; i++) {
+                        pageNumbers.push(
+                          <PaginationItem key={i}>
+                            <PaginationLink
+                              href="#"
+                              isActive={currentPage === i}
+                              onClick={(e: React.MouseEvent) => {
+                                e.preventDefault();
+                                handlePageChange(i);
+                              }}
+                            >
+                              {i}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      }
                     } else {
-                      pageNum = currentPage - 2 + i;
+                      // Сложная логика для большого количества страниц
+                      const startPage = Math.max(1, currentPage - 2);
+                      const endPage = Math.min(totalPages, currentPage + 2);
+                      
+                      // Первая страница
+                      if (startPage > 1) {
+                        pageNumbers.push(
+                          <PaginationItem key={1}>
+                            <PaginationLink
+                              href="#"
+                              isActive={currentPage === 1}
+                              onClick={(e: React.MouseEvent) => {
+                                e.preventDefault();
+                                handlePageChange(1);
+                              }}
+                            >
+                              1
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                        
+                        if (startPage > 2) {
+                          pageNumbers.push(<PaginationEllipsis key="ellipsis-start" />);
+                        }
+                      }
+                      
+                      // Страницы вокруг текущей
+                      for (let i = startPage; i <= endPage; i++) {
+                        pageNumbers.push(
+                          <PaginationItem key={i}>
+                            <PaginationLink
+                              href="#"
+                              isActive={currentPage === i}
+                              onClick={(e: React.MouseEvent) => {
+                                e.preventDefault();
+                                handlePageChange(i);
+                              }}
+                            >
+                              {i}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      }
+                      
+                      // Последняя страница
+                      if (endPage < totalPages) {
+                        if (endPage < totalPages - 1) {
+                          pageNumbers.push(<PaginationEllipsis key="ellipsis-end" />);
+                        }
+                        
+                        pageNumbers.push(
+                          <PaginationItem key={totalPages}>
+                            <PaginationLink
+                              href="#"
+                              isActive={currentPage === totalPages}
+                              onClick={(e: React.MouseEvent) => {
+                                e.preventDefault();
+                                handlePageChange(totalPages);
+                              }}
+                            >
+                              {totalPages}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      }
                     }
                     
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={currentPage === pageNum ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handlePageChange(pageNum)}
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  })}
-                </div>
-                
-                <Button
-                  variant="outline"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  Следующая
-                </Button>
-              </div>
+                    return pageNumbers;
+                  })()}
+                  
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e: React.MouseEvent) => {
+                        e.preventDefault();
+                        if (currentPage < totalPages) {
+                          handlePageChange(currentPage + 1);
+                        }
+                      }}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             )}
           </>
         ) : (
