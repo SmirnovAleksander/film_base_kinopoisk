@@ -128,31 +128,6 @@ export default function ProfilePage() {
 
         <Separator />
 
-        {/* Последние закладки */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Последние закладки</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {bookmarks.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {bookmarks.slice(0, 12).map((bookmark) => (
-                  <div key={bookmark.id} className="aspect-[2/3]">
-                    {/* Временная заглушка */}
-                    <div className="w-full h-full bg-muted rounded-md flex items-center justify-center">
-                      <span className="text-xs text-muted-foreground">ID: {bookmark.film_id}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">У вас пока нет закладок</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
         {/* Последние оценки */}
         <Card>
           <CardHeader>
