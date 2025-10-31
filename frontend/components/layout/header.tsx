@@ -162,7 +162,17 @@ export function Header() {
                     Профиль
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
+                {user?.is_superuser && (
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Admin
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Выйти
