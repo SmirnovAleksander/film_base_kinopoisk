@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
 import {
   Pagination,
   PaginationContent,
@@ -49,6 +50,11 @@ export default function FilmsPage() {
   const [sortBy, setSortBy] = useState<'title' | 'year' | 'rating'>('title');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Значения для слайдеров
+  const currentYear = new Date().getFullYear();
+  const [yearRange, setYearRange] = useState<[number, number]>([1890, currentYear]);
+  const [ratingRange, setRatingRange] = useState<[number, number]>([1, 10]);
 
   // Инициализация данных
   useEffect(() => {
@@ -86,8 +92,22 @@ export default function FilmsPage() {
         max_rating: maxRating ? parseFloat(maxRating) : undefined,
       };
       filterFilms(filterParams);
+      
+      // Обновляем слайдеры если есть значения в URL
+      if (startYear || endYear) {
+        setYearRange([
+          startYear ? parseInt(startYear) : 1890,
+          endYear ? parseInt(endYear) : currentYear
+        ]);
+      }
+      if (minRating || maxRating) {
+        setRatingRange([
+          minRating ? parseFloat(minRating) : 1,
+          maxRating ? parseFloat(maxRating) : 10
+        ]);
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, currentYear]);
 
   const handleSearch = async (query?: string) => {
     const searchTerm = query || localSearchQuery;
@@ -106,6 +126,10 @@ export default function FilmsPage() {
       ...localFilters,
       page: 1,
       page_size: pageSize,
+      start_year: yearRange[0],
+      end_year: yearRange[1],
+      min_rating: ratingRange[0],
+      max_rating: ratingRange[1],
     };
 
     setFilters(filterParams);
@@ -117,6 +141,8 @@ export default function FilmsPage() {
     setLocalFilters({});
     setSearchQuery('');
     setLocalSearchQuery('');
+    setYearRange([1890, currentYear]);
+    setRatingRange([1, 10]);
     filterFilms({ page: 1, page_size: pageSize });
   };
 
@@ -133,6 +159,15 @@ export default function FilmsPage() {
     } else {
       await filterFilms({ page, page_size: pageSize });
     }
+  };
+
+  // Обработчики для слайдеров
+  const handleYearRangeChange = (value: number[]) => {
+    setYearRange([value[0], value[1]]);
+  };
+
+  const handleRatingRangeChange = (value: number[]) => {
+    setRatingRange([value[0], value[1]]);
   };
 
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -234,41 +269,69 @@ export default function FilmsPage() {
                 </div>
 
                 {/* Год выпуска */}
-                <div className="space-y-2">
-                  <Label>Год выпуска</Label>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Год выпуска</Label>
+                    <div className="flex gap-2 text-sm text-muted-foreground">
+                      <span>{yearRange[0]}</span>
+                      <span>-</span>
+                      <span>{yearRange[1]}</span>
+                    </div>
+                  </div>
+                  <Slider
+                    min={1890}
+                    max={currentYear}
+                    step={1}
+                    value={yearRange}
+                    onValueChange={handleYearRangeChange}
+                    className="w-full"
+                  />
                   <div className="flex gap-2">
                     <Input
                       placeholder="С"
                       type="number"
-                      min="1900"
-                      max="2030"
-                      value={localFilters.start_year || ''}
-                      onChange={(e) => 
-                        setLocalFilters(prev => ({
-                          ...prev,
-                          start_year: e.target.value ? parseInt(e.target.value) : undefined
-                        }))
-                      }
+                      min="1890"
+                      max={currentYear.toString()}
+                      value={yearRange[0]}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 1890;
+                        const newRange: [number, number] = [Math.min(value, yearRange[1]), yearRange[1]];
+                        setYearRange(newRange);
+                      }}
                     />
                     <Input
                       placeholder="По"
                       type="number"
-                      min="1900"
-                      max="2030"
-                      value={localFilters.end_year || ''}
-                      onChange={(e) => 
-                        setLocalFilters(prev => ({
-                          ...prev,
-                          end_year: e.target.value ? parseInt(e.target.value) : undefined
-                        }))
-                      }
+                      min="1890"
+                      max={currentYear.toString()}
+                      value={yearRange[1]}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || currentYear;
+                        const newRange: [number, number] = [yearRange[0], Math.max(value, yearRange[0])];
+                        setYearRange(newRange);
+                      }}
                     />
                   </div>
                 </div>
 
                 {/* Рейтинг */}
-                <div className="space-y-2">
-                  <Label>Рейтинг</Label>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Рейтинг</Label>
+                    <div className="flex gap-2 text-sm text-muted-foreground">
+                      <span>{ratingRange[0]}</span>
+                      <span>-</span>
+                      <span>{ratingRange[1]}</span>
+                    </div>
+                  </div>
+                  <Slider
+                    min={1}
+                    max={10}
+                    step={0.1}
+                    value={ratingRange}
+                    onValueChange={handleRatingRangeChange}
+                    className="w-full"
+                  />
                   <div className="flex gap-2">
                     <Input
                       placeholder="Мин"
@@ -276,13 +339,12 @@ export default function FilmsPage() {
                       min="1"
                       max="10"
                       step="0.1"
-                      value={localFilters.min_rating || ''}
-                      onChange={(e) => 
-                        setLocalFilters(prev => ({
-                          ...prev,
-                          min_rating: e.target.value ? parseFloat(e.target.value) : undefined
-                        }))
-                      }
+                      value={ratingRange[0]}
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value) || 1;
+                        const newRange: [number, number] = [Math.min(value, ratingRange[1]), ratingRange[1]];
+                        setRatingRange(newRange);
+                      }}
                     />
                     <Input
                       placeholder="Макс"
@@ -290,13 +352,12 @@ export default function FilmsPage() {
                       min="1"
                       max="10"
                       step="0.1"
-                      value={localFilters.max_rating || ''}
-                      onChange={(e) => 
-                        setLocalFilters(prev => ({
-                          ...prev,
-                          max_rating: e.target.value ? parseFloat(e.target.value) : undefined
-                        }))
-                      }
+                      value={ratingRange[1]}
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value) || 10;
+                        const newRange: [number, number] = [ratingRange[0], Math.max(value, ratingRange[0])];
+                        setRatingRange(newRange);
+                      }}
                     />
                   </div>
                 </div>
@@ -355,6 +416,56 @@ export default function FilmsPage() {
             )}
 
             {/* Другие фильтры */}
+            {(filters.start_year || filters.end_year || filters.min_rating || filters.max_rating) && (
+              <div className="flex items-center gap-2">
+                {/* Год выпуска (скрываем если дефолтные значения) */}
+                {(filters.start_year || filters.end_year) &&
+                 !(filters.start_year === 1890 && filters.end_year === currentYear) && (
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    Год: {filters.start_year}-{filters.end_year}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto p-0 ml-1"
+                      onClick={() => {
+                        setYearRange([1890, currentYear]);
+                        const newFilters = { ...filters };
+                        delete newFilters.start_year;
+                        delete newFilters.end_year;
+                        setFilters(newFilters);
+                        filterFilms({ ...newFilters, page: 1 });
+                      }}
+                    >
+                      ×
+                    </Button>
+                  </Badge>
+                )}
+                
+                {/* Рейтинг (скрываем если дефолтные значения) */}
+                {(filters.min_rating || filters.max_rating) &&
+                 !(filters.min_rating === 1 && filters.max_rating === 10) && (
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    Рейтинг: {filters.min_rating}-{filters.max_rating}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto p-0 ml-1"
+                      onClick={() => {
+                        setRatingRange([1, 10]);
+                        const newFilters = { ...filters };
+                        delete newFilters.min_rating;
+                        delete newFilters.max_rating;
+                        setFilters(newFilters);
+                        filterFilms({ ...newFilters, page: 1 });
+                      }}
+                    >
+                      ×
+                    </Button>
+                  </Badge>
+                )}
+              </div>
+            )}
+
             <Button
               variant="ghost"
               size="sm"
