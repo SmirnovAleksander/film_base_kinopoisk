@@ -20,6 +20,7 @@ export const ROUTES = {
   PROFILE: '/profile',
   BOOKMARKS: '/bookmarks',
   HISTORY: '/history',
+  POSTERS: (id: string | number) => `/posters/${id}`,
 } as const;
 
 // Пагинация

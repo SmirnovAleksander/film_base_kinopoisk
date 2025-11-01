@@ -11,6 +11,7 @@ import type {
   FilmRecommendationsResponse,
   FilmFilterParams,
   FilmSearchParams,
+  FilmStills,
 } from '@/lib/types';
 import type { Stuff } from '@/lib/types';
 import { API_ENDPOINTS, PAGINATION } from '@/lib/config';
@@ -109,7 +110,7 @@ export class FilmsAPI {
   }
 
   // Получить кадры фильма
-  static async getFilmStills(id: number): Promise<{ stills: any[]; wall: any[] }> {
+  static async getFilmStills(id: number): Promise<FilmStills> {
     const response = await apiClient.get(API_ENDPOINTS.FILMS.STILL(id));
     return response.data;
   }

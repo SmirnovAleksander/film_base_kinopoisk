@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
-import { 
-  ArrowLeft, 
-  Calendar, 
-  Clock, 
-  Star, 
-  Heart, 
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  Star,
+  Heart,
   MessageSquare,
   Share,
   MapPin,
@@ -18,7 +18,8 @@ import {
   Eye,
   Edit,
   Trash2,
-  Send
+  Send,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +34,7 @@ import { StarRating } from '@/components/film';
 import { useFilmsStore, useUserInteractionsStore, useAuthStore } from '@/store';
 import { ROUTES } from '@/lib/config';
 import { FilmsAPI } from '@/lib/api';
+import type { FilmStills } from '@/lib/types/film.types';
 
 export default function FilmDetailsPage() {
   const params = useParams();
@@ -57,7 +59,7 @@ export default function FilmDetailsPage() {
   const [newComment, setNewComment] = useState('');
   const [filmStuff, setFilmStuff] = useState<any[]>([]);
   const [isLoadingStuff, setIsLoadingStuff] = useState(false);
-  const [filmStills, setFilmStills] = useState<{ stills: any[]; wall: any[] }>({ stills: [], wall: [] });
+  const [filmStills, setFilmStills] = useState<FilmStills>({ stills: [], wall: [] });
   const [isLoadingStills, setIsLoadingStills] = useState(false);
   const [recommendedFilms, setRecommendedFilms] = useState<any[]>([]);
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
@@ -496,19 +498,31 @@ export default function FilmDetailsPage() {
             {filmStills.stills.length > 0 && (
               <Card className="border-0 shadow-xl">
                 <CardHeader>
-                  <CardTitle className="text-2xl">Кадры из фильма</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-2xl">Кадры из фильма</CardTitle>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={ROUTES.POSTERS(filmId)}>
+                        <ImageIcon className="h-4 w-4 mr-2" />
+                        Посмотреть все ({filmStills.stills.length})
+                      </Link>
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {isLoadingStills ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {Array.from({ length: 8 }).map((_, i) => (
-                        <StillCardSkeleton key={i} />
+                    <div className="flex gap-4 overflow-hidden">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <div key={i} className="flex-shrink-0 w-80">
+                          <StillCardSkeleton />
+                        </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {filmStills.stills.map((still) => (
-                        <StillCard key={still.id} still={still} />
+                    <div className="flex gap-4 overflow-x-auto pb-4">
+                      {filmStills.stills.slice(0, 6).map((still) => (
+                        <div key={still.id} className="flex-shrink-0 w-80">
+                          <StillCard still={still} />
+                        </div>
                       ))}
                     </div>
                   )}
@@ -520,19 +534,31 @@ export default function FilmDetailsPage() {
             {filmStills.wall.length > 0 && (
               <Card className="border-0 shadow-xl">
                 <CardHeader>
-                  <CardTitle className="text-2xl">Обои</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-2xl">Обои</CardTitle>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={ROUTES.POSTERS(filmId)}>
+                        <ImageIcon className="h-4 w-4 mr-2" />
+                        Посмотреть все ({filmStills.wall.length})
+                      </Link>
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {isLoadingStills ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {Array.from({ length: 8 }).map((_, i) => (
-                        <StillCardSkeleton key={i} />
+                    <div className="flex gap-4 overflow-hidden">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <div key={i} className="flex-shrink-0 w-80">
+                          <StillCardSkeleton />
+                        </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {filmStills.wall.map((wall) => (
-                        <StillCard key={wall.id} still={wall} />
+                    <div className="flex gap-4 overflow-x-auto pb-4">
+                      {filmStills.wall.slice(0, 6).map((wall) => (
+                        <div key={wall.id} className="flex-shrink-0 w-80">
+                          <StillCard still={wall} />
+                        </div>
                       ))}
                     </div>
                   )}

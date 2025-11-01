@@ -194,3 +194,14 @@ export interface FilmFilterParams {
   page?: number;
   page_size?: number;
 }
+
+// Новые типы для Stills в формате от Kinopoisk
+export interface Still {
+  id: string;
+  original: string;
+}
+
+export interface FilmStills {
+  stills: Still[];
+  wall: Still[];
+}
