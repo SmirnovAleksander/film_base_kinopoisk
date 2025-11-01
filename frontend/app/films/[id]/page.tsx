@@ -11,21 +11,26 @@ import {
   Heart, 
   MessageSquare,
   Share,
-  ExternalLink,
   MapPin,
   Users,
-  TrendingUp
+  TrendingUp,
+  Play,
+  Eye,
+  Edit,
+  Trash2,
+  Send
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import Link from 'next/link';
-import { FilmCardSkeleton } from '@/components/film';
+import { FilmCard, FilmCardSkeleton, MiniPersonCard, StillCard, StillCardSkeleton } from '@/components/film';
 import { StarRating } from '@/components/film';
-import { useFilmsStore, useUserInteractionsStore } from '@/store';
+import { useFilmsStore, useUserInteractionsStore, useAuthStore } from '@/store';
 import { ROUTES } from '@/lib/config';
 import { FilmsAPI } from '@/lib/api';
 
@@ -35,11 +40,11 @@ export default function FilmDetailsPage() {
   
   const { currentFilm, fetchFilmDetails, isLoading } = useFilmsStore();
   const {
+    comments,
     fetchFilmComments,
     addComment,
     updateComment,
     deleteComment,
-    comments,
     bookmarkedFilmIds,
     addBookmark,
     removeBookmark,
@@ -47,25 +52,30 @@ export default function FilmDetailsPage() {
     isLoadingComments,
     isAddingComment
   } = useUserInteractionsStore();
+  const { user } = useAuthStore();
 
   const [newComment, setNewComment] = useState('');
-  const [activeTab, setActiveTab] = useState('details');
   const [filmStuff, setFilmStuff] = useState<any[]>([]);
   const [isLoadingStuff, setIsLoadingStuff] = useState(false);
+  const [filmStills, setFilmStills] = useState<{ stills: any[]; wall: any[] }>({ stills: [], wall: [] });
+  const [isLoadingStills, setIsLoadingStills] = useState(false);
+  const [recommendedFilms, setRecommendedFilms] = useState<any[]>([]);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
+  const [similarFilms, setSimilarFilms] = useState<any[]>([]);
+  const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
   
   // Состояние для редактирования комментариев
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingContent, setEditingContent] = useState('');
-  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
     if (filmId) {
       fetchFilmDetails(filmId);
       fetchFilmComments(filmId);
       loadFilmStuff();
-      // Здесь можно получить информацию о текущем пользователе
-      // const user = useAuthStore.getState().user;
-      // setCurrentUser(user);
+      loadFilmStills();
+      loadRecommendedFilms();
+      loadSimilarFilms();
     }
   }, [filmId]);
 
@@ -81,9 +91,45 @@ export default function FilmDetailsPage() {
     }
   };
 
+  const loadFilmStills = async () => {
+    try {
+      setIsLoadingStills(true);
+      const stills = await FilmsAPI.getFilmStills(filmId);
+      setFilmStills(stills);
+    } catch (error) {
+      console.error('Error loading film stills:', error);
+    } finally {
+      setIsLoadingStills(false);
+    }
+  };
+
+  const loadRecommendedFilms = async () => {
+    try {
+      setIsLoadingRecommendations(true);
+      const recommendations = await FilmsAPI.getFilmRecommendations(filmId, 10);
+      setRecommendedFilms(recommendations.items);
+    } catch (error) {
+      console.error('Error loading film recommendations:', error);
+    } finally {
+      setIsLoadingRecommendations(false);
+    }
+  };
+
+  const loadSimilarFilms = async () => {
+    try {
+      setIsLoadingSimilar(true);
+      const similar = await FilmsAPI.getSimilarFilms(filmId);
+      setSimilarFilms(similar);
+    } catch (error) {
+      console.error('Error loading similar films:', error);
+    } finally {
+      setIsLoadingSimilar(false);
+    }
+  };
+
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || !user) return;
 
     await addComment(filmId, newComment.trim());
     setNewComment('');
@@ -122,9 +168,8 @@ export default function FilmDetailsPage() {
     }
   };
 
-  // Проверяем, может ли пользователь редактировать комментарий
   const canEditComment = (comment: any) => {
-    return currentUser && comment.user_id === currentUser.id;
+    return user && comment.user_id === user.id;
   };
 
   const isBookmarked = bookmarkedFilmIds.has(filmId);
@@ -151,356 +196,461 @@ export default function FilmDetailsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Навигация */}
-      <div className="mb-8">
-        <Button asChild variant="ghost">
-          <Link href={ROUTES.FILMS}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            К списку фильмов
-          </Link>
-        </Button>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
+      <div className="container mx-auto px-4 py-8 space-y-12">
+        {/* Навигация */}
+        <div className="mb-8">
+          <Button asChild variant="ghost" className="text-muted-foreground hover:text-foreground">
+            <Link href={ROUTES.FILMS}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              К списку фильмов
+            </Link>
+          </Button>
+        </div>
 
-      {/* Основная информация о фильме */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        {/* Постер */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-8">
-            <Card>
+        {/* Основная информация о фильме */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Постер */}
+          <div className="lg:col-span-1">
+            <Card className="p-0 top-8 overflow-hidden border-0 shadow-2xl">
               <CardContent className="p-0">
                 {currentFilm.poster ? (
-                  <div className="aspect-[2/3] relative">
+                  <div className="relative aspect-[2/3] group">
                     <Image
                       src={currentFilm.poster}
                       alt={currentFilm.title || 'Без названия'}
                       fill
-                      className="object-cover rounded-t-lg"
+                      className="object-cover rounded-lg group-hover:scale-105 transition-transform duration-500 "
                       sizes="(max-width: 768px) 100vw, 33vw"
+                      unoptimized={true}
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg" />
+                    <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <Button className="w-full" size="lg">
+                        <Play className="h-4 w-4 mr-2" />
+                        Смотреть трейлер
+                      </Button>
+                    </div>
                   </div>
                 ) : (
-                  <div className="aspect-[2/3] bg-muted flex items-center justify-center">
+                  <div className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center">
                     <span className="text-muted-foreground">Нет постера</span>
                   </div>
                 )}
               </CardContent>
             </Card>
           </div>
-        </div>
 
-        {/* Детали */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Заголовок */}
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              {currentFilm.title || currentFilm.original_title || 'Без названия'}
-            </h1>
-            {currentFilm.original_title && currentFilm.title !== currentFilm.original_title && (
-              <p className="text-xl text-muted-foreground">
-                {currentFilm.original_title}
-              </p>
-            )}
-            {currentFilm.tagline && (
-              <p className="text-lg italic text-muted-foreground mt-2">
-                "{currentFilm.tagline}"
-              </p>
-            )}
-          </div>
-
-          {/* Кнопки действий */}
-          <div className="flex flex-wrap gap-2">
-            <StarRating 
-              filmId={filmId} 
-              interactive={true}
-              size="lg"
-            />
-            <Button
-              variant={isBookmarked ? "default" : "outline"}
-              onClick={handleBookmarkToggle}
-              disabled={isAddingBookmark}
-            >
-              <Heart className={`h-4 w-4 mr-2 ${isBookmarked ? 'fill-current' : ''}`} />
-              {isBookmarked ? 'В закладках' : 'В закладки'}
-            </Button>
-            <Button variant="outline">
-              <Share className="h-4 w-4 mr-2" />
-              Поделиться
-            </Button>
-          </div>
-
-          {/* Метаинформация */}
-          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-            {currentFilm.year && (
-              <div className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
-                <span>{currentFilm.year}</span>
-              </div>
-            )}
-            {currentFilm.duration && (
-              <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                <span>{currentFilm.duration}</span>
-              </div>
-            )}
-            {currentFilm.content_rating && (
-              <Badge variant="secondary">
-                {currentFilm.content_rating}
-              </Badge>
-            )}
-          </div>
-
-          {/* Рейтинги */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {currentFilm.rating_kp && (
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <Star className="h-4 w-4 text-yellow-500" />
-                    <span className="font-medium">Кинопоиск</span>
-                  </div>
-                  <p className="text-2xl font-bold">{currentFilm.rating_kp}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {currentFilm.kp_votes_count} голосов
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-            {currentFilm.rating_imdb && (
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <Star className="h-4 w-4 text-yellow-500" />
-                    <span className="font-medium">IMDB</span>
-                  </div>
-                  <p className="text-2xl font-bold">{currentFilm.rating_imdb}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {currentFilm.imdb_votes_count} голосов
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-            {currentFilm.user_rating && (
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-blue-500" />
-                    <span className="font-medium">Пользователи</span>
-                  </div>
-                  <p className="text-2xl font-bold">{currentFilm.user_rating}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {currentFilm.user_rating_count} оценок
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* Жанры и страны */}
-          <div className="space-y-4">
-            {currentFilm.genres.length > 0 && (
-              <div>
-                <h3 className="font-semibold mb-2">Жанры</h3>
-                <div className="flex flex-wrap gap-2">
-                  {currentFilm.genres.map((genre) => (
-                    <Badge key={genre.id} variant="secondary">
-                      {genre.name}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-            {currentFilm.countries.length > 0 && (
-              <div>
-                <h3 className="font-semibold mb-2">Страны</h3>
-                <div className="flex flex-wrap gap-2">
-                  {currentFilm.countries.map((country) => (
-                    <Badge key={country.id} variant="outline">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {country.name}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Подробная информация */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="details">Описание</TabsTrigger>
-          <TabsTrigger value="crew">Участники</TabsTrigger>
-          <TabsTrigger value="similar">Похожие</TabsTrigger>
-          <TabsTrigger value="comments">
-            Комментарии {comments.length > 0 && `(${comments.length})`}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="details" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Описание</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {currentFilm.full_description && (
-                <div>
-                  <h4 className="font-semibold mb-2">Полное описание</h4>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {currentFilm.full_description}
-                  </p>
-                </div>
-              )}
-              
-              {currentFilm.description && (
-                <div>
-                  <h4 className="font-semibold mb-2">Краткое описание</h4>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {currentFilm.description}
-                  </p>
-                </div>
-              )}
-
-              {/* Дополнительная информация */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-                {currentFilm.budget && (
-                  <div>
-                    <h5 className="font-medium">Бюджет</h5>
-                    <p className="text-muted-foreground">{currentFilm.budget}</p>
-                  </div>
-                )}
-                {currentFilm.usa_box_office && (
-                  <div>
-                    <h5 className="font-medium">Сборы в США</h5>
-                    <p className="text-muted-foreground">{currentFilm.usa_box_office}</p>
-                  </div>
-                )}
-                {currentFilm.rus_box_office && (
-                  <div>
-                    <h5 className="font-medium">Сборы в России</h5>
-                    <p className="text-muted-foreground">{currentFilm.rus_box_office}</p>
-                  </div>
-                )}
-                {currentFilm.ru_premiere && (
-                  <div>
-                    <h5 className="font-medium">Премьера в России</h5>
-                    <p className="text-muted-foreground">{currentFilm.ru_premiere}</p>
-                  </div>
-                )}
-                {currentFilm.world_premiere && (
-                  <div>
-                    <h5 className="font-medium">Мировая премьера</h5>
-                    <p className="text-muted-foreground">{currentFilm.world_premiere}</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="crew">
-          <Card>
-            <CardHeader>
-              <CardTitle>Участники</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoadingStuff ? (
-                <div className="space-y-4">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="flex items-center space-x-4">
-                      <Skeleton className="h-16 w-16 rounded-full" />
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-48" />
-                        <Skeleton className="h-3 w-32" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : filmStuff.length > 0 ? (
-                <div className="space-y-4">
-                  {filmStuff.map((person) => (
-                    <div key={person.id} className="flex items-center space-x-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                      {person.image ? (
-                        <img
-                          src={person.image}
-                          alt={person.name || person.original_name}
-                          className="h-16 w-16 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-                          <span className="text-muted-foreground text-sm">Нет фото</span>
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <h3 className="font-semibold">
-                          <Link
-                            href={ROUTES.STUFF_DETAILS(person.id)}
-                            className="hover:text-blue-600 transition-colors"
-                          >
-                            {person.name || person.original_name}
-                          </Link>
-                        </h3>
-                        {person.original_name && person.name !== person.original_name && (
-                          <p className="text-sm text-muted-foreground">{person.original_name}</p>
-                        )}
-                        {person.career && person.career.length > 0 && (
-                          <p className="text-sm text-muted-foreground">
-                            {person.career.slice(0, 3).join(', ')}
-                            {person.career.length > 3 && '...'}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-8">
-                  Информация об участниках не найдена.
+          {/* Детали */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Заголовок */}
+            <div className="space-y-4">
+              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                {currentFilm.title || currentFilm.original_title || 'Без названия'}
+              </h1>
+              {currentFilm.original_title && currentFilm.title !== currentFilm.original_title && (
+                <p className="text-xl text-muted-foreground font-medium">
+                  {currentFilm.original_title}
                 </p>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+              {currentFilm.tagline && (
+                <p className="text-lg italic text-muted-foreground border-l-4 border-primary pl-4">
+                  "{currentFilm.tagline}"
+                </p>
+              )}
+            </div>
 
-        <TabsContent value="similar">
-          <Card>
+            {/* Кнопки действий */}
+            <div className="flex flex-wrap gap-3">
+              <StarRating 
+                filmId={filmId} 
+                interactive={true}
+                size="lg"
+              />
+              <Button
+                variant={isBookmarked ? "default" : "outline"}
+                onClick={handleBookmarkToggle}
+                disabled={isAddingBookmark}
+                className="shadow-lg"
+              >
+                <Heart className={`h-4 w-4 mr-2 ${isBookmarked ? 'fill-current' : ''}`} />
+                {isBookmarked ? 'В закладках' : 'В закладки'}
+              </Button>
+              <Button variant="outline" className="shadow-lg">
+                <Share className="h-4 w-4 mr-2" />
+                Поделиться
+              </Button>
+              <Button variant="outline" className="shadow-lg">
+                <Eye className="h-4 w-4 mr-2" />
+                Смотреть
+              </Button>
+            </div>
+
+            {/* Метаинформация */}
+            <div className="flex flex-wrap gap-6 text-sm text-muted-foreground">
+              {currentFilm.year && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  <span className="font-medium">{currentFilm.year}</span>
+                </div>
+              )}
+              {currentFilm.duration && (
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary" />
+                  <span className="font-medium">{currentFilm.duration}</span>
+                </div>
+              )}
+              {currentFilm.content_rating && (
+                <Badge variant="secondary" className="font-medium">
+                  {currentFilm.content_rating}
+                </Badge>
+              )}
+            </div>
+
+            {/* Рейтинги */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {currentFilm.rating_kp && (
+                <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-primary/10 rounded-full">
+                        <Star className="h-5 w-5 text-primary" />
+                      </div>
+                      <span className="font-semibold">Кинопоиск</span>
+                    </div>
+                    <p className="text-3xl font-bold text-primary">{currentFilm.rating_kp}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {currentFilm.kp_votes_count} голосов
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+              {currentFilm.rating_imdb && (
+                <Card className="border-yellow-500/20 bg-gradient-to-br from-yellow-500/5 to-yellow-500/10">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-yellow-500/10 rounded-full">
+                        <Star className="h-5 w-5 text-yellow-500" />
+                      </div>
+                      <span className="font-semibold">IMDB</span>
+                    </div>
+                    <p className="text-3xl font-bold text-yellow-500">{currentFilm.rating_imdb}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {currentFilm.imdb_votes_count} голосов
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+              {currentFilm.user_rating && (
+                <Card className="border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-blue-500/10">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-blue-500/10 rounded-full">
+                        <Users className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <span className="font-semibold">Пользователи</span>
+                    </div>
+                    <p className="text-3xl font-bold text-blue-500">{currentFilm.user_rating}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {currentFilm.user_rating_count} оценок
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Жанры и страны */}
+            <div className="space-y-4">
+              {currentFilm.genres.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3 text-lg">Жанры</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {currentFilm.genres.map((genre) => (
+                      <Badge key={genre.id} variant="secondary" className="px-3 py-1">
+                        {genre.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {currentFilm.countries.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3 text-lg">Страны</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {currentFilm.countries.map((country) => (
+                      <Badge key={country.id} variant="outline" className="px-3 py-1">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        {country.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Описание */}
+        {(currentFilm.full_description || currentFilm.description) && (
+          <section className="space-y-6">
+            <Card className="border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-2xl">Описание</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {currentFilm.full_description && (
+                  <div>
+                    <h4 className="font-semibold mb-3 text-lg">Полное описание</h4>
+                    <p className="text-muted-foreground leading-relaxed text-lg">
+                      {currentFilm.full_description}
+                    </p>
+                  </div>
+                )}
+                
+                {currentFilm.description && (
+                  <div>
+                    <h4 className="font-semibold mb-3 text-lg">Краткое описание</h4>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {currentFilm.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Дополнительная информация */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6 border-t">
+                  {currentFilm.budget && (
+                    <div className="space-y-2">
+                      <h5 className="font-semibold">Бюджет</h5>
+                      <p className="text-muted-foreground">{currentFilm.budget}</p>
+                    </div>
+                  )}
+                  {currentFilm.usa_box_office && (
+                    <div className="space-y-2">
+                      <h5 className="font-semibold">Сборы в США</h5>
+                      <p className="text-muted-foreground">{currentFilm.usa_box_office}</p>
+                    </div>
+                  )}
+                  {currentFilm.rus_box_office && (
+                    <div className="space-y-2">
+                      <h5 className="font-semibold">Сборы в России</h5>
+                      <p className="text-muted-foreground">{currentFilm.rus_box_office}</p>
+                    </div>
+                  )}
+                  {currentFilm.ru_premiere && (
+                    <div className="space-y-2">
+                      <h5 className="font-semibold">Премьера в России</h5>
+                      <p className="text-muted-foreground">{currentFilm.ru_premiere}</p>
+                    </div>
+                  )}
+                  {currentFilm.world_premiere && (
+                    <div className="space-y-2">
+                      <h5 className="font-semibold">Мировая премьера</h5>
+                      <p className="text-muted-foreground">{currentFilm.world_premiere}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        )}
+
+        {/* Участники */}
+        {filmStuff.length > 0 && (
+          <section className="space-y-6">
+            <Card className="border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-2xl flex items-center gap-2">
+                  <Users className="h-6 w-6" />
+                  Участники
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoadingStuff ? (
+                  <div className="flex gap-4 overflow-hidden">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="flex-shrink-0 w-80">
+                        <Skeleton className="h-24 w-full" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <ScrollArea className="w-full">
+                    <div className="flex gap-4 pb-4">
+                      {filmStuff.map((person) => (
+                        <div key={person.id} className="flex-shrink-0 w-80">
+                          <MiniPersonCard person={person} />
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+        )}
+
+        {/* Кадры из фильма */}
+        {(filmStills.stills.length > 0 || filmStills.wall.length > 0) && (
+          <section className="space-y-8">
+            {/* Stills */}
+            {filmStills.stills.length > 0 && (
+              <Card className="border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="text-2xl">Кадры из фильма</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isLoadingStills ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <StillCardSkeleton key={i} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {filmStills.stills.map((still) => (
+                        <StillCard key={still.id} still={still} />
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Wallpapers */}
+            {filmStills.wall.length > 0 && (
+              <Card className="border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="text-2xl">Обои</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isLoadingStills ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <StillCardSkeleton key={i} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {filmStills.wall.map((wall) => (
+                        <StillCard key={wall.id} still={wall} />
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </section>
+        )}
+
+        {/* Рекомендуемые фильмы */}
+        {recommendedFilms.length > 0 && (
+          <section className="space-y-6">
+            <Card className="border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-2xl flex items-center gap-2">
+                  <TrendingUp className="h-6 w-6" />
+                  Рекомендуемые фильмы
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoadingRecommendations ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {Array.from({ length: 12 }).map((_, i) => (
+                      <FilmCardSkeleton key={i} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {recommendedFilms.map((film) => (
+                      <FilmCard key={film.id} film={film} />
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+        )}
+
+        {/* Похожие фильмы */}
+        {similarFilms.length > 0 && (
+          <section className="space-y-6">
+            <Card className="border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-2xl flex items-center gap-2">
+                  <TrendingUp className="h-6 w-6" />
+                  Похожие фильмы
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoadingSimilar ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <FilmCardSkeleton key={i} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {similarFilms.map((film) => (
+                      <FilmCard 
+                        key={film.id} 
+                        film={{
+                          ...film,
+                          id: film.similar_film_id ? parseInt(film.similar_film_id) : film.id,
+                          title: film.similar_film_title,
+                          year: film.similar_film_year ? parseInt(film.similar_film_year) : undefined,
+                          poster: film.similar_film_poster,
+                          rating_kp: film.similar_film_rating ? parseFloat(film.similar_film_rating) : undefined
+                        }} 
+                      />
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+        )}
+
+        {/* Комментарии */}
+        <section className="space-y-6">
+          <Card className="border-0 shadow-xl">
             <CardHeader>
-              <CardTitle>
-                <TrendingUp className="h-5 w-5 inline mr-2" />
-                Похожие фильмы
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <MessageSquare className="h-6 w-6" />
+                Комментарии {comments.length > 0 && `(${comments.length})`}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <FilmCardSkeleton key={i} />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="comments" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Комментарии</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               {/* Форма добавления комментария */}
-              <form onSubmit={handleCommentSubmit} className="space-y-4">
-                <textarea
-                  placeholder="Напишите ваш комментарий..."
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  className="w-full min-h-[100px] p-3 border rounded-md resize-none"
-                  disabled={isAddingComment}
-                />
-                <Button type="submit" disabled={!newComment.trim() || isAddingComment}>
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  {isAddingComment ? 'Отправка...' : 'Отправить комментарий'}
-                </Button>
-              </form>
+              {user && (
+                <form onSubmit={handleCommentSubmit} className="space-y-4">
+                  <Textarea
+                    placeholder="Напишите ваш комментарий..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    className="min-h-[120px] resize-none"
+                    disabled={isAddingComment}
+                  />
+                  <Button 
+                    type="submit" 
+                    disabled={!newComment.trim() || isAddingComment}
+                    className="shadow-lg"
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    {isAddingComment ? 'Отправка...' : 'Отправить комментарий'}
+                  </Button>
+                </form>
+              )}
+
+              {!user && (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">
+                    Войдите в аккаунт, чтобы оставлять комментарии
+                  </p>
+                  <Button asChild variant="outline">
+                    <Link href={ROUTES.LOGIN}>Войти</Link>
+                  </Button>
+                </div>
+              )}
 
               <Separator />
 
@@ -508,9 +658,9 @@ export default function FilmDetailsPage() {
               {isLoadingComments ? (
                 <div className="space-y-4">
                   {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="space-y-2">
+                    <div key={i} className="space-y-3">
                       <Skeleton className="h-4 w-1/3" />
-                      <Skeleton className="h-16 w-full" />
+                      <Skeleton className="h-20 w-full" />
                       <Skeleton className="h-3 w-1/4" />
                     </div>
                   ))}
@@ -518,36 +668,40 @@ export default function FilmDetailsPage() {
               ) : comments.length > 0 ? (
                 <div className="space-y-4">
                   {comments.map((comment) => (
-                    <div key={comment.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">
-                          Пользователь #{comment.user_id}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-muted-foreground">
-                            {new Date(comment.created_at).toLocaleDateString('ru-RU')}
+                    <div key={comment.id} className="border rounded-lg p-6 bg-card/50 hover:bg-card/80 transition-colors">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="space-y-1">
+                          <span className="font-semibold">
+                            {/* Доступ к пользователю через поле user_id */}
+                            <span>Пользователь #{comment.user_id}</span>
                           </span>
-                          {canEditComment(comment) && !comment.is_deleted && (
-                            <div className="flex gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditComment(comment.id, comment.content)}
-                                disabled={editingCommentId === comment.id}
-                              >
-                                ✏️
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteComment(comment.id)}
-                                disabled={isAddingComment}
-                              >
-                                🗑️
-                              </Button>
-                            </div>
-                          )}
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>{new Date(comment.created_at).toLocaleDateString('ru-RU')}</span>
+                            {comment.is_edited && (
+                              <span className="text-xs">(изменено)</span>
+                            )}
+                          </div>
                         </div>
+                        {canEditComment(comment) && !comment.is_deleted && (
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditComment(comment.id, comment.content)}
+                              disabled={editingCommentId === comment.id}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteComment(comment.id)}
+                              disabled={isAddingComment}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
                       
                       {comment.is_deleted ? (
@@ -555,11 +709,11 @@ export default function FilmDetailsPage() {
                           [Комментарий удален]
                         </p>
                       ) : editingCommentId === comment.id ? (
-                        <div className="space-y-2">
-                          <textarea
+                        <div className="space-y-3">
+                          <Textarea
                             value={editingContent}
                             onChange={(e) => setEditingContent(e.target.value)}
-                            className="w-full min-h-[80px] p-2 border rounded-md resize-none"
+                            className="min-h-[100px] resize-none"
                             placeholder="Редактируйте ваш комментарий..."
                           />
                           <div className="flex gap-2">
@@ -581,27 +735,26 @@ export default function FilmDetailsPage() {
                           </div>
                         </div>
                       ) : (
-                        <>
-                          <p className="text-muted-foreground">{comment.content}</p>
-                          {comment.is_edited && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              (изменено)
-                            </p>
-                          )}
-                        </>
+                        <p className="text-foreground leading-relaxed">{comment.content}</p>
                       )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground py-8">
-                  Комментариев пока нет. Будьте первым!
-                </p>
+                <div className="text-center py-12">
+                  <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground text-lg mb-2">
+                    Комментариев пока нет
+                  </p>
+                  <p className="text-muted-foreground">
+                    Будьте первым, кто оставит отзыв!
+                  </p>
+                </div>
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </section>
+      </div>
     </div>
   );
 }
