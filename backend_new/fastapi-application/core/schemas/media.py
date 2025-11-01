@@ -4,14 +4,13 @@ from pydantic import BaseModel, Field, ConfigDict
 
 
 class MediaBase(BaseModel):
-    url: str = Field(..., max_length=500, description="URL медиа контента")
-    title: str = Field(..., max_length=1000, description="Заголовок")
+    url: Optional[str] = Field(None, max_length=500, description="URL медиа контента")
+    title: Optional[str] = Field(None, max_length=1000, description="Заголовок")
     image: Optional[str] = Field(None, max_length=1000, description="URL изображения")
     category: Optional[str] = Field(None, max_length=100, description="Категория")
     date: Optional[str] = Field(None, max_length=100, description="Дата публикации")
-    comments_count: int = Field(0, description="Количество комментариев")
     card_type: Optional[str] = Field(None, max_length=20, description="Тип карточки")
-    type: str = Field("news", max_length=20, description="Тип контента")
+    type: Optional[str] = Field(None, max_length=20, description="Тип контента")
 
 
 class MediaRead(MediaBase):

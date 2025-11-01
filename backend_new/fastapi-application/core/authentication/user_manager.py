@@ -1,5 +1,6 @@
 import logging
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Dict, Any
+from datetime import datetime
 from fastapi_users import BaseUserManager, IntegerIDMixin
 from fastapi_users.db import BaseUserDatabase
 
@@ -72,3 +73,26 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, UserIdType]):
             send_email_confirmed,
             user=user
         )
+
+    async def on_after_update(
+            self,
+            user: User,
+            update_dict: Dict[str, Any],
+            request: Optional["Request"] = None,
+    ) -> None:
+        """
+        Обновляет поле updated_at пользователя после успешного обновления.
+        """
+        from sqlalchemy import update
+        
+        # Обновляем поле updated_at текущим временем
+        await self.user_db.session.execute(
+            update(User)
+            .where(User.id == user.id)
+            .values(updated_at=datetime.now())
+        )
+        
+        # Коммитим изменения
+        await self.user_db.session.commit()
+        
+        log.warning(f"User {user.id} has been updated. Updated fields: {list(update_dict.keys())}")

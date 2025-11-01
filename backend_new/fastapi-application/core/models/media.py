@@ -12,12 +12,11 @@ class Media(Base, IntIdPkMixin):
     """Модель медиа контента (новости, видео, игры, подкасты)"""
     __tablename__ = "media"
     
-    url: Mapped[str] = mapped_column(String(500), nullable=False, unique=True)
-    title: Mapped[str] = mapped_column(String(1000), nullable=False, index=True)
+    url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True, unique=True)
+    title: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True, index=True)
     image: Mapped[Optional[str]] = mapped_column(String(1000))
     category: Mapped[Optional[str]] = mapped_column(String(100), index=True)
     date: Mapped[Optional[str]] = mapped_column(String(100))
-    comments_count: Mapped[int] = mapped_column(Integer, default=0)
     card_type: Mapped[Optional[str]] = mapped_column(String(20))
-    type: Mapped[str] = mapped_column(String(20), default="news", index=True)
+    type: Mapped[Optional[str]] = mapped_column(String(20), default="news", index=True)
     parsed_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
