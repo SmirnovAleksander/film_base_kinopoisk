@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { Play, Star, TrendingUp, Film, Heart } from 'lucide-react';
+import { Play, Star, TrendingUp, Film, Heart, Flag, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FilmCard, FilmCardSkeleton } from '@/components/film/FilmCard';
@@ -12,18 +12,32 @@ import { ROUTES } from '@/lib/config';
 
 export default function HomePage() {
   const { isAuthenticated } = useAuth();
-  const { 
-    films, 
-    fetchFilms, 
-    isLoading 
+  const {
+    films,
+    highRatedFilms,
+    russianFilms,
+    usaFilms,
+    fetchFilms,
+    fetchHighRatedFilms,
+    fetchRussianFilms,
+    fetchUSAFilms,
+    isLoading,
+    isLoadingHighRated,
+    isLoadingRussian,
+    isLoadingUSA
   } = useFilmsStore();
 
   useEffect(() => {
     fetchFilms(1);
-  }, [fetchFilms]);
+    fetchHighRatedFilms(1);
+    fetchRussianFilms(1);
+    fetchUSAFilms(1);
+  }, [fetchFilms, fetchHighRatedFilms, fetchRussianFilms, fetchUSAFilms]);
 
-  const featuredFilms = films.slice(0, 6);
-  const latestFilms = films.slice(6, 12);
+  // Используем отдельные данные для каждой категории
+  const featuredFilms = highRatedFilms.slice(0, 6);
+  const latestFilms = films.slice(0, 6);
+  const usaFilmsList = usaFilms.slice(0, 6);
 
   return (
     <div className="min-h-screen bg-background">
@@ -120,13 +134,16 @@ export default function HomePage() {
         {/* Рекомендуемые фильмы */}
         <section className="mb-16">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold">Рекомендуемые фильмы</h2>
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <TrendingUp className="h-6 w-6 text-green-500" />
+              Рекомендуемые фильмы
+            </h2>
             <Button asChild variant="outline">
               <Link href={ROUTES.FILMS}>Смотреть все</Link>
             </Button>
           </div>
           
-          {isLoading ? (
+          {isLoadingHighRated ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
                 <FilmCardSkeleton key={i} />
@@ -144,7 +161,10 @@ export default function HomePage() {
         {/* Новые поступления */}
         <section className="mb-16">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold">Новые поступления</h2>
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Play className="h-6 w-6 text-purple-500" />
+              Новые поступления
+            </h2>
             <Button asChild variant="outline">
               <Link href={ROUTES.FILMS}>Смотреть все</Link>
             </Button>
@@ -159,6 +179,87 @@ export default function HomePage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
               {latestFilms.map((film) => (
+                <FilmCard key={film.id} film={film} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Фильмы с высоким рейтингом */}
+        <section className="mb-16">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Star className="h-6 w-6 text-yellow-500" />
+              Фильмы с высоким рейтингом
+            </h2>
+            <Button asChild variant="outline">
+              <Link href={ROUTES.FILMS}>Смотреть все</Link>
+            </Button>
+          </div>
+          
+          {isLoadingHighRated ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <FilmCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+              {highRatedFilms.map((film) => (
+                <FilmCard key={film.id} film={film} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Российские фильмы */}
+        <section className="mb-16">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Flag className="h-6 w-6 text-red-500" />
+              Российские фильмы
+            </h2>
+            <Button asChild variant="outline">
+              <Link href={ROUTES.FILMS}>Смотреть все</Link>
+            </Button>
+          </div>
+          
+          {isLoadingRussian ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <FilmCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+              {russianFilms.map((film) => (
+                <FilmCard key={film.id} film={film} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* США фильмы */}
+        <section className="mb-16">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Map className="h-6 w-6 text-blue-500" />
+              США фильмы
+            </h2>
+            <Button asChild variant="outline">
+              <Link href={ROUTES.FILMS}>Смотреть все</Link>
+            </Button>
+          </div>
+          
+          {isLoadingUSA ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <FilmCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+              {usaFilms.map((film) => (
                 <FilmCard key={film.id} film={film} />
               ))}
             </div>

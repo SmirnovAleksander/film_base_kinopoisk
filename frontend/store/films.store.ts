@@ -17,11 +17,21 @@ interface FilmsState {
   genres: Genre[];
   countries: Country[];
   
+  // Категории фильмов
+  highRatedFilms: Film[];
+  russianFilms: Film[];
+  usaFilms: Film[];
+  
   // Поиск и фильтрация
   searchQuery: string;
   filters: FilmFilterParams;
   isSearching: boolean;
   isLoading: boolean;
+  
+  // Состояния загрузки категорий
+  isLoadingHighRated: boolean;
+  isLoadingRussian: boolean;
+  isLoadingUSA: boolean;
   
   // Пагинация
   currentPage: number;
@@ -31,10 +41,14 @@ interface FilmsState {
   // Действия
   fetchFilms: (page?: number) => Promise<void>;
   searchFilms: (params: FilmSearchParams) => Promise<void>;
-  filterFilms: (params: FilmFilterParams) => Promise<void>;
+  filterFilms: (params: FilmFilterParams, saveTo?: 'highRated' | 'russian' | 'usa' | 'default') => Promise<void>;
   fetchFilmDetails: (id: number) => Promise<void>;
   fetchGenres: () => Promise<void>;
   fetchCountries: () => Promise<void>;
+  // Категории фильмов
+  fetchHighRatedFilms: (page?: number) => Promise<void>;
+  fetchRussianFilms: (page?: number) => Promise<void>;
+  fetchUSAFilms: (page?: number) => Promise<void>;
   setSearchQuery: (query: string) => void;
   setFilters: (filters: Partial<FilmFilterParams>) => void;
   setPage: (page: number) => void;
@@ -49,10 +63,18 @@ export const useFilmsStore = create<FilmsState>((set, get) => ({
   currentFilm: null,
   genres: [],
   countries: [],
+  // Категории фильмов
+  highRatedFilms: [],
+  russianFilms: [],
+  usaFilms: [],
   searchQuery: '',
   filters: {},
   isSearching: false,
   isLoading: false,
+  // Состояния загрузки категорий
+  isLoadingHighRated: false,
+  isLoadingRussian: false,
+  isLoadingUSA: false,
   currentPage: 1,
   pageSize: PAGINATION.DEFAULT_PAGE_SIZE,
   totalCount: 0,
@@ -91,36 +113,77 @@ export const useFilmsStore = create<FilmsState>((set, get) => ({
     }
   },
 
-  filterFilms: async (params: FilmFilterParams) => {
-    set({ isLoading: true });
+  filterFilms: async (params: FilmFilterParams, saveTo?: 'highRated' | 'russian' | 'usa' | 'default') => {
+    const isCategoryRequest = saveTo && saveTo !== 'default';
+    
+    if (isCategoryRequest) {
+      // Для категорий используем отдельные состояния загрузки
+      if (saveTo === 'highRated') set({ isLoadingHighRated: true });
+      if (saveTo === 'russian') set({ isLoadingRussian: true });
+      if (saveTo === 'usa') set({ isLoadingUSA: true });
+    } else {
+      // Основной список фильмов
+      set({ isLoading: true });
+    }
+    
     try {
       const response = await FilmsAPI.filterFilms(params);
-      set({
-        films: response.items,
-        totalCount: response.total_count,
-        filters: {
-          genre: params.genre,
-          genre_id: params.genre_id,
-          country: params.country,
-          country_id: params.country_id,
-          year: params.year,
-          start_year: params.start_year,
-          end_year: params.end_year,
-          title: params.title,
-          rating_kp_min: params.rating_kp_min,
-          rating_kp_max: params.rating_kp_max,
-          min_rating: params.min_rating,
-          max_rating: params.max_rating,
-          lang: params.lang,
-          source: params.source,
-          page: params.page,
-          page_size: params.page_size,
-        },
-        currentPage: params.page || 1,
-        isLoading: false,
-      });
+      
+      if (isCategoryRequest) {
+        // Сохраняем в категории
+        if (saveTo === 'highRated') {
+          set({
+            highRatedFilms: response.items,
+            isLoadingHighRated: false
+          });
+        }
+        if (saveTo === 'russian') {
+          set({
+            russianFilms: response.items,
+            isLoadingRussian: false
+          });
+        }
+        if (saveTo === 'usa') {
+          set({
+            usaFilms: response.items,
+            isLoadingUSA: false
+          });
+        }
+      } else {
+        // Основной список фильмов
+        set({
+          films: response.items,
+          totalCount: response.total_count,
+          filters: {
+            genre: params.genre,
+            genre_id: params.genre_id,
+            country: params.country,
+            country_id: params.country_id,
+            year: params.year,
+            start_year: params.start_year,
+            end_year: params.end_year,
+            title: params.title,
+            rating_kp_min: params.rating_kp_min,
+            rating_kp_max: params.rating_kp_max,
+            min_rating: params.min_rating,
+            max_rating: params.max_rating,
+            lang: params.lang,
+            source: params.source,
+            page: params.page,
+            page_size: params.page_size,
+          },
+          currentPage: params.page || 1,
+          isLoading: false,
+        });
+      }
     } catch (error) {
-      set({ isLoading: false });
+      if (isCategoryRequest) {
+        if (saveTo === 'highRated') set({ isLoadingHighRated: false });
+        if (saveTo === 'russian') set({ isLoadingRussian: false });
+        if (saveTo === 'usa') set({ isLoadingUSA: false });
+      } else {
+        set({ isLoading: false });
+      }
       throw error;
     }
   },
@@ -185,5 +248,68 @@ export const useFilmsStore = create<FilmsState>((set, get) => ({
 
   setLoading: (loading: boolean) => {
     set({ isLoading: loading });
+  },
+
+  // Категории фильмов
+  fetchHighRatedFilms: async (page = 1) => {
+    await get().filterFilms({
+      min_rating: 8,
+      max_rating: 10,
+      lang: 'ru',
+      source: 'kp',
+      page,
+      page_size: 6, // Меньше для главной страницы
+    }, 'highRated');
+  },
+
+  fetchRussianFilms: async (page = 1) => {
+    // Убеждаемся, что у нас есть список стран
+    const { countries } = get();
+    if (countries.length === 0) {
+      await get().fetchCountries();
+    }
+    
+    const updatedCountries = countries.length > 0 ? countries : get().countries;
+    // Находим ID России (может быть разные варианты названия)
+    const russiaCountry = updatedCountries.find(
+      country =>
+        country.name.toLowerCase().includes('россия') ||
+        country.name.toLowerCase().includes('российская') ||
+        country.name.toLowerCase().includes('ussr')
+    );
+
+    await get().filterFilms({
+      country_id: russiaCountry?.id,
+      lang: 'ru',
+      source: 'kp',
+      page,
+      page_size: 6, // Меньше для главной страницы
+    }, 'russian');
+  },
+
+  fetchUSAFilms: async (page = 1) => {
+    // Убеждаемся, что у нас есть список стран
+    const { countries } = get();
+    if (countries.length === 0) {
+      await get().fetchCountries();
+    }
+    
+    const updatedCountries = countries.length > 0 ? countries : get().countries;
+    // Находим ID США (может быть разные варианты названия)
+    const usaCountry = updatedCountries.find(
+      country =>
+        country.name.toLowerCase().includes('сша') ||
+        country.name.toLowerCase().includes('соединенные') ||
+        country.name.toLowerCase().includes('america') ||
+        country.name.toLowerCase().includes('usa')
+    );
+
+    await get().filterFilms({
+      country_id: usaCountry?.id,
+      lang: 'ru',
+      source: 'kp',
+      page,
+      page_size: 6, // Меньше для главной страницы
+    }, 'usa');
   },
 }));
