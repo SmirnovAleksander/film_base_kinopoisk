@@ -28,7 +28,7 @@ export function MiniPersonCard({ person, className = '' }: MiniPersonCardProps) 
       <CardContent className="p-3">
         <div className="flex items-center space-x-3">
           {/* Фото */}
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             {person.image ? (
               <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted">
                 <Image

@@ -79,7 +79,7 @@ export default function HistoryPage() {
               <CardContent className="p-4">
                 <div className="flex gap-4">
                   {/* Постер */}
-                  <div className="w-16 h-24 bg-muted rounded flex-shrink-0">
+                  <div className="w-16 h-24 bg-muted rounded shrink-0">
                     {item.film?.poster ? (
                       <img
                         src={item.film.poster}
@@ -130,7 +130,7 @@ export default function HistoryPage() {
                       </div>
 
                       {/* Кнопки действий */}
-                      <div className="flex gap-2 flex-shrink-0">
+                      <div className="flex gap-2 shrink-0">
                         <Button asChild size="sm">
                           <Link href={ROUTES.FILM_DETAILS(item.film.id)}>
                             <Play className="h-4 w-4 mr-2" />

@@ -28,10 +28,10 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Героический блок */}
-      <section className="relative bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-20">
+      <section className="relative bg-linear-to-br from-primary/10 via-background to-secondary/10 py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               Ваша персональная база фильмов
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">

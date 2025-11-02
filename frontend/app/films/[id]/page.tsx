@@ -185,7 +185,7 @@ export default function FilmDetailsPage() {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
-            <Skeleton className="aspect-[2/3] w-full" />
+            <Skeleton className="aspect-2/3 w-full" />
           </div>
           <div className="lg:col-span-2 space-y-6">
             <Skeleton className="h-8 w-3/4" />
@@ -198,7 +198,7 @@ export default function FilmDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
+    <div className="min-h-screen bg-linear-to-br from-background via-background to-muted/30">
       <div className="container mx-auto px-4 py-8 space-y-12">
         {/* Навигация */}
         <div className="mb-8">
@@ -217,7 +217,7 @@ export default function FilmDetailsPage() {
             <Card className="p-0 top-8 overflow-hidden border-0 shadow-2xl">
               <CardContent className="p-0">
                 {currentFilm.poster ? (
-                  <div className="relative aspect-[2/3] group">
+                  <div className="relative aspect-2/3 group">
                     <Image
                       src={currentFilm.poster}
                       alt={currentFilm.title || 'Без названия'}
@@ -226,7 +226,7 @@ export default function FilmDetailsPage() {
                       sizes="(max-width: 768px) 100vw, 33vw"
                       unoptimized={true}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg" />
+                    <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg" />
                     <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <Button className="w-full" size="lg">
                         <Play className="h-4 w-4 mr-2" />
@@ -235,7 +235,7 @@ export default function FilmDetailsPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center">
+                  <div className="aspect-2/3 bg-muted rounded-lg flex items-center justify-center">
                     <span className="text-muted-foreground">Нет постера</span>
                   </div>
                 )}
@@ -247,7 +247,7 @@ export default function FilmDetailsPage() {
           <div className="lg:col-span-2 space-y-8">
             {/* Заголовок */}
             <div className="space-y-4">
-              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+              <h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
                 {currentFilm.title || currentFilm.original_title || 'Без названия'}
               </h1>
               {currentFilm.original_title && currentFilm.title !== currentFilm.original_title && (
@@ -312,7 +312,7 @@ export default function FilmDetailsPage() {
             {/* Рейтинги */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {currentFilm.rating_kp && (
-                <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+                <Card className="border-primary/20 bg-linear-to-br from-primary/5 to-primary/10">
                   <CardContent className="p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="p-2 bg-primary/10 rounded-full">
@@ -328,7 +328,7 @@ export default function FilmDetailsPage() {
                 </Card>
               )}
               {currentFilm.rating_imdb && (
-                <Card className="border-yellow-500/20 bg-gradient-to-br from-yellow-500/5 to-yellow-500/10">
+                <Card className="border-yellow-500/20 bg-linear-to-br from-yellow-500/5 to-yellow-500/10">
                   <CardContent className="p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="p-2 bg-yellow-500/10 rounded-full">
@@ -344,7 +344,7 @@ export default function FilmDetailsPage() {
                 </Card>
               )}
               {currentFilm.user_rating && (
-                <Card className="border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-blue-500/10">
+                <Card className="border-blue-500/20 bg-linear-to-br from-blue-500/5 to-blue-500/10">
                   <CardContent className="p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="p-2 bg-blue-500/10 rounded-full">
@@ -470,7 +470,7 @@ export default function FilmDetailsPage() {
                 {isLoadingStuff ? (
                   <div className="flex gap-4 overflow-hidden">
                     {Array.from({ length: 8 }).map((_, i) => (
-                      <div key={i} className="flex-shrink-0 w-80">
+                      <div key={i} className="shrink-0 w-80">
                         <Skeleton className="h-24 w-full" />
                       </div>
                     ))}
@@ -479,7 +479,7 @@ export default function FilmDetailsPage() {
                   <ScrollArea className="w-full">
                     <div className="flex gap-4 pb-4">
                       {filmStuff.map((person) => (
-                        <div key={person.id} className="flex-shrink-0 w-80">
+                        <div key={person.id} className="shrink-0 w-80">
                           <MiniPersonCard person={person} />
                         </div>
                       ))}
@@ -512,7 +512,7 @@ export default function FilmDetailsPage() {
                   {isLoadingStills ? (
                     <div className="flex gap-4 overflow-hidden">
                       {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="flex-shrink-0 w-80">
+                        <div key={i} className="shrink-0 w-80">
                           <StillCardSkeleton />
                         </div>
                       ))}
@@ -520,7 +520,7 @@ export default function FilmDetailsPage() {
                   ) : (
                     <div className="flex gap-4 overflow-x-auto pb-4">
                       {filmStills.stills.slice(0, 6).map((still) => (
-                        <div key={still.id} className="flex-shrink-0 w-80">
+                        <div key={still.id} className="shrink-0 w-80">
                           <StillCard still={still} />
                         </div>
                       ))}
@@ -548,7 +548,7 @@ export default function FilmDetailsPage() {
                   {isLoadingStills ? (
                     <div className="flex gap-4 overflow-hidden">
                       {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="flex-shrink-0 w-80">
+                        <div key={i} className="shrink-0 w-80">
                           <StillCardSkeleton />
                         </div>
                       ))}
@@ -556,7 +556,7 @@ export default function FilmDetailsPage() {
                   ) : (
                     <div className="flex gap-4 overflow-x-auto pb-4">
                       {filmStills.wall.slice(0, 6).map((wall) => (
-                        <div key={wall.id} className="flex-shrink-0 w-80">
+                        <div key={wall.id} className="shrink-0 w-80">
                           <StillCard still={wall} />
                         </div>
                       ))}

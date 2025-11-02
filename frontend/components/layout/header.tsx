@@ -66,7 +66,7 @@ export function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container mx-auto flex h-16 items-center max-w-7xl px-4">
         {/* Логотип */}
         <Link href={ROUTES.HOME} className="flex items-center space-x-2 mr-6">

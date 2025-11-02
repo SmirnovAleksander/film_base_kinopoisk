@@ -74,7 +74,7 @@ export function FilmCard({ film, showActions = true, className }: FilmCardProps)
     <Card className={`group overflow-hidden transition-all duration-200 pt-0 hover:shadow-lg ${className}`}>
       <Link href={ROUTES.FILM_DETAILS(film.id)} className="block">
         {/* Постер фильма */}
-        <div className="relative aspect-[2/3] overflow-hidden">
+        <div className="relative aspect-2/3 overflow-hidden">
           {!imageLoaded && (
             <Skeleton className="absolute inset-0 w-full h-full" />
           )}
@@ -202,7 +202,7 @@ export function FilmCard({ film, showActions = true, className }: FilmCardProps)
 export function FilmCardSkeleton({ className }: { className?: string }) {
   return (
     <Card className={className}>
-      <div className="aspect-[2/3]">
+      <div className="aspect-2/3">
         <Skeleton className="w-full h-full" />
       </div>
       <CardContent className="p-4">

@@ -63,7 +63,7 @@ export default function BookmarksPage() {
                     showActions={true}
                   />
                 ) : (
-                  <div className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center">
+                  <div className="aspect-2/3 bg-muted rounded-lg flex items-center justify-center">
                     <span className="text-muted-foreground">Фильм не найден</span>
                   </div>
                 )}

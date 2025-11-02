@@ -154,7 +154,7 @@ export default function ProfilePage() {
                 {userRatings.slice(0, 10).map((rating) => (
                   <div key={rating.id} className="flex items-center gap-4 p-3 border rounded-lg">
                     {/* Миниатюра фильма */}
-                    <div className="w-16 h-20 bg-muted rounded-md overflow-hidden flex-shrink-0">
+                    <div className="w-16 h-20 bg-muted rounded-md overflow-hidden shrink-0">
                       {rating.film?.poster ? (
                         <img
                           src={rating.film.poster}
@@ -187,7 +187,7 @@ export default function ProfilePage() {
                     </div>
                     
                     {/* Дата оценки */}
-                    <div className="text-right flex-shrink-0">
+                    <div className="text-right shrink-0">
                       <p className="text-sm text-muted-foreground">
                         {new Date(rating.created_at).toLocaleDateString('ru-RU')}
                       </p>

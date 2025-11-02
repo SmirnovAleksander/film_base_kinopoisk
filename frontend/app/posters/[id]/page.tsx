@@ -78,7 +78,7 @@ export default function PostersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
+    <div className="min-h-screen bg-linear-to-br from-background via-background to-muted/30">
       <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Навигация */}
         <div className="mb-8">
@@ -92,7 +92,7 @@ export default function PostersPage() {
 
         {/* Заголовок */}
         <div className="space-y-4">
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-4xl font-bold bg-linear-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
             Галерея изображений
           </h1>
           {currentFilm && (
