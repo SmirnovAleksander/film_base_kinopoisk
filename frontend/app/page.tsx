@@ -34,11 +34,6 @@ export default function HomePage() {
     fetchUSAFilms(1);
   }, [fetchFilms, fetchHighRatedFilms, fetchRussianFilms, fetchUSAFilms]);
 
-  // Используем отдельные данные для каждой категории
-  const featuredFilms = highRatedFilms.slice(0, 6);
-  const latestFilms = films.slice(0, 6);
-  const usaFilmsList = usaFilms.slice(0, 6);
-
   return (
     <div className="min-h-screen bg-background">
       {/* Героический блок */}
@@ -129,60 +124,6 @@ export default function HomePage() {
               </CardContent>
             </Card>
           </div>
-        </section>
-
-        {/* Рекомендуемые фильмы */}
-        <section className="mb-16">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <TrendingUp className="h-6 w-6 text-green-500" />
-              Рекомендуемые фильмы
-            </h2>
-            <Button asChild variant="outline">
-              <Link href={ROUTES.FILMS}>Смотреть все</Link>
-            </Button>
-          </div>
-          
-          {isLoadingHighRated ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <FilmCardSkeleton key={i} />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-              {featuredFilms.map((film) => (
-                <FilmCard key={film.id} film={film} />
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Новые поступления */}
-        <section className="mb-16">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <Play className="h-6 w-6 text-purple-500" />
-              Новые поступления
-            </h2>
-            <Button asChild variant="outline">
-              <Link href={ROUTES.FILMS}>Смотреть все</Link>
-            </Button>
-          </div>
-          
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <FilmCardSkeleton key={i} />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-              {latestFilms.map((film) => (
-                <FilmCard key={film.id} film={film} />
-              ))}
-            </div>
-          )}
         </section>
 
         {/* Фильмы с высоким рейтингом */}
