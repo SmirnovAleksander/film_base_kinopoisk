@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, Heart, Bookmark, Calendar, Eye } from 'lucide-react';
+import { Star, Heart, Calendar, Eye } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,10 +16,12 @@ import { Film } from '@/lib/types';
 interface FilmCardProps {
   film: Film;
   showActions?: boolean;
+  isExternal?: boolean;
+  externalUrl?: string;
   className?: string;
 }
 
-export function FilmCard({ film, showActions = true, className }: FilmCardProps) {
+export function FilmCard({ film, showActions = true, isExternal = false, externalUrl, className }: FilmCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const {
@@ -52,6 +54,8 @@ export function FilmCard({ film, showActions = true, className }: FilmCardProps)
     e.preventDefault();
     e.stopPropagation();
     
+    if (isExternal) return; // Блокируем закладки для внешних фильмов
+    
     if (isBookmarked) {
       await removeBookmark(film.id);
     } else {
@@ -70,9 +74,25 @@ export function FilmCard({ film, showActions = true, className }: FilmCardProps)
     return 'text-red-500';
   };
 
+  // Определяем контент ссылки
+  const LinkWrapper = ({ children }: { children: React.ReactNode }) => {
+    if (isExternal && externalUrl) {
+      return (
+        <a href={externalUrl} target="_blank" rel="noopener noreferrer" className="block">
+          {children}
+        </a>
+      );
+    }
+    return (
+      <Link href={ROUTES.FILM_DETAILS(film.id)} className="block">
+        {children}
+      </Link>
+    );
+  };
+
   return (
     <Card className={`group overflow-hidden transition-all duration-200 pt-0 hover:shadow-lg ${className}`}>
-      <Link href={ROUTES.FILM_DETAILS(film.id)} className="block">
+      <LinkWrapper>
         {/* Постер фильма */}
         <div className="relative aspect-2/3 overflow-hidden">
           {!imageLoaded && (
@@ -107,8 +127,8 @@ export function FilmCard({ film, showActions = true, className }: FilmCardProps)
             )}
           </div>
 
-          {/* Кнопка закладки */}
-          {showActions && (
+          {/* Кнопка закладки - только для внутренних фильмов */}
+          {showActions && !isExternal && (
             <Button
               size="icon"
               variant={isBookmarked ? "default" : "secondary"}
@@ -192,8 +212,17 @@ export function FilmCard({ film, showActions = true, className }: FilmCardProps)
               {film.description || film.full_description}
             </p>
           )}
+          
+          {/* Индикатор внешнего источника */}
+          {isExternal && (
+            <div className="mt-2">
+              <Badge variant="outline" className="text-xs text-blue-600">
+                На Kinopoisk  
+              </Badge>
+            </div>
+          )}
         </CardContent>
-      </Link>
+      </LinkWrapper>
     </Card>
   );
 }

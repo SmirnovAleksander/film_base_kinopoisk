@@ -65,6 +65,7 @@ export default function FilmDetailsPage() {
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
   const [similarFilms, setSimilarFilms] = useState<any[]>([]);
   const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
+  const [similarFilmStatuses, setSimilarFilmStatuses] = useState<{[kinopoiskId: string]: {existsInDb: boolean, filmData?: any}}>({});
   
   // Состояние для редактирования комментариев
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
@@ -121,6 +122,22 @@ export default function FilmDetailsPage() {
     try {
       setIsLoadingSimilar(true);
       const similar = await FilmsAPI.getSimilarFilms(filmId);
+      
+      // Проверяем доступность каждого фильма в базе
+      const filmStatuses: {[kinopoiskId: string]: {existsInDb: boolean, filmData?: any}} = {};
+      
+      for (const similarFilm of similar) {
+        const kinopoiskId = similarFilm.similar_film_id;
+        try {
+          const filmData = await FilmsAPI.getFilmByKinopoiskId(kinopoiskId);
+          filmStatuses[kinopoiskId] = { existsInDb: true, filmData };
+        } catch (error) {
+          // Фильм не найден в базе
+          filmStatuses[kinopoiskId] = { existsInDb: false };
+        }
+      }
+      
+      setSimilarFilmStatuses(filmStatuses);
       setSimilarFilms(similar);
     } catch (error) {
       console.error('Error loading similar films:', error);
@@ -616,19 +633,55 @@ export default function FilmDetailsPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    {similarFilms.map((film) => (
-                      <FilmCard 
-                        key={film.id} 
-                        film={{
-                          ...film,
-                          id: film.similar_film_id ? parseInt(film.similar_film_id) : film.id,
-                          title: film.similar_film_title,
-                          year: film.similar_film_year ? parseInt(film.similar_film_year) : undefined,
-                          poster: film.similar_film_poster,
-                          rating_kp: film.similar_film_rating ? parseFloat(film.similar_film_rating) : undefined
-                        }} 
-                      />
-                    ))}
+                    {similarFilms.map((film) => {
+                      const kinopoiskId = film.similar_film_id;
+                      const filmStatus = similarFilmStatuses[kinopoiskId];
+                      
+                      if (filmStatus?.existsInDb && filmStatus.filmData) {
+                        // Фильм есть в базе - используем обычную ссылку
+                        return (
+                          <FilmCard
+                              key={film.id}
+                              film={{
+                                id: filmStatus.filmData.id,
+                                kinopoisk_id: filmStatus.filmData.kinopoisk_id,
+                                title: filmStatus.filmData.title,
+                                original_title: filmStatus.filmData.original_title,
+                                poster: filmStatus.filmData.poster,
+                                year: filmStatus.filmData.year,
+                                rating_kp: filmStatus.filmData.rating_kp,
+                                rating_imdb: filmStatus.filmData.rating_imdb,
+                                description: filmStatus.filmData.description,
+                                duration: filmStatus.filmData.duration,
+                                user_rating: filmStatus.filmData.user_rating,
+                                user_rating_count: filmStatus.filmData.user_rating_count,
+                                is_family_friendly: filmStatus.filmData.is_family_friendly || false,
+                              }}
+                            />
+                        );
+                      } else {
+                        // Фильма нет в базе - используем FilmCard с флагом isExternal
+                        const externalUrl = `https://www.kinopoisk.ru/film/${kinopoiskId}/`;
+                        return (
+                          <FilmCard
+                            key={film.id}
+                            isExternal={true}
+                            externalUrl={externalUrl}
+                            showActions={false}
+                            film={{
+                              id: parseInt(kinopoiskId), // Используем kinopoisk_id как id для совместимости
+                              kinopoisk_id: kinopoiskId,
+                              title: film.similar_film_title,
+                              poster: film.similar_film_poster,
+                              year: film.similar_film_year ? parseInt(film.similar_film_year) : undefined,
+                              rating_kp: film.similar_film_rating ? parseFloat(film.similar_film_rating) : undefined,
+                              is_family_friendly: false, // Значение по умолчанию
+                              user_rating_count: 0, // Значение по умолчанию
+                            }}
+                          />
+                        );
+                      }
+                    })}
                   </div>
                 )}
               </CardContent>
