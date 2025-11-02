@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUserInteractionsStore } from '@/store';
@@ -14,23 +14,24 @@ interface StarRatingProps {
   className?: string;
 }
 
-export function StarRating({ 
-  filmId, 
-  initialRating = 0, 
-  size = 'md', 
+export function StarRating({
+  filmId,
+  initialRating = 0,
+  size = 'md',
   interactive = true,
   onRatingChange,
-  className 
+  className
 }: StarRatingProps) {
   const [hoverRating, setHoverRating] = useState(0);
   const [currentRating, setCurrentRating] = useState(initialRating);
+  const containerRef = useRef<HTMLDivElement>(null);
   const { setFilmRating, getUserRating, isAddingRating } = useUserInteractionsStore();
 
   const userRating = currentRating || getUserRating(filmId) || 0;
 
   const sizeClasses = {
     sm: 'w-4 h-4',
-    md: 'w-5 h-5', 
+    md: 'w-5 h-5',
     lg: 'w-6 h-6',
   };
 
@@ -48,16 +49,28 @@ export function StarRating({
     }
   };
 
-  const handleMouseLeave = () => {
+  const handleContainerLeave = () => {
     if (interactive) {
       setHoverRating(0);
+    }
+  };
+
+  const handleContainerEnter = () => {
+    if (interactive) {
+      // Восстанавливаем последнее значение hover если оно было
+      setHoverRating(userRating > 0 ? 0 : 0);
     }
   };
 
   const displayRating = hoverRating || userRating;
 
   return (
-    <div className={`flex items-center gap-1 ${className}`}>
+    <div
+      ref={containerRef}
+      className={`flex items-center gap-1 ${className}`}
+      onMouseEnter={handleContainerEnter}
+      onMouseLeave={handleContainerLeave}
+    >
       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => {
         const isFilled = displayRating >= rating;
         const isHalfFilled = displayRating >= rating - 0.5 && displayRating < rating;
@@ -66,24 +79,24 @@ export function StarRating({
           <Button
             key={rating}
             variant="ghost"
-            size="icon"
-            className={`p-0 h-auto ${interactive ? 'cursor-pointer' : 'cursor-default'}`}
+            className={`p-2 rounded-full h-auto w-auto ${
+              interactive ? 'cursor-pointer hover:bg-yellow-500/10' : 'cursor-default'
+            } transition-colors duration-200`}
             onClick={() => handleStarClick(rating)}
             onMouseEnter={() => handleStarHover(rating)}
-            onMouseLeave={handleMouseLeave}
             disabled={!interactive || isAddingRating}
           >
-            <div className="relative">
+            <div className="relative flex items-center justify-center transition-colors duration-200">
               {/* Звезда-фон (серая) */}
-              <Star 
-                className={`${sizeClasses[size]} text-muted-foreground`} 
+              <Star
+                className={`${sizeClasses[size]} text-muted-foreground`}
                 fill="none"
               />
               
               {/* Звезда-оценка (желтая) */}
               {(isFilled || (isHalfFilled && displayRating >= rating - 0.5)) && (
-                <Star 
-                  className={`absolute top-0 left-0 ${sizeClasses[size]} text-yellow-500`} 
+                <Star
+                  className={`absolute top-0 left-0 ${sizeClasses[size]} text-yellow-500 transition-colors duration-200`}
                   fill="currentColor"
                 />
               )}

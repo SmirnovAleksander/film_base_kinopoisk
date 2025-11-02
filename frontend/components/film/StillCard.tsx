@@ -60,22 +60,6 @@ export function StillCard({ still, className = '' }: StillCardProps) {
               </div>
             </div>
           </DialogTrigger>
-          
-          {/* Полноразмерное изображение в модальном окне */}
-          <DialogContent className="max-w-4xl p-0">
-            {still.original && !imageError && (
-              <div className="relative w-full h-auto max-h-[80vh] overflow-hidden">
-                <Image
-                  src={still.original}
-                  alt={`Кадр из фильма ${still.id}`}
-                  width={1920}
-                  height={1080}
-                  className="w-full h-auto object-contain"
-                  unoptimized={true}
-                />
-              </div>
-            )}
-          </DialogContent>
         </Dialog>
       </CardContent>
     </Card>
