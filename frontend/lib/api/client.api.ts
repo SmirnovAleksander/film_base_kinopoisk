@@ -1,5 +1,5 @@
 import axios, { AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { API_CONFIG, STORAGE_KEYS } from '@/lib/config';
+import { API_CONFIG } from '@/lib/config';
 import { AuthAPI } from './auth.api';
 
 // Создаем экземпляр axios
@@ -19,12 +19,10 @@ interface RequestConfig extends InternalAxiosRequestConfig {
 // Интерцептор для добавления токена авторизации
 apiClient.interceptors.request.use(
   (config: RequestConfig) => {
-    if (typeof window !== 'undefined') {
-      // Используем AuthAPI для получения токена из cookies
-      const token = AuthAPI.getAuthToken();
-      if (token && !config.headers?.Authorization) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+    // Получаем токен из in-memory хранилища
+    const token = AuthAPI.getAuthToken();
+    if (token && !config.headers?.Authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -46,22 +44,20 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Для OAuth2 нет refresh токена, поэтому просто очищаем состояние
+        // Очищаем in-memory хранилище
+        AuthAPI.clearAuthData();
+        console.warn('🔑 Авторизация истекла. Требуется повторный вход.');
+        
+        // Отправляем кастомное событие для уведомления UI
         if (typeof window !== 'undefined') {
-          AuthAPI.clearAuthData();
-          console.warn('🔑 Авторизация истекла. Требуется повторный вход.');
-          
-          // Отправляем кастомное событие для уведомления UI
           window.dispatchEvent(new CustomEvent('auth:expired', {
             detail: { message: 'Сессия истекла. Пожалуйста, войдите снова.' }
           }));
         }
       } catch (refreshError) {
         // Если произошла ошибка при очистке
-        if (typeof window !== 'undefined') {
-          AuthAPI.clearAuthData();
-          console.error('❌ Ошибка при очистке авторизации:', refreshError);
-        }
+        AuthAPI.clearAuthData();
+        console.error('❌ Ошибка при очистке авторизации:', refreshError);
       }
     } else if (error.response?.status === 401) {
       // Вторая попытка с тем же токеном - логируем, но не очищаем повторно

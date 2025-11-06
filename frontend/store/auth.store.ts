@@ -22,6 +22,9 @@ interface AuthState {
   updateUser: (userData: Partial<User>) => Promise<void>;
   clearAuth: () => void;
   setLoading: (loading: boolean) => void;
+  // Методы для работы с localStorage
+  initializeFromStorage: () => void;
+  syncWithLocalStorage: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -32,29 +35,54 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       isAuthenticated: false,
 
+      initializeFromStorage: () => {
+        // Восстанавливаем данные из localStorage
+        const token = AuthAPI.getAuthToken();
+        const user = AuthAPI.getUserData();
+        
+        if (token && user) {
+          set({
+            user,
+            token,
+            isAuthenticated: true,
+          });
+          console.log('🔑 AuthStore: Initialized from localStorage');
+        } else {
+          console.log('🔑 AuthStore: No auth data in localStorage');
+        }
+      },
+
+      syncWithLocalStorage: () => {
+        // Синхронизация с localStorage
+        const token = AuthAPI.getAuthToken();
+        const user = AuthAPI.getUserData();
+        
+        set({
+          user: user || null,
+          token: token,
+          isAuthenticated: !!(token && user),
+        });
+      },
+
       login: async (data: LoginData) => {
         set({ isLoading: true });
         try {
           // OAuth2 вход - получаем только access_token
           const { access_token, token_type } = await AuthAPI.login(data);
-          console.log('🔍 Login response:', { access_token: access_token.substring(0, 20) + '...', token_type });
+          console.log('🔍 Login response:', {
+            access_token: access_token.substring(0, 20) + '...',
+            token_type
+          });
           
-          // КРИТИЧНО: Сначала сохраняем токен в cookies
-          // Без этого getCurrentUser() не сможет аутентифицироваться
+          // Сначала сохраняем токен в localStorage
           AuthAPI.setAuthData(access_token, {} as User);
           
           // Теперь получаем данные пользователя с валидным токеном
           const user = await AuthAPI.getCurrentUser();
           console.log('🔍 User data:', user);
 
-          // Обновляем cookies с реальными данными пользователя
+          // Обновляем localStorage с реальными данными пользователя
           AuthAPI.setAuthData(access_token, user);
-          
-          // Проверяем, что данные сохранились
-          const savedToken = AuthAPI.getAuthToken();
-          const savedUser = AuthAPI.getUserData();
-          console.log('🔍 Saved token:', savedToken ? savedToken.substring(0, 20) + '...' : 'null');
-          console.log('🔍 Saved user:', savedUser);
 
           set({
             user,
@@ -62,6 +90,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
           });
+          console.log('🔑 AuthStore: Login successful');
         } catch (error) {
           set({ isLoading: false });
           // Очищаем частичные данные в случае ошибки
@@ -101,6 +130,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: false,
             isLoading: false,
           });
+          console.log('🔑 AuthStore: Logout completed');
         }
       },
 
@@ -116,7 +146,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const user = await AuthAPI.getCurrentUser();
           
-          // Обновляем данные в cookies
+          // Обновляем данные в localStorage
           AuthAPI.setAuthData(token, user);
 
           set({
@@ -151,7 +181,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const updatedUser = await AuthAPI.updateProfile(userData);
           
-          // Обновляем данные в cookies
+          // Обновляем данные в localStorage
           const token = AuthAPI.getAuthToken();
           if (token) {
             AuthAPI.setAuthData(token, updatedUser);
@@ -190,6 +220,16 @@ export const useAuthStore = create<AuthState>()(
         token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => {
+        // Дополнительная синхронизация с localStorage после десериализации
+        return (state, error) => {
+          if (!error) {
+            console.log('🔑 AuthStore: Rehydrated from localStorage');
+            // Синхронизация с localStorage
+            AuthAPI.getAuthToken() && AuthAPI.getUserData();
+          }
+        };
+      },
     }
   )
 );

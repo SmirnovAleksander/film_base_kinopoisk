@@ -1,5 +1,4 @@
 import { apiClient } from './client.api';
-import Cookies from 'js-cookie';
 import {
   LoginData,
   RegisterData,
@@ -7,10 +6,30 @@ import {
 } from '@/lib/types';
 import { API_ENDPOINTS, STORAGE_KEYS } from '@/lib/config';
 
+// LocalStorage ключи
+const TOKEN_KEY = STORAGE_KEYS.AUTH_TOKEN;
+const USER_KEY = STORAGE_KEYS.USER_DATA;
+
+// Event emitter для уведомления об изменении токена
+class AuthEventEmitter {
+  private listeners: Set<() => void> = new Set();
+
+  onChange(listener: () => void) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  emit() {
+    this.listeners.forEach(listener => listener());
+  }
+}
+
+export const authEvents = new AuthEventEmitter();
+
 export class AuthAPI {
   // Вход в систему (OAuth2 формат)
   static async login(data: LoginData): Promise<{ access_token: string; token_type: string }> {
-    const response = await apiClient.post(API_ENDPOINTS.AUTH.LOGIN, 
+    const response = await apiClient.post(API_ENDPOINTS.AUTH.LOGIN,
       new URLSearchParams({
         grant_type: 'password',
         username: data.email,
@@ -18,7 +37,7 @@ export class AuthAPI {
         scope: '',
         client_id: '',
         client_secret: '',
-      }), 
+      }),
       {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -42,12 +61,16 @@ export class AuthAPI {
 
   // Выход из системы
   static async logout(): Promise<void> {
-    // Очищаем cookies
-    Cookies.remove(STORAGE_KEYS.AUTH_TOKEN);
-    Cookies.remove(`${STORAGE_KEYS.AUTH_TOKEN}_refresh`);
-    Cookies.remove(STORAGE_KEYS.USER_DATA);
+    // Очищаем localStorage
+    this.clearAuthData();
     
-    await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT);
+    // Отправляем запрос на сервер для завершения сессии
+    try {
+      await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT);
+    } catch (error) {
+      // Игнорируем ошибку logout от сервера, локальные данные все равно очищены
+      console.warn('Server logout error:', error);
+    }
   }
 
   // Запросить токен верификации email
@@ -102,25 +125,78 @@ export class AuthAPI {
     return response.data;
   }
 
-  // Утилиты для работы с cookies
+  // Утилиты для работы с localStorage
   static setAuthData(accessToken: string, user: User): void {
-    // Сохраняем в cookies сроком на 7 дней
-    Cookies.set(STORAGE_KEYS.AUTH_TOKEN, accessToken, { expires: 7 });
-    Cookies.set(STORAGE_KEYS.USER_DATA, JSON.stringify(user), { expires: 7 });
+    if (typeof window !== 'undefined') {
+      try {
+        // Сохраняем в localStorage
+        localStorage.setItem(TOKEN_KEY, accessToken);
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
+        authEvents.emit(); // Уведомляем об изменении токена
+        console.log('🔑 AuthAPI: Auth data stored in localStorage');
+      } catch (error) {
+        console.error('Failed to store auth data:', error);
+      }
+    }
   }
 
   static getAuthToken(): string | null {
-    return Cookies.get(STORAGE_KEYS.AUTH_TOKEN) || null;
+    if (typeof window === 'undefined') return null;
+    
+    try {
+      return localStorage.getItem(TOKEN_KEY);
+    } catch (error) {
+      console.error('Failed to get auth token:', error);
+      return null;
+    }
   }
 
   static getUserData(): User | null {
-    const userData = Cookies.get(STORAGE_KEYS.USER_DATA);
-    return userData ? JSON.parse(userData) : null;
+    if (typeof window === 'undefined') return null;
+    
+    try {
+      const userData = localStorage.getItem(USER_KEY);
+      return userData ? JSON.parse(userData) : null;
+    } catch (error) {
+      console.error('Failed to get user data:', error);
+      return null;
+    }
   }
 
   static clearAuthData(): void {
-    Cookies.remove(STORAGE_KEYS.AUTH_TOKEN);
-    Cookies.remove(`${STORAGE_KEYS.AUTH_TOKEN}_refresh`);
-    Cookies.remove(STORAGE_KEYS.USER_DATA);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+        authEvents.emit(); // Уведомляем об очистке токена
+        console.log('🔑 AuthAPI: Auth data cleared from localStorage');
+      } catch (error) {
+        console.error('Failed to clear auth data:', error);
+      }
+    }
+  }
+
+  // Проверка актуальности токена
+  static isTokenValid(): boolean {
+    return this.getAuthToken() !== null;
+  }
+
+  // Подписка на изменения токена
+  static onAuthChange(callback: () => void): () => void {
+    return authEvents.onChange(callback);
+  }
+
+  // Проверка доступности localStorage
+  static isLocalStorageAvailable(): boolean {
+    if (typeof window === 'undefined') return false;
+    
+    try {
+      const test = '__localStorage_test__';
+      localStorage.setItem(test, test);
+      localStorage.removeItem(test);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
