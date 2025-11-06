@@ -114,6 +114,12 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   fetchBookmarks: async (page = 1) => {
     set({ isLoadingBookmarks: true, bookmarksPage: page });
     try {
+      // Проверяем авторизацию
+      const { isAuthenticated, user } = useAuthStore.getState();
+      if (!isAuthenticated || !user) {
+        throw new Error('Пользователь не авторизован');
+      }
+      
       const response = await UserInteractionsAPI.getBookmarks(page, PAGINATION.DEFAULT_PAGE_SIZE);
       const bookmarkedIds = new Set(response.items.map(bookmark => bookmark.film_id));
       
@@ -132,6 +138,12 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   addBookmark: async (filmId: number) => {
     set({ isAddingBookmark: true });
     try {
+      // Проверяем авторизацию
+      const { isAuthenticated, user } = useAuthStore.getState();
+      if (!isAuthenticated || !user) {
+        throw new Error('Пользователь не авторизован');
+      }
+      
       await UserInteractionsAPI.addBookmark(filmId);
       
       // Обновляем локальное состояние
@@ -161,6 +173,12 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   removeBookmark: async (filmId: number) => {
     set({ isAddingBookmark: true });
     try {
+      // Проверяем авторизацию
+      const { isAuthenticated, user } = useAuthStore.getState();
+      if (!isAuthenticated || !user) {
+        throw new Error('Пользователь не авторизован');
+      }
+      
       await UserInteractionsAPI.removeBookmark(filmId);
       
       // Обновляем локальное состояние
@@ -204,9 +222,9 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   fetchUserRatings: async (page = 1) => {
     set({ isLoadingRatings: true, ratingsPage: page });
     try {
-      // Получаем ID текущего пользователя из auth store
-      const { user } = useAuthStore.getState();
-      if (!user) {
+      // Проверяем авторизацию
+      const { isAuthenticated, user } = useAuthStore.getState();
+      if (!isAuthenticated || !user) {
         throw new Error('Пользователь не авторизован');
       }
       
@@ -228,6 +246,12 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   setFilmRating: async (filmId: number, rating: number) => {
     set({ isAddingRating: true });
     try {
+      // Проверяем авторизацию
+      const { isAuthenticated, user } = useAuthStore.getState();
+      if (!isAuthenticated || !user) {
+        throw new Error('Пользователь не авторизован');
+      }
+      
       const ratingData: UserFilmRatingCreate = { rating, film_id: filmId };
       await UserInteractionsAPI.setFilmRating(filmId, ratingData);
       
@@ -271,6 +295,12 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   deleteFilmRating: async (filmId: number) => {
     set({ isAddingRating: true });
     try {
+      // Проверяем авторизацию
+      const { isAuthenticated, user } = useAuthStore.getState();
+      if (!isAuthenticated || !user) {
+        throw new Error('Пользователь не авторизован');
+      }
+      
       await UserInteractionsAPI.deleteFilmRating(filmId);
       
       // Обновляем локальное состояние
@@ -325,6 +355,12 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   addComment: async (filmId: number, content: string) => {
     set({ isAddingComment: true });
     try {
+      // Проверяем авторизацию
+      const { isAuthenticated, user } = useAuthStore.getState();
+      if (!isAuthenticated || !user) {
+        throw new Error('Пользователь не авторизован');
+      }
+      
       const commentData: CommentCreate = { content, film_id: filmId };
       await UserInteractionsAPI.addComment(filmId, commentData);
       
@@ -353,13 +389,19 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   updateComment: async (commentId: number, content: string) => {
     set({ isAddingComment: true });
     try {
+      // Проверяем авторизацию
+      const { isAuthenticated, user } = useAuthStore.getState();
+      if (!isAuthenticated || !user) {
+        throw new Error('Пользователь не авторизован');
+      }
+      
       const commentData: CommentUpdate = { content };
       await UserInteractionsAPI.updateComment(commentId, commentData);
       
       // Обновляем локальное состояние
       const { comments } = get();
-      const updatedComments = comments.map(comment => 
-        comment.id === commentId 
+      const updatedComments = comments.map(comment =>
+        comment.id === commentId
           ? { ...comment, content, is_edited: true, edited_at: new Date().toISOString() }
           : comment
       );
@@ -377,12 +419,18 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   deleteComment: async (commentId: number) => {
     set({ isAddingComment: true });
     try {
+      // Проверяем авторизацию
+      const { isAuthenticated, user } = useAuthStore.getState();
+      if (!isAuthenticated || !user) {
+        throw new Error('Пользователь не авторизован');
+      }
+      
       await UserInteractionsAPI.deleteComment(commentId);
       
       // Обновляем локальное состояние (мягкое удаление)
       const { comments } = get();
-      const updatedComments = comments.map(comment => 
-        comment.id === commentId 
+      const updatedComments = comments.map(comment =>
+        comment.id === commentId
           ? { ...comment, is_deleted: true }
           : comment
       );
@@ -409,6 +457,12 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   fetchUserHistory: async (page = 1) => {
     set({ historyLoading: true, historyPage: page });
     try {
+      // Проверяем авторизацию
+      const { isAuthenticated, user } = useAuthStore.getState();
+      if (!isAuthenticated || !user) {
+        throw new Error('Пользователь не авторизован');
+      }
+      
       const response: UserFilmHistoryResponse = await UserInteractionsAPI.getUserHistory(page, PAGINATION.DEFAULT_PAGE_SIZE);
       set({
         userHistory: response.history,
@@ -424,6 +478,12 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   addFilmToHistory: async (filmId: number) => {
     set({ isAddingToHistory: true });
     try {
+      // Проверяем авторизацию
+      const { isAuthenticated, user } = useAuthStore.getState();
+      if (!isAuthenticated || !user) {
+        throw new Error('Пользователь не авторизован');
+      }
+      
       await UserInteractionsAPI.addFilmToHistory(filmId);
       
       // Обновляем локальное состояние
@@ -448,6 +508,12 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   removeFilmFromHistory: async (filmId: number) => {
     set({ isAddingToHistory: true });
     try {
+      // Проверяем авторизацию
+      const { isAuthenticated, user } = useAuthStore.getState();
+      if (!isAuthenticated || !user) {
+        throw new Error('Пользователь не авторизован');
+      }
+      
       await UserInteractionsAPI.removeFilmFromHistory(filmId);
       
       const { userHistory } = get();
@@ -467,6 +533,12 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   clearHistory: async () => {
     set({ historyLoading: true });
     try {
+      // Проверяем авторизацию
+      const { isAuthenticated, user } = useAuthStore.getState();
+      if (!isAuthenticated || !user) {
+        throw new Error('Пользователь не авторизован');
+      }
+      
       await UserInteractionsAPI.clearHistory();
       set({
         userHistory: [],

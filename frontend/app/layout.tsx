@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AppProviders } from "@/lib/providers";
 import { Header } from "@/components/layout/header";
 import { HistoryTracker } from "@/components/history-tracker";
+import { AuthDebug } from "@/components/AuthDebug";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -89,6 +90,7 @@ export default function RootLayout({
               <HistoryTracker />
               {children}
             </main>
+            <AuthDebug />
           </AppProviders>
         </ThemeProvider>
       </body>

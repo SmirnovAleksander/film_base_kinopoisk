@@ -19,32 +19,78 @@ interface RequestConfig extends InternalAxiosRequestConfig {
 // Интерцептор для добавления токена авторизации
 apiClient.interceptors.request.use(
   (config: RequestConfig) => {
-    // Получаем токен из in-memory хранилища
+    // Всегда получаем свежий токен из localStorage
     const token = AuthAPI.getAuthToken();
-    if (token && !config.headers?.Authorization) {
+    console.log('🔑 Request interceptor - Token:', token ? `${token.substring(0, 20)}...` : 'null');
+    console.log('🔑 Request interceptor - URL:', config.url);
+    console.log('🔑 Request interceptor - Method:', config.method?.toUpperCase());
+    
+    if (token) {
+      // Удаляем существующий Authorization header и добавляем новый
+      delete config.headers.Authorization;
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('✅ Added/Updated Authorization header:', `Bearer ${token.substring(0, 20)}...`);
+    } else {
+      console.warn('⚠️ No token available for authenticated request:', config.url);
     }
+    
+    // Дополнительная диагностика для отладки
+    if (config.url?.includes('/bookmarks') ||
+        config.url?.includes('/history') ||
+        config.url?.includes('/ratings') ||
+        config.url?.includes('/users/me')) {
+      console.log('🔍 Authenticated request detected - Token available:', !!token);
+    }
+    
     return config;
   },
   (error) => {
+    console.error('❌ Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
 // Интерцептор для обработки ответов и обновления токенов
 apiClient.interceptors.response.use(
-  (response: AxiosResponse) => {
-    return response;
-  },
-  async (error: AxiosError) => {
-    const originalRequest = error.config as RequestConfig;
+(response: AxiosResponse) => {
+  console.log('✅ Response interceptor - Success:', response.config.url);
+  return response;
+},
+async (error: AxiosError) => {
+  const originalRequest = error.config as RequestConfig;
+  const status = error.response?.status;
+  const url = originalRequest?.url;
+  
+  console.log('❌ Response interceptor - Error:', status, url);
+   
+  // Диагностика состояния авторизации при ошибке 401
+  if (status === 401) {
+    const token = AuthAPI.getAuthToken();
+    console.log('🔍 401 Error Diagnostics:');
+    console.log('🔍 - Token available:', !!token);
+    console.log('🔍 - Token value:', token ? `${token.substring(0, 20)}...` : 'null');
+    console.log('🔍 - Request URL:', url);
+    console.log('🔍 - Request method:', originalRequest?.method);
+    console.log('🔍 - Request headers Authorization:', originalRequest?.headers?.Authorization ? 'present' : 'missing');
+  }
 
-    // Если ошибка 401 и не первая попытка
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+  // Если ошибка 401 и не первая попытка
+  if (status === 401 && !originalRequest._retry) {
+    originalRequest._retry = true;
+    
+    // Определяем, является ли запрос аутентифицированным
+    const isAuthenticatedRequest = url?.includes('/bookmarks') ||
+                                  url?.includes('/history') ||
+                                  url?.includes('/ratings') ||
+                                  url?.includes('/users/') ||
+                                  url?.includes('/comments') ||
+                                  originalRequest?.headers?.Authorization;
 
+    if (isAuthenticatedRequest) {
+      console.warn('🔑 Authenticated request failed with 401 - Clearing auth data');
+      
       try {
-        // Очищаем in-memory хранилище
+        // Очищаем localStorage
         AuthAPI.clearAuthData();
         console.warn('🔑 Авторизация истекла. Требуется повторный вход.');
         
@@ -59,13 +105,16 @@ apiClient.interceptors.response.use(
         AuthAPI.clearAuthData();
         console.error('❌ Ошибка при очистке авторизации:', refreshError);
       }
-    } else if (error.response?.status === 401) {
-      // Вторая попытка с тем же токеном - логируем, но не очищаем повторно
-      console.warn('🔑 Повторная ошибка 401 для:', originalRequest?.url);
+    } else {
+      console.log('🔍 Non-authenticated request failed with 401 - Ignoring');
     }
-
-    return Promise.reject(error);
+  } else if (status === 401) {
+    // Вторая попытка с тем же токеном
+    console.warn('🔑 Повторная ошибка 401 для:', url);
   }
+
+  return Promise.reject(error);
+}
 );
 
 // Функция для проверки, авторизован ли пользователь
