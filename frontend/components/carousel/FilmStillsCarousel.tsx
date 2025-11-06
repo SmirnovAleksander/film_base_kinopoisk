@@ -10,6 +10,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
+import './css/embla.css';
 
 type Still = {
   id: string;
@@ -132,24 +133,18 @@ export function FilmStillsCarousel({
   }
 
   return (
-    <div className={`relative ${className}`}>
-      {/* Viewport */}
-      <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex -ml-4">
+    <div className={`embla max-w-6xl mx-auto ${className}`}>
+      <div className="embla__viewport" ref={emblaRef}>
+        <div className="embla__container">
           {stills.map((still, index) => (
-            <div
-              key={still.id}
-              className="flex-none w-md pl-4"
-              style={{ opacity: '1' }}
-            >
+            <div className="embla__slide" key={still.id}>
               <div className="relative aspect-video rounded-lg overflow-hidden bg-muted group cursor-pointer">
                 <Image
                   src={still.original}
                   alt={`Кадр ${index + 1}`}
                   fill
                   className="object-cover transition-transform duration-200 group-hover:scale-105"
-                  sizes="(max-width: 768px) 100vw, 448px"
-                  unoptimized={true}
+                  unoptimized={false}
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
               </div>
