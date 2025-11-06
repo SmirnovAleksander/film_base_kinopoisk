@@ -32,6 +32,8 @@ import Link from 'next/link';
 import { FilmCard, FilmCardSkeleton, MiniPersonCard, StillCard, StillCardSkeleton } from '@/components/film';
 import { StarRating } from '@/components/film';
 import { useFilmsStore, useUserInteractionsStore, useAuthStore } from '@/store';
+import { useAuth } from '@/hooks/use-auth';
+import { toast } from 'sonner';
 import { ROUTES } from '@/lib/config';
 import { FilmsAPI } from '@/lib/api';
 import type { FilmStills } from '@/lib/types/film.types';
@@ -55,6 +57,7 @@ export default function FilmDetailsPage() {
     isAddingComment
   } = useUserInteractionsStore();
   const { user } = useAuthStore();
+  const { isAuthenticated } = useAuth();
 
   const [newComment, setNewComment] = useState('');
   const [filmStuff, setFilmStuff] = useState<any[]>([]);
@@ -193,6 +196,13 @@ export default function FilmDetailsPage() {
 
   const isBookmarked = bookmarkedFilmIds.has(filmId);
 
+  // Функция копирования URL
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/films/${filmId}`;
+    await navigator.clipboard.writeText(shareUrl);
+    toast.success('Ссылка скопирована в буфер обмена!');
+  };
+
   if (isLoading || !currentFilm) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -281,21 +291,24 @@ export default function FilmDetailsPage() {
 
             {/* Кнопки действий */}
             <div className="flex flex-wrap gap-3">
-              <StarRating 
-                filmId={filmId} 
+              <StarRating
+                filmId={filmId}
                 interactive={true}
                 size="lg"
               />
-              <Button
-                variant={isBookmarked ? "default" : "outline"}
-                onClick={handleBookmarkToggle}
-                disabled={isAddingBookmark}
-                className="shadow-lg"
-              >
-                <Heart className={`h-4 w-4 mr-2 ${isBookmarked ? 'fill-current' : ''}`} />
-                {isBookmarked ? 'В закладках' : 'В закладки'}
-              </Button>
-              <Button variant="outline" className="shadow-lg">
+              {/* Кнопка закладок - только для авторизованных пользователей */}
+              {isAuthenticated && (
+                <Button
+                  variant={isBookmarked ? "default" : "outline"}
+                  onClick={handleBookmarkToggle}
+                  disabled={isAddingBookmark}
+                  className="shadow-lg"
+                >
+                  <Heart className={`h-4 w-4 mr-2 ${isBookmarked ? 'fill-current' : ''}`} />
+                  {isBookmarked ? 'В закладках' : 'В закладки'}
+                </Button>
+              )}
+              <Button variant="outline" className="shadow-lg" onClick={handleShare}>
                 <Share className="h-4 w-4 mr-2" />
                 Поделиться
               </Button>

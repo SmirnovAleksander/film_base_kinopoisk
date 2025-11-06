@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUserInteractionsStore } from '@/store';
+import { useAuth } from '@/hooks/use-auth';
 
 interface StarRatingProps {
   filmId: number;
@@ -25,6 +27,8 @@ export function StarRating({
   const [hoverRating, setHoverRating] = useState(0);
   const [currentRating, setCurrentRating] = useState(initialRating);
   const containerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const { setFilmRating, getUserRating, isAddingRating } = useUserInteractionsStore();
 
   const userRating = currentRating || getUserRating(filmId) || 0;
@@ -37,6 +41,12 @@ export function StarRating({
 
   const handleStarClick = async (rating: number) => {
     if (!interactive || isAddingRating) return;
+
+    // Проверяем авторизацию
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
 
     setCurrentRating(rating);
     await setFilmRating(filmId, rating);

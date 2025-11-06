@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUserInteractionsStore } from '@/store';
+import { useAuth } from '@/hooks/use-auth';
 import { ROUTES } from '@/lib/config';
 import { formatDuration } from '@/lib/utils';
 import { Film } from '@/lib/types';
@@ -24,6 +25,10 @@ interface FilmCardProps {
 export function FilmCard({ film, showActions = true, isExternal = false, externalUrl, className }: FilmCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  
+  // Хук аутентификации
+  const { isAuthenticated } = useAuth();
+  
   const {
     bookmarkedFilmIds,
     addBookmark,
@@ -55,6 +60,7 @@ export function FilmCard({ film, showActions = true, isExternal = false, externa
     e.stopPropagation();
     
     if (isExternal) return; // Блокируем закладки для внешних фильмов
+    if (!isAuthenticated) return; // Блокируем для неавторизованных пользователей
     
     if (isBookmarked) {
       await removeBookmark(film.id);
@@ -124,8 +130,8 @@ export function FilmCard({ film, showActions = true, isExternal = false, externa
           )}
         </div>
 
-        {/* Кнопка закладки - только для внутренних фильмов */}
-        {showActions && !isExternal && (
+        {/* Кнопка закладки - только для авторизованных пользователей и внутренних фильмов */}
+        {showActions && !isExternal && isAuthenticated && (
           <Button
             size="icon"
             variant={isBookmarked ? "default" : "secondary"}
