@@ -37,6 +37,7 @@ import { toast } from 'sonner';
 import { ROUTES } from '@/lib/config';
 import { FilmsAPI } from '@/lib/api';
 import type { FilmStills } from '@/lib/types/film.types';
+import FilmStillsCarousel from '@/components/carousel/FilmStillsCarousel';
 
 export default function FilmDetailsPage() {
   const params = useParams();
@@ -223,6 +224,9 @@ export default function FilmDetailsPage() {
       </div>
     );
   }
+
+  // Конфигурация карусели
+  const carouselOptions = { loop: true }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-background via-background to-muted/30">
@@ -542,19 +546,17 @@ export default function FilmDetailsPage() {
                   {isLoadingStills ? (
                     <div className="flex gap-4 overflow-hidden">
                       {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="shrink-0 w-80">
+                        <div key={i} className="shrink-0 w-md">
                           <StillCardSkeleton />
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="flex gap-4 overflow-x-auto pb-4">
-                      {filmStills.stills.slice(0, 6).map((still) => (
-                        <div key={still.id} className="shrink-0 w-80">
-                          <StillCard still={still} />
-                        </div>
-                      ))}
-                    </div>
+                    <FilmStillsCarousel
+                      stills={filmStills.stills}
+                      options={carouselOptions}
+                      className="w-full"
+                    />
                   )}
                 </CardContent>
               </Card>
@@ -578,19 +580,17 @@ export default function FilmDetailsPage() {
                   {isLoadingStills ? (
                     <div className="flex gap-4 overflow-hidden">
                       {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="shrink-0 w-80">
+                        <div key={i} className="shrink-0 w-md">
                           <StillCardSkeleton />
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="flex gap-4 overflow-x-auto pb-4">
-                      {filmStills.wall.slice(0, 6).map((wall) => (
-                        <div key={wall.id} className="shrink-0 w-80">
-                          <StillCard still={wall} />
-                        </div>
-                      ))}
-                    </div>
+                    <FilmStillsCarousel
+                      stills={filmStills.wall.slice(0, 6)}
+                      options={carouselOptions}
+                      className="w-full"
+                    />
                   )}
                 </CardContent>
               </Card>
