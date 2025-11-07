@@ -52,7 +52,7 @@ class DataBaseConfig(BaseModel):
     }
 
 class AccessToken(BaseModel):
-    lifetime_seconds: int = 3600
+    lifetime_seconds: int = 7 * 24 * 60 * 60
     reset_password_token_secret: str
     verification_token_secret: str
 
