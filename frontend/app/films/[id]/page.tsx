@@ -526,7 +526,7 @@ export default function FilmDetailsPage() {
         )}
 
         {/* Кадры из фильма */}
-        {(filmStills.stills.length > 0 || filmStills.wall.length > 0) && (
+        {(filmStills.stills.length > 0) && (
           <section className="space-y-8">
             {/* Stills */}
             {filmStills.stills.length > 0 && (
@@ -554,40 +554,6 @@ export default function FilmDetailsPage() {
                   ) : (
                     <FilmStillsCarousel
                       stills={filmStills.stills}
-                      options={carouselOptions}
-                      className="w-full"
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Wallpapers */}
-            {filmStills.wall.length > 0 && (
-              <Card className="border-0 shadow-xl">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-2xl">Обои</CardTitle>
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={ROUTES.POSTERS(filmId)}>
-                        <ImageIcon className="h-4 w-4 mr-2" />
-                        Посмотреть все ({filmStills.wall.length})
-                      </Link>
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingStills ? (
-                    <div className="flex gap-4 overflow-hidden">
-                      {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="shrink-0 w-md">
-                          <StillCardSkeleton />
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <FilmStillsCarousel
-                      stills={filmStills.wall.slice(0, 6)}
                       options={carouselOptions}
                       className="w-full"
                     />
