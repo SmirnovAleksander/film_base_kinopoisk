@@ -24,7 +24,7 @@ export function MiniPersonCard({ person, className = '' }: MiniPersonCardProps) 
   const displayOriginalName = person.original_name && person.name !== person.original_name ? person.original_name : null;
 
   return (
-    <Card className={`group hover:shadow-md transition-all duration-200 ${className}`}>
+    <Card className={`group hover:shadow-md transition-all duration-200 p-0 ${className}`}>
       <CardContent className="p-3">
         <div className="flex items-center space-x-3">
           {/* Фото */}
@@ -37,7 +37,7 @@ export function MiniPersonCard({ person, className = '' }: MiniPersonCardProps) 
                   width={64}
                   height={64}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                  unoptimized={true}
+                  unoptimized={false}
                 />
               </div>
             ) : (

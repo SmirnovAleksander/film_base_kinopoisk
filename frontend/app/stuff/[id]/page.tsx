@@ -106,7 +106,7 @@ export default function StuffDetailsPage() {
         {/* Фото */}
         <div className="lg:col-span-1">
           <div className="sticky top-8">
-            <Card>
+            <Card className='p-0'>
               <CardContent className="p-0">
                 {stuff.image ? (
                   <div className="aspect-square relative">
@@ -114,8 +114,7 @@ export default function StuffDetailsPage() {
                       src={stuff.image}
                       alt={stuff.name || stuff.original_name || 'Участник'}
                       fill
-                      className="object-cover rounded-t-lg"
-                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-contain rounded-t-lg"
                     />
                   </div>
                 ) : (
@@ -211,7 +210,6 @@ export default function StuffDetailsPage() {
         <TabsList>
           <TabsTrigger value="biography">Биография</TabsTrigger>
           <TabsTrigger value="personal">Личная информация</TabsTrigger>
-          <TabsTrigger value="filmography">Фильмография</TabsTrigger>
         </TabsList>
 
         <TabsContent value="biography">
@@ -297,19 +295,6 @@ export default function StuffDetailsPage() {
                   </ul>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="filmography">
-          <Card>
-            <CardHeader>
-              <CardTitle>Фильмография</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-center py-8">
-                Информация о фильмографии будет добавлена в следующей версии.
-              </p>
             </CardContent>
           </Card>
         </TabsContent>

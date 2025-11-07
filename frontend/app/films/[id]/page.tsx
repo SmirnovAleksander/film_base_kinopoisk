@@ -510,15 +510,15 @@ export default function FilmDetailsPage() {
                     ))}
                   </div>
                 ) : (
-                  <ScrollArea className="w-full">
-                    <div className="flex gap-4 pb-4">
+                  <div className="w-full overflow-x-auto">
+                    <div className="flex gap-4 pb-4 min-w-max">
                       {filmStuff.map((person) => (
                         <div key={person.id} className="shrink-0 w-80">
                           <MiniPersonCard person={person} />
                         </div>
                       ))}
                     </div>
-                  </ScrollArea>
+                  </div>
                 )}
               </CardContent>
             </Card>
