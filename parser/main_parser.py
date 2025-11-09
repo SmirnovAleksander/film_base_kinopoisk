@@ -104,12 +104,11 @@ class MainParser:
             """
             CREATE TABLE IF NOT EXISTS media (
                 id SERIAL PRIMARY KEY,
-                url VARCHAR(500) UNIQUE NOT NULL,
-                title VARCHAR(1000) NOT NULL,
+                url VARCHAR(500) UNIQUE,
+                title VARCHAR(1000),
                 image VARCHAR(1000),
                 category VARCHAR(100),
                 date VARCHAR(100),
-                comments_count INTEGER DEFAULT 0,
                 card_type VARCHAR(20),
                 type VARCHAR(20) DEFAULT 'news',
                 parsed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -467,48 +466,120 @@ class MainParser:
             cursor.close()
 
     def parse_and_save_stills(self, film_kinopoisk_id: str, film_db_id: int):
-        """Парсит страницы /stills и /wall и сохраняет оригиналы изображений."""
-        urls = [
-            f"https://www.kinopoisk.ru/film/{film_kinopoisk_id}/stills/",
-            f"https://www.kinopoisk.ru/film/{film_kinopoisk_id}/wall/",
-        ]
-        grouped = {"stills": [], "wall": []}
-        for url in urls:
-            try:
-                self.stills_parser.load_html_from_url(url)
-                items = self.stills_parser.extract_stills_info()
-                key = 'stills' if '/stills' in url else ('wall' if '/wall' in url else 'stills')
-                grouped[key].extend(items)
-                # Небольшая пауза между загрузками
-                time.sleep(self.delays['BETWEEN_FILMS'])
-            except Exception as e:
-                print(f"⚠️ Не удалось спарсить кадры {url}: {e}")
-        # Сохраняем в БД
-        self.save_film_stills(film_db_id, grouped)
+        """Парсит кадры фильма, сначала получая доступные категории, затем парсит каждую категорию."""
+        try:
+            # Сначала парсим главную страницу кадров чтобы получить все доступные категории
+            main_stills_url = f"https://www.kinopoisk.ru/film/{film_kinopoisk_id}/stills/"
+            self.stills_parser.load_html_from_url(main_stills_url)
+            all_categories = self.stills_parser.extract_image_categories()
+            
+            if not all_categories:
+                print(f"⚠️ Не найдено категорий кадров для фильма {film_kinopoisk_id}")
+                return
+            
+            # Фильтруем только разрешенные категории
+            allowed_types = {'stills', 'wall', 'shooting'}
+            filtered_categories = [cat for cat in all_categories if cat['type'] in allowed_types]
+            
+            if not filtered_categories:
+                print(f"⚠️ Нет разрешенных категорий для фильма {film_kinopoisk_id}")
+                return
+            
+            print(f"📸 Найдено категорий кадров: {len(filtered_categories)}/{len(all_categories)}")
+            for category in filtered_categories:
+                print(f"  - {category['name']} ({category['type']}): {category['count']} элементов")
+            
+            # Группируем кадры по типам
+            grouped = {}
+            for category in filtered_categories:
+                category_type = category['type']
+                category_url = f"https://www.kinopoisk.ru{category['url']}"
+                
+                try:
+                    # Загружаем страницу конкретной категории
+                    self.stills_parser.load_html_from_url(category_url)
+                    # Извлекаем кадры с указанием типа
+                    items = self.stills_parser.extract_stills_info(category_type)
+                    grouped[category_type] = items
+                    print(f"✅ Спарсено {len(items)} кадров типа '{category_type}'")
+                    
+                    # Пауза между категориями
+                    time.sleep(self.delays['BETWEEN_FILMS'])
+                except Exception as e:
+                    print(f"⚠️ Не удалось спарсить категорию {category['name']} ({category_url}): {e}")
+                    continue
+            
+            # Сохраняем все кадры в БД
+            self.save_film_stills(film_db_id, grouped)
+            
+        except Exception as e:
+            print(f"❌ Ошибка при парсинге кадров фильма {film_kinopoisk_id}: {e}")
 
     def save_film_stills(self, film_db_id: int, grouped_items):
-        """Сохраняет кадры фильма в таблицу film_still."""
+        """Сохраняет кадры фильма в таблицу film_still с указанием типа."""
         cursor = self.db_connection.cursor()
         try:
-            for source in ('stills', 'wall'):
-                for it in grouped_items.get(source, []):
-                    picture_id = it.get('id')
-                    original_url = it.get('original')
+            total_saved = 0
+            total_errors = 0
+            
+            # Сначала обновим ограничение БД для поля source с полным списком типов
+            try:
+                cursor.execute("ALTER TABLE film_still DROP CONSTRAINT IF EXISTS film_still_source_check")
+                # Добавляем все возможные типы включая screenshots
+                # allowed_types = ('stills', 'wall', 'shooting', 'posters', 'fanart', 'promo', 'covers', 'images', 'gallery', 'photos', 'screenshots')
+                # Только разрешенные типы: 'stills', 'wall', 'shooting'
+                allowed_types = ('stills', 'wall', 'shooting', 'screenshots', 'promo')
+                constraint_sql = f"ALTER TABLE film_still ADD CONSTRAINT film_still_source_check CHECK (source IN {allowed_types})"
+                cursor.execute(constraint_sql)
+                print("✅ Обновлено ограничение БД для поля 'source'")
+            except Exception as e:
+                print(f"⚠️ Не удалось обновить ограничение БД: {e}")
+                # Продолжаем работу даже если не удалось обновить ограничение
+            
+            for image_type, images in grouped_items.items():
+                for image_data in images:
+                    picture_id = image_data.get('id')
+                    original_url = image_data.get('original')
+                    
                     if not picture_id or not original_url:
                         continue
-                    cursor.execute(
-                        """
-                        INSERT INTO film_still (film_id, picture_id, original_url, source)
-                        VALUES (%s, %s, %s, %s)
-                        ON CONFLICT (film_id, picture_id, source) DO UPDATE SET
-                            original_url = EXCLUDED.original_url
-                        """,
-                        (film_db_id, picture_id, original_url, source)
-                    )
-            self.db_connection.commit()
+                    
+                    # Используем тип изображения напрямую в поле source
+                    source = image_type
+                    
+                    try:
+                        # Начинаем новую транзакцию для каждого кадра
+                        cursor.execute(
+                            """
+                            INSERT INTO film_still (film_id, picture_id, original_url, source)
+                            VALUES (%s, %s, %s, %s)
+                            ON CONFLICT (film_id, picture_id, source) DO UPDATE SET
+                                original_url = EXCLUDED.original_url
+                            """,
+                            (film_db_id, picture_id, original_url, source)
+                        )
+                        self.db_connection.commit()
+                        total_saved += 1
+                        
+                    except Exception as e:
+                        # Откатываем неудачную транзакцию и продолжаем
+                        self.db_connection.rollback()
+                        print(f"⚠️ Ошибка сохранения кадра {picture_id} (тип: {source}): {e}")
+                        total_errors += 1
+                        # Продолжаем с следующим кадром
+                        continue
+            
+            if total_errors > 0:
+                print(f"💾 Сохранено {total_saved} кадров в БД, {total_errors} ошибок")
+            else:
+                print(f"💾 Сохранено {total_saved} кадров в БД")
+                
         except Exception as e:
-            print(f"❌ Ошибка сохранения кадров: {e}")
-            self.db_connection.rollback()
+            print(f"❌ Общая ошибка сохранения кадров: {e}")
+            try:
+                self.db_connection.rollback()
+            except:
+                pass
         finally:
             cursor.close()
     
@@ -710,12 +781,11 @@ class MainParser:
                 if cursor.fetchone():
                     # Обновляем существующий медиа контент
                     cursor.execute("""
-                        UPDATE media SET 
+                        UPDATE media SET
                             title = %s,
                             image = %s,
                             category = %s,
                             date = %s,
-                            comments_count = %s,
                             card_type = %s,
                             type = %s,
                             parsed_at = CURRENT_TIMESTAMP
@@ -725,7 +795,6 @@ class MainParser:
                         media_item.get('image'),
                         media_item.get('category'),
                         media_item.get('date'),
-                        int(media_item.get('comments_count', 0)) if media_item.get('comments_count') else 0,
                         media_item.get('card_type'),
                         media_item.get('type', 'news'),
                         media_item.get('url')
@@ -733,15 +802,14 @@ class MainParser:
                 else:
                     # Вставляем новый медиа контент
                     cursor.execute("""
-                        INSERT INTO media (url, title, image, category, date, comments_count, card_type, type)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        INSERT INTO media (url, title, image, category, date, card_type, type)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
                     """, (
                         media_item.get('url'),
                         media_item.get('title'),
                         media_item.get('image'),
                         media_item.get('category'),
                         media_item.get('date'),
-                        int(media_item.get('comments_count', 0)) if media_item.get('comments_count') else 0,
                         media_item.get('card_type'),
                         media_item.get('type', 'news')
                     ))

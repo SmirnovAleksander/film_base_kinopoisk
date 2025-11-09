@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*-
 """
 Парсер галереи кадров/постеров на странице фильма Кинопоиска
-Извлекает список URL изображений
+Извлекает список URL изображений и доступных категорий
 """
 
 import json
 import os
 import time
-from typing import List, Dict
+import re
+from typing import List, Dict, Optional
 from bs4 import BeautifulSoup
 import requests
 
@@ -17,6 +18,24 @@ class StillsPageParser:
     """Парсер страницы кадров/постеров фильма"""
     
     DELAY_BEFORE_REQUEST = 2
+    
+    def _normalize_url(self, url: str) -> str:
+        """
+        Нормализует URL - добавляет https:// если нужно
+        
+        Args:
+            url: Исходный URL
+            
+        Returns:
+            Нормализованный URL
+        """
+        if not url:
+            return url
+        if url.startswith('//'):
+            return 'https:' + url
+        if not url.startswith('http'):
+            return 'https://' + url
+        return url
     
     def __init__(self, html_file_path: str = None):
         self.html_file_path = html_file_path
@@ -105,15 +124,97 @@ class StillsPageParser:
             if chosen not in urls:
                 urls.append(chosen)
         return urls
-
-    def extract_stills_info(self) -> List[Dict]:
+    
+    def extract_image_categories(self) -> List[Dict[str, str]]:
+        if not self.soup:
+            raise ValueError("HTML не загружен")
+        
+        categories = []
+        
+        # Ищем контейнер с навигацией категорий по data-tid="3b1075e9"
+        nav_container = self.soup.find('ul', {'data-tid': '3b1075e9'})
+        if not nav_container:
+            # Альтернативный поиск по классу
+            nav_container = self.soup.find('ul', class_=lambda x: x and 'imagesTypes' in x)
+        
+        if not nav_container:
+            return categories
+        
+        # Ищем все элементы категорий по data-tid="70e06bb9"
+        category_items = nav_container.find_all('li', {'data-tid': '70e06bb9'})
+        
+        for item in category_items:
+            # Ищем ссылку на категорию
+            link = item.find('a', {'data-test-id': 'next-link'})
+            if not link or not link.get('href'):
+                continue
+            
+            href = link.get('href').strip()
+            
+            # Извлекаем название категории
+            name_elem = item.find('div', class_=lambda x: x and 'name' in x)
+            name = name_elem.get_text(strip=True) if name_elem else ''
+            
+            # Извлекаем количество элементов
+            count_elem = item.find('div', class_=lambda x: x and 'count' in x)
+            count = count_elem.get_text(strip=True) if count_elem else ''
+            
+            # Определяем тип на основе URL
+            category_type = self._determine_category_type(href)
+            
+            if href and name and category_type:
+                categories.append({
+                    'url': href,
+                    'name': name,
+                    'count': count,
+                    'type': category_type
+                })
+        
+        return categories
+    
+    def _determine_category_type(self, url: str) -> str:
+        """
+        Определяет тип категории напрямую из URL, извлекая сегмент после /film/{id}/
+        
+        Args:
+            url: URL категории (например, '/film/1143242/stills/' или '/film/1143242/gallery/')
+            
+        Returns:
+            Тип категории (например, 'stills', 'gallery', 'images', etc.)
+        """
+        if not url:
+            return 'unknown'
+        
+        # Извлекаем тип из URL после /film/ID/
+        # URL может быть: /film/1143242/stills/ или /film/1143242/gallery/
+        import re
+        match = re.search(r'/film/\d+/([^/]+)/', url)
+        if match:
+            return match.group(1)
+        
+        # Если не удалось извлечь, возвращаем последний сегмент пути
+        path_parts = url.strip('/').split('/')
+        if path_parts:
+            return path_parts[-1]
+        
+        return 'unknown'
+    
+    def extract_stills_info(self, category_type: str = None) -> List[Dict]:
         """
         Извлекает структурированную информацию по каждой карточке кадра:
         - id (например, 1877733 из /picture/1877733/)
         - original (orig из b8279232)
+        - type (тип категории: 'stills', 'shooting', 'posters')
+        
+        Args:
+            category_type: Тип категории ('stills', 'shooting', 'posters')
+            
+        Returns:
+            Список словарей с информацией о кадрах
         """
         if not self.soup:
             raise ValueError("HTML не загружен")
+        
         items: List[Dict] = []
         # Каждая карточка кадра
         for card in self.soup.find_all('div', {'data-tid': 'c17ba3a'}):
@@ -124,7 +225,6 @@ class StillsPageParser:
                 href = link.get('href').strip()
                 # Извлекаем id картинки
                 try:
-                    import re
                     m = re.search(r"/picture/(\d+)/", href)
                     if m:
                         data['id'] = m.group(1)
@@ -137,21 +237,15 @@ class StillsPageParser:
             a_orig = card.find('a', {'data-tid': 'b8279232'})
             original = a_orig.get('href').strip() if a_orig and a_orig.get('href') else None
 
-            # Нормализация URL-ов
-            def normalize(u: str) -> str:
-                if not u:
-                    return u
-                if u.startswith('//'):
-                    return 'https:' + u
-                if not u.startswith('http'):
-                    return 'https://' + u
-                return u
-
             # Ничего не добавляем для превью
             if original:
-                data['original'] = normalize(original)
+                data['original'] = self._normalize_url(original)
+            
+            # Добавляем тип категории если указан
+            if category_type:
+                data['type'] = category_type
 
-            if any(k in data for k in ('id', 'original')):
+            if any(k in data for k in ('id', 'original', 'type')):
                 items.append(data)
 
         return items
@@ -178,5 +272,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
