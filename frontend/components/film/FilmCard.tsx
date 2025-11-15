@@ -26,7 +26,6 @@ export function FilmCard({ film, showActions = true, isExternal = false, externa
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   
-  // Хук аутентификации
   const { isAuthenticated } = useAuth();
   
   const {
@@ -42,7 +41,6 @@ export function FilmCard({ film, showActions = true, isExternal = false, externa
   const userRating = getUserRating(film.id);
   const isRated = ratedFilmIds.has(film.id);
 
-  // Проверяем валидность URL постера
   const isValidPosterUrl = (url: string): boolean => {
     if (!url || typeof url !== 'string') return false;
     try {
@@ -59,8 +57,8 @@ export function FilmCard({ film, showActions = true, isExternal = false, externa
     e.preventDefault();
     e.stopPropagation();
     
-    if (isExternal) return; // Блокируем закладки для внешних фильмов
-    if (!isAuthenticated) return; // Блокируем для неавторизованных пользователей
+    if (isExternal) return;
+    if (!isAuthenticated) return;
     
     if (isBookmarked) {
       await removeBookmark(film.id);
@@ -80,7 +78,6 @@ export function FilmCard({ film, showActions = true, isExternal = false, externa
     return 'text-red-500';
   };
 
-  // Создаем компонент-обертку для ссылки
   const LinkWrapper = isExternal && externalUrl
     ? ({ children }: { children: React.ReactNode }) => (
         <a href={externalUrl} target="_blank" rel="noopener noreferrer" className="block">
@@ -93,7 +90,6 @@ export function FilmCard({ film, showActions = true, isExternal = false, externa
         </Link>
       );
 
-  // Рендерим контент карточки
   const cardContent = (
     <>
       {/* Постер фильма */}
@@ -130,7 +126,7 @@ export function FilmCard({ film, showActions = true, isExternal = false, externa
           )}
         </div>
 
-        {/* Кнопка закладки - только для авторизованных пользователей и внутренних фильмов */}
+        {/* Кнопка закладки */}
         {showActions && !isExternal && isAuthenticated && (
           <Button
             size="icon"
@@ -237,7 +233,6 @@ export function FilmCard({ film, showActions = true, isExternal = false, externa
   );
 }
 
-// Скелетон для загрузки
 export function FilmCardSkeleton({ className }: { className?: string }) {
   return (
     <Card className={className}>

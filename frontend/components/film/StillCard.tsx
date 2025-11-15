@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 
 interface StillCardProps {
   still: {
@@ -66,7 +66,6 @@ export function StillCard({ still, className = '' }: StillCardProps) {
   );
 }
 
-// Скелетон для загрузки
 export function StillCardSkeleton({ className }: { className?: string }) {
   return (
     <Card className={className}>

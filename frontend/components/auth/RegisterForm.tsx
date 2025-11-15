@@ -95,7 +95,7 @@ export function RegisterForm({
       };
       
       await register(registerData);
-      router.push(ROUTES.HOME);
+      router.push(ROUTES.LOGIN);
       router.refresh();
       if (onSuccess) {
         onSuccess();

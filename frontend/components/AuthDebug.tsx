@@ -9,18 +9,13 @@ export function AuthDebug() {
   const { isAuthenticated, user, token, isLoading } = useAuth();
 
   const runDiagnostics = () => {
-    console.log('🔍 === AUTH DIAGNOSTICS START ===');
-    
-    // AuthAPI diagnostics
     console.log('🔍 AuthAPI Token:', AuthAPI.getAuthToken() ? `${AuthAPI.getAuthToken()!.substring(0, 20)}...` : 'null');
     console.log('🔍 AuthAPI User:', AuthAPI.getUserData());
     console.log('🔍 AuthAPI isTokenValid:', AuthAPI.isTokenValid());
     console.log('🔍 AuthAPI localStorage available:', AuthAPI.isLocalStorageAvailable());
     
-    // localStorage debug
     AuthAPI.debugLocalStorage();
     
-    // Store state
     console.log('🔍 Store State:', {
       isAuthenticated,
       user: user ? `${user.username} (${user.id})` : null,
@@ -32,7 +27,7 @@ export function AuthDebug() {
   };
 
   if (process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_ENV === 'production') {
-    return null; // Don't show in production
+    return null;
   }
 
   return (
