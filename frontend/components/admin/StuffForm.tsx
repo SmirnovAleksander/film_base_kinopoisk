@@ -1,0 +1,220 @@
+'use client';
+
+import { useState} from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+
+
+export default function StuffForm({ stuff, onSubmit, onCancel }: any) {
+  const [formData, setFormData] = useState({
+    kinopoisk_id: stuff?.kinopoisk_id || '',
+    name: stuff?.name || '',
+    original_name: stuff?.original_name || '',
+    career: stuff?.career?.join(', ') || '',
+    ganres: stuff?.ganres?.join(', ') || '',
+    height: stuff?.height || '',
+    birthday_day_month: stuff?.birthday_day_month || '',
+    zodiac: stuff?.zodiac || '',
+    age: stuff?.age?.toString() || '',
+    birthplace: stuff?.birthplace?.join(', ') || '',
+    spouse: stuff?.spouse?.join(', ') || '',
+    children: stuff?.children?.join(', ') || '',
+    total_films: stuff?.total_films?.toString() || '',
+    career_start_year: stuff?.career_start_year?.toString() || '',
+    career_end_year: stuff?.career_end_year?.toString() || '',
+    image: stuff?.image || '',
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const submitData = {
+      ...formData,
+      age: formData.age ? parseInt(formData.age) : null,
+      total_films: formData.total_films ? parseInt(formData.total_films) : null,
+      career_start_year: formData.career_start_year ? parseInt(formData.career_start_year) : null,
+      career_end_year: formData.career_end_year ? parseInt(formData.career_end_year) : null,
+      career: formData.career.split(',').map((s: string) => s.trim()).filter(Boolean),
+      ganres: formData.ganres.split(',').map((s: string) => s.trim()).filter(Boolean),
+      birthplace: formData.birthplace.split(',').map((s: string) => s.trim()).filter(Boolean),
+      spouse: formData.spouse.split(',').map((s: string) => s.trim()).filter(Boolean),
+      children: formData.children.split(',').map((s: string) => s.trim()).filter(Boolean),
+    };
+    onSubmit(submitData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="kinopoisk_id">Kinopoisk ID</Label>
+          <Input
+            id="kinopoisk_id"
+            value={formData.kinopoisk_id}
+            onChange={(e) => setFormData({ ...formData, kinopoisk_id: e.target.value })}
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="age">Возраст</Label>
+          <Input
+            id="age"
+            type="number"
+            value={formData.age}
+            onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="name">Имя</Label>
+          <Input
+            id="name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label htmlFor="original_name">Оригинальное имя</Label>
+          <Input
+            id="original_name"
+            value={formData.original_name}
+            onChange={(e) => setFormData({ ...formData, original_name: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="height">Рост</Label>
+          <Input
+            id="height"
+            placeholder="180 см"
+            value={formData.height}
+            onChange={(e) => setFormData({ ...formData, height: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label htmlFor="zodiac">Знак зодиака</Label>
+          <Input
+            id="zodiac"
+            value={formData.zodiac}
+            onChange={(e) => setFormData({ ...formData, zodiac: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="birthday_day_month">День рождения</Label>
+          <Input
+            id="birthday_day_month"
+            placeholder="15 июня"
+            value={formData.birthday_day_month}
+            onChange={(e) => setFormData({ ...formData, birthday_day_month: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label htmlFor="total_films">Количество фильмов</Label>
+          <Input
+            id="total_films"
+            type="number"
+            value={formData.total_films}
+            onChange={(e) => setFormData({ ...formData, total_films: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="career_start_year">Начало карьеры</Label>
+          <Input
+            id="career_start_year"
+            type="number"
+            value={formData.career_start_year}
+            onChange={(e) => setFormData({ ...formData, career_start_year: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label htmlFor="career_end_year">Конец карьеры</Label>
+          <Input
+            id="career_end_year"
+            type="number"
+            value={formData.career_end_year}
+            onChange={(e) => setFormData({ ...formData, career_end_year: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="career">Карьера (через запятую)</Label>
+        <Input
+          id="career"
+          placeholder="Актер, Режиссер, Продюсер"
+          value={formData.career}
+          onChange={(e) => setFormData({ ...formData, career: e.target.value })}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="ganres">Жанры (через запятую)</Label>
+        <Input
+          id="ganres"
+          placeholder="Драма, Комедия, Боевик"
+          value={formData.ganres}
+          onChange={(e) => setFormData({ ...formData, ganres: e.target.value })}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="birthplace">Место рождения (через запятую)</Label>
+        <Input
+          id="birthplace"
+          placeholder="Москва, Россия"
+          value={formData.birthplace}
+          onChange={(e) => setFormData({ ...formData, birthplace: e.target.value })}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="spouse">Супруг(а) (через запятую)</Label>
+        <Input
+          id="spouse"
+          placeholder="Имя супруги"
+          value={formData.spouse}
+          onChange={(e) => setFormData({ ...formData, spouse: e.target.value })}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="children">Дети (через запятую)</Label>
+        <Input
+          id="children"
+          placeholder="Имена детей"
+          value={formData.children}
+          onChange={(e) => setFormData({ ...formData, children: e.target.value })}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="image">Ссылка на фото</Label>
+        <Input
+          id="image"
+          value={formData.image}
+          onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+        />
+      </div>
+
+      <Separator />
+
+      <div className="flex space-x-2">
+        <Button type="submit">Сохранить</Button>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Отмена
+        </Button>
+      </div>
+    </form>
+  );
+}
