@@ -14,8 +14,6 @@ export function AuthDebug() {
     console.log('🔍 AuthAPI isTokenValid:', AuthAPI.isTokenValid());
     console.log('🔍 AuthAPI localStorage available:', AuthAPI.isLocalStorageAvailable());
     
-    AuthAPI.debugLocalStorage();
-    
     console.log('🔍 Store State:', {
       isAuthenticated,
       user: user ? `${user.username} (${user.id})` : null,

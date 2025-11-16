@@ -4,7 +4,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AppProviders } from "@/lib/providers";
 import { Header } from "@/components/layout/header";
 import { HistoryTracker } from "@/components/history-tracker";
-import { AuthDebug } from "@/components/AuthDebug";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -92,7 +91,6 @@ export default function RootLayout({
               {children}
             </main>
             <Toaster />
-            <AuthDebug />
           </AppProviders>
         </ThemeProvider>
       </body>

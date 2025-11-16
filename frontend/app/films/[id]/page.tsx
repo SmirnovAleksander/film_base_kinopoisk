@@ -27,7 +27,6 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import Link from 'next/link';
 import { FilmCard, FilmCardSkeleton, MiniPersonCard, StillCard, StillCardSkeleton } from '@/components/film';
 import { StarRating } from '@/components/film';

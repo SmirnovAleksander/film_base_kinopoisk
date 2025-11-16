@@ -13,12 +13,9 @@ export const useHistoryTracker = () => {
 
   useEffect(() => {
     const trackVisit = async () => {
-      // Проверяем, что пользователь авторизован
       if (!isUserAuthenticated && !isAuthenticated()) {
-        return; // Не записываем историю для неавторизованных пользователей
+        return;
       }
-
-      // Проверяем, что мы на странице фильма
       const filmMatch = pathname.match(/\/films\/(\d+)/);
 
       if (filmMatch) {
@@ -33,7 +30,6 @@ export const useHistoryTracker = () => {
       }
     };
 
-    // Задержка для предотвращения дублирования при навигации
     const timeoutId = setTimeout(trackVisit, 500);
 
     return () => clearTimeout(timeoutId);
