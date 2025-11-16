@@ -1,14 +1,40 @@
 'use client';
 
 import { useState} from 'react';
+import Image from 'next/image';
+import { Stuff, StuffCreate, StuffUpdate } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 
+interface StuffFormData {
+  kinopoisk_id: string;
+  name: string;
+  original_name: string;
+  career: string;
+  ganres: string;
+  height: string;
+  birthday_day_month: string;
+  zodiac: string;
+  age: string;
+  birthplace: string;
+  spouse: string;
+  children: string;
+  total_films: string;
+  career_start_year: string;
+  career_end_year: string;
+  image: string;
+}
 
-export default function StuffForm({ stuff, onSubmit, onCancel }: any) {
-  const [formData, setFormData] = useState({
+interface StuffFormProps {
+  stuff?: Stuff | null;
+  onSubmit: (data: StuffCreate | StuffUpdate) => void;
+  onCancel: () => void;
+}
+
+export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps) {
+  const [formData, setFormData] = useState<StuffFormData>({
     kinopoisk_id: stuff?.kinopoisk_id || '',
     name: stuff?.name || '',
     original_name: stuff?.original_name || '',
@@ -29,17 +55,23 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: any) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const submitData = {
-      ...formData,
+    const submitData: StuffCreate | StuffUpdate = {
+      ...(stuff ? {} : { kinopoisk_id: formData.kinopoisk_id }),
+      name: formData.name || null,
+      original_name: formData.original_name || null,
       age: formData.age ? parseInt(formData.age) : null,
       total_films: formData.total_films ? parseInt(formData.total_films) : null,
       career_start_year: formData.career_start_year ? parseInt(formData.career_start_year) : null,
       career_end_year: formData.career_end_year ? parseInt(formData.career_end_year) : null,
-      career: formData.career.split(',').map((s: string) => s.trim()).filter(Boolean),
-      ganres: formData.ganres.split(',').map((s: string) => s.trim()).filter(Boolean),
-      birthplace: formData.birthplace.split(',').map((s: string) => s.trim()).filter(Boolean),
-      spouse: formData.spouse.split(',').map((s: string) => s.trim()).filter(Boolean),
-      children: formData.children.split(',').map((s: string) => s.trim()).filter(Boolean),
+      career: formData.career ? formData.career.split(',').map((s: string) => s.trim()).filter(Boolean) : null,
+      ganres: formData.ganres ? formData.ganres.split(',').map((s: string) => s.trim()).filter(Boolean) : null,
+      birthplace: formData.birthplace ? formData.birthplace.split(',').map((s: string) => s.trim()).filter(Boolean) : null,
+      spouse: formData.spouse ? formData.spouse.split(',').map((s: string) => s.trim()).filter(Boolean) : null,
+      children: formData.children ? formData.children.split(',').map((s: string) => s.trim()).filter(Boolean) : null,
+      height: formData.height || null,
+      birthday_day_month: formData.birthday_day_month || null,
+      zodiac: formData.zodiac || null,
+      image: formData.image || null,
     };
     onSubmit(submitData);
   };
@@ -200,11 +232,26 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: any) {
 
       <div>
         <Label htmlFor="image">Ссылка на фото</Label>
-        <Input
-          id="image"
-          value={formData.image}
-          onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-        />
+        <div className="space-y-2">
+          <Input
+            id="image"
+            value={formData.image}
+            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+          />
+          {formData.image && (
+            <div className="relative w-full h-64 rounded-lg overflow-hidden border">
+              <Image
+                src={formData.image}
+                alt="Фото участника"
+                fill
+                className="object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       <Separator />

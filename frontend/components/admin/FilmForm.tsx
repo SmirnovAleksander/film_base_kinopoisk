@@ -1,15 +1,48 @@
 'use client';
 
 import { useState } from 'react';
-import { FilmWithDetails, Stuff } from '@/lib/types';
+import Image from 'next/image';
+import { FilmWithDetails, FilmCreate, FilmUpdate } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 
-export default function FilmForm({ film, onSubmit, onCancel }: any) {
-  const [formData, setFormData] = useState({
+interface FilmFormData {
+  kinopoisk_id: string;
+  title: string;
+  original_title: string;
+  description: string;
+  full_description: string;
+  year: string;
+  tagline: string;
+  poster: string;
+  duration: string;
+  rating_kp: string;
+  rating_imdb: string;
+  budget: string;
+  rus_box_office: string;
+  usa_box_office: string;
+  ru_premiere: string;
+  world_premiere: string;
+  content_rating: string;
+  is_family_friendly: boolean;
+  kp_votes_count: string;
+  imdb_votes_count: string;
+  user_rating: string;
+  user_rating_count: string;
+}
+
+interface FilmFormProps {
+  film?: FilmWithDetails | null;
+  onSubmit: (data: FilmCreate | FilmUpdate) => void;
+  onCancel: () => void;
+}
+
+export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
+  const [formData, setFormData] = useState<FilmFormData>({
     kinopoisk_id: film?.kinopoisk_id || '',
     title: film?.title || '',
     original_title: film?.original_title || '',
@@ -24,15 +57,41 @@ export default function FilmForm({ film, onSubmit, onCancel }: any) {
     budget: film?.budget || '',
     rus_box_office: film?.rus_box_office || '',
     usa_box_office: film?.usa_box_office || '',
+    ru_premiere: film?.ru_premiere || '',
+    world_premiere: film?.world_premiere || '',
+    content_rating: film?.content_rating || '',
+    is_family_friendly: film?.is_family_friendly ?? false,
+    kp_votes_count: film?.kp_votes_count || '',
+    imdb_votes_count: film?.imdb_votes_count || '',
+    user_rating: film?.user_rating?.toString() || '',
+    user_rating_count: film?.user_rating_count?.toString() || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const submitData = {
-      ...formData,
+    const submitData: FilmCreate | FilmUpdate = {
+      ...(film ? {} : { kinopoisk_id: formData.kinopoisk_id }),
+      title: formData.title || null,
+      original_title: formData.original_title || null,
+      description: formData.description || null,
+      full_description: formData.full_description || null,
       year: formData.year ? parseInt(formData.year) : null,
+      tagline: formData.tagline || null,
+      poster: formData.poster || null,
+      duration: formData.duration || null,
       rating_kp: formData.rating_kp ? parseFloat(formData.rating_kp) : null,
       rating_imdb: formData.rating_imdb ? parseFloat(formData.rating_imdb) : null,
+      budget: formData.budget || null,
+      rus_box_office: formData.rus_box_office || null,
+      usa_box_office: formData.usa_box_office || null,
+      ru_premiere: formData.ru_premiere || null,
+      world_premiere: formData.world_premiere || null,
+      content_rating: formData.content_rating || null,
+      is_family_friendly: formData.is_family_friendly,
+      kp_votes_count: formData.kp_votes_count || null,
+      imdb_votes_count: formData.imdb_votes_count || null,
+      user_rating: formData.user_rating ? parseFloat(formData.user_rating) : null,
+      user_rating_count: formData.user_rating_count ? parseInt(formData.user_rating_count) : null,
     };
     onSubmit(submitData);
   };
@@ -119,13 +178,72 @@ export default function FilmForm({ film, onSubmit, onCancel }: any) {
           />
         </div>
         <div>
-          <Label htmlFor="poster">Ссылка на постер</Label>
+          <Label htmlFor="content_rating">Возрастной рейтинг</Label>
+          <Input
+            id="content_rating"
+            placeholder="16+"
+            value={formData.content_rating}
+            onChange={(e) => setFormData({ ...formData, content_rating: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="poster">Ссылка на постер</Label>
+        <div className="space-y-2">
           <Input
             id="poster"
             value={formData.poster}
             onChange={(e) => setFormData({ ...formData, poster: e.target.value })}
           />
+          {formData.poster && (
+            <div className="relative w-full h-64 rounded-lg overflow-hidden border">
+              <Image
+                src={formData.poster}
+                alt="Постер фильма"
+                fill
+                className="object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="ru_premiere">Премьера в России</Label>
+          <Input
+            id="ru_premiere"
+            placeholder="2024-01-01"
+            value={formData.ru_premiere}
+            onChange={(e) => setFormData({ ...formData, ru_premiere: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label htmlFor="world_premiere">Мировая премьера</Label>
+          <Input
+            id="world_premiere"
+            placeholder="2024-01-01"
+            value={formData.world_premiere}
+            onChange={(e) => setFormData({ ...formData, world_premiere: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id="is_family_friendly"
+          checked={formData.is_family_friendly}
+          onCheckedChange={(checked) => 
+            setFormData({ ...formData, is_family_friendly: checked as boolean })
+          }
+        />
+        <Label htmlFor="is_family_friendly" className="cursor-pointer">
+          Семейный фильм
+        </Label>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -142,6 +260,18 @@ export default function FilmForm({ film, onSubmit, onCancel }: any) {
           />
         </div>
         <div>
+          <Label htmlFor="kp_votes_count">Количество голосов КП</Label>
+          <Input
+            id="kp_votes_count"
+            value={formData.kp_votes_count}
+            onChange={(e) => setFormData({ ...formData, kp_votes_count: e.target.value })}
+            placeholder="100000"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
           <Label htmlFor="rating_imdb">Рейтинг IMDb</Label>
           <Input
             id="rating_imdb"
@@ -151,6 +281,40 @@ export default function FilmForm({ film, onSubmit, onCancel }: any) {
             max="10"
             value={formData.rating_imdb}
             onChange={(e) => setFormData({ ...formData, rating_imdb: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label htmlFor="imdb_votes_count">Количество голосов IMDb</Label>
+          <Input
+            id="imdb_votes_count"
+            value={formData.imdb_votes_count}
+            onChange={(e) => setFormData({ ...formData, imdb_votes_count: e.target.value })}
+            placeholder="50000"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="user_rating">Пользовательский рейтинг</Label>
+          <Input
+            id="user_rating"
+            type="number"
+            step="0.1"
+            min="0"
+            max="10"
+            value={formData.user_rating}
+            onChange={(e) => setFormData({ ...formData, user_rating: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label htmlFor="user_rating_count">Количество пользовательских оценок</Label>
+          <Input
+            id="user_rating_count"
+            type="number"
+            value={formData.user_rating_count}
+            onChange={(e) => setFormData({ ...formData, user_rating_count: e.target.value })}
+            placeholder="1000"
           />
         </div>
       </div>
