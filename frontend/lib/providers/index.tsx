@@ -10,7 +10,6 @@ interface AppProvidersProps {
 
 function AuthInitializer() {
   useEffect(() => {
-    // Инициализируем аутентификацию при загрузке приложения
     const token = AuthAPI.getAuthToken();
     const user = AuthAPI.getUserData();
     

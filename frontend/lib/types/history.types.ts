@@ -22,5 +22,4 @@ export interface MessageResponse {
   message: string;
 }
 
-// Импорт для зависимостей
 import type { Film } from './film.types';

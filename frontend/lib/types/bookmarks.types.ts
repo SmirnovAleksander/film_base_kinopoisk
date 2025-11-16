@@ -26,5 +26,4 @@ export interface BookmarkStatusResponse {
   bookmarked_at?: string | null;
 }
 
-// Импорт для зависимостей
 import type { Film } from './film.types';

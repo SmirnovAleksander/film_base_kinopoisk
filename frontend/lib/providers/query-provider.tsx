@@ -10,7 +10,7 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
         defaultOptions: {
           queries: {
             staleTime: 5 * 60 * 1000, // 5 минут
-            gcTime: 10 * 60 * 1000, // 10 минут (было cacheTime)
+            gcTime: 10 * 60 * 1000, // 10 минут
             retry: (failureCount, error: any) => {
               // Не повторяем запросы при 401, 403, 404
               if (error?.response?.status === 401 ||
@@ -25,7 +25,6 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
           mutations: {
             retry: false,
             onError: (error: any) => {
-              // Логирование ошибок мутаций
               console.error('Mutation error:', error);
             },
             onSuccess: () => {

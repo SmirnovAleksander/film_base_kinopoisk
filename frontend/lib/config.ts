@@ -1,7 +1,3 @@
-/**
- * Конфигурация приложения
- */
-
 // API конфигурация
 export const API_CONFIG = {
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1',
@@ -130,6 +126,5 @@ export const API_ENDPOINTS = {
       DELETE: (id: number) => `/admin/stuff/${id}`,
     },
   },
-  // Дополнительные endpoint'ы (необязательные)
   HEALTH: '/health',
 } as const;

@@ -5,9 +5,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-/**
- * Форматирование дат для отображения
- */
 export function formatDate(date: string | Date, format: 'short' | 'long' | 'relative' = 'short'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   
@@ -30,9 +27,6 @@ export function formatDate(date: string | Date, format: 'short' | 'long' | 'rela
   }
 }
 
-/**
- * Форматирование относительной даты ("2 часа назад", "вчера", etc.)
- */
 export function formatRelativeDate(date: Date): string {
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -63,9 +57,6 @@ export function formatRelativeDate(date: Date): string {
   return formatDate(date, 'short');
 }
 
-/**
- * Форматирование продолжительности в минутах
- */
 export function formatDurationMinutes(minutes: number): string {
   if (minutes < 60) {
     return `${minutes} мин`;
@@ -81,15 +72,10 @@ export function formatDurationMinutes(minutes: number): string {
   return `${hours} ч ${remainingMinutes} мин`;
 }
 
-/**
- * Форматирование продолжительности из строки (например, "120 мин", "2 ч 30 мин", "90")
- */
 export function formatDuration(duration: string | null | undefined): string {
   if (!duration || typeof duration !== 'string') {
     return '';
   }
-
-  // Очищаем строку от лишних символов и приводим к нижнему регистру
   const cleanDuration = duration.trim().toLowerCase();
   
   // Если строка содержит только цифры, считаем что это минуты
@@ -139,9 +125,6 @@ export function formatDuration(duration: string | null | undefined): string {
   return duration.trim() || '';
 }
 
-/**
- * Обрезка текста до указанной длины
- */
 export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) {
     return text;
@@ -149,31 +132,8 @@ export function truncateText(text: string, maxLength: number): string {
   return text.slice(0, maxLength).trim() + '...';
 }
 
-/**
- * Форматирование числа с разделителями тысяч
- */
-export function formatNumber(num: number): string {
-  return new Intl.NumberFormat('ru-RU').format(num);
-}
 
-/**
- * Валидация email
- */
-export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-/**
- * Генерация случайного ID
- */
-export function generateId(): string {
-  return Math.random().toString(36).substr(2, 9);
-}
-
-/**
- * Форматирование рейтинга для отображения
- */
+//Форматирование рейтинга для отображения
 export function formatRating(rating: number | null | undefined, maxRating: number = 10): string {
   if (!rating || rating <= 0) {
     return 'Нет оценки';
@@ -182,9 +142,7 @@ export function formatRating(rating: number | null | undefined, maxRating: numbe
   return `${rating.toFixed(1)}/${maxRating}`;
 }
 
-/**
- * Получение цвета рейтинга на основе значения
- */
+//Получение цвета рейтинга на основе значения
 export function getRatingColor(rating: number, maxRating: number = 10): string {
   const percentage = (rating / maxRating) * 100;
   
@@ -197,51 +155,4 @@ export function getRatingColor(rating: number, maxRating: number = 10): string {
   } else {
     return 'text-red-500';
   }
-}
-
-/**
- * Форматирование размера файла
- */
-export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Б';
-  
-  const k = 1024;
-  const sizes = ['Б', 'КБ', 'МБ', 'ГБ'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-/**
- * Задержка выполнения (для демонстрации загрузки)
- */
-export function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
- * Проверка, является ли устройство мобильным
- */
-export function isMobile(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.innerWidth < 768;
-}
-
-/**
- * Глубокое клонирование объекта
- */
-export function deepClone<T>(obj: T): T {
-  if (obj === null || typeof obj !== 'object') return obj;
-  if (obj instanceof Date) return new Date(obj.getTime()) as any;
-  if (obj instanceof Array) return obj.map(item => deepClone(item)) as any;
-  if (typeof obj === 'object') {
-    const clonedObj = {} as any;
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        clonedObj[key] = deepClone(obj[key]);
-      }
-    }
-    return clonedObj;
-  }
-  return obj;
 }
