@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { AdminAPI } from '@/lib/api';
-import { FilmWithDetails, Stuff, Genre, Country } from '@/lib/types';
+import { FilmWithDetails, Stuff, Genre, Country, Media } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -21,11 +21,13 @@ import {
   Clock,
   Tag,
   Globe,
+  Newspaper,
 } from 'lucide-react';
 import StuffForm from '@/components/admin/StuffForm';
 import FilmForm from '@/components/admin/FilmForm';
 import GenreForm from '@/components/admin/GenreForm';
 import CountryForm from '@/components/admin/CountryForm';
+import MediaForm from '@/components/admin/MediaForm';
 
 interface FilmsResponse extends Array<FilmWithDetails> {}
 interface StuffResponse {
@@ -40,15 +42,18 @@ export default function AdminPage() {
   const [stuff, setStuff] = useState<StuffResponse | null>(null);
   const [genres, setGenres] = useState<Genre[] | null>(null);
   const [countries, setCountries] = useState<Country[] | null>(null);
+  const [media, setMedia] = useState<Media[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [editingFilm, setEditingFilm] = useState<FilmWithDetails | null>(null);
   const [editingStuff, setEditingStuff] = useState<Stuff | null>(null);
   const [editingGenre, setEditingGenre] = useState<Genre | null>(null);
   const [editingCountry, setEditingCountry] = useState<Country | null>(null);
+  const [editingMedia, setEditingMedia] = useState<Media | null>(null);
   const [showFilmDialog, setShowFilmDialog] = useState(false);
   const [showStuffDialog, setShowStuffDialog] = useState(false);
   const [showGenreDialog, setShowGenreDialog] = useState(false);
   const [showCountryDialog, setShowCountryDialog] = useState(false);
+  const [showMediaDialog, setShowMediaDialog] = useState(false);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -63,17 +68,19 @@ export default function AdminPage() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [filmsData, stuffData, genresData, countriesData] = await Promise.all([
+      const [filmsData, stuffData, genresData, countriesData, mediaData] = await Promise.all([
         AdminAPI.getAllFilms(1, 100),
         AdminAPI.getAllStuff(1, 100),
         AdminAPI.getAllGenres(),
-        AdminAPI.getAllCountries()
-      ]) as [FilmsResponse, StuffResponse, Genre[], Country[]];
+        AdminAPI.getAllCountries(),
+        AdminAPI.getAllMedia(1, 100)
+      ]) as [FilmsResponse, StuffResponse, Genre[], Country[], Media[]];
       
       setFilms(filmsData);
       setStuff(stuffData);
       setGenres(genresData);
       setCountries(countriesData);
+      setMedia(mediaData);
     } catch (error) {
       console.error('Error loading data:', error);
       showMessage('Ошибка загрузки данных');
@@ -198,6 +205,35 @@ export default function AdminPage() {
     }
   };
 
+  const handleMediaSubmit = async (mediaData: any) => {
+    try {
+      if (editingMedia) {
+        await AdminAPI.updateMedia(editingMedia.id, mediaData);
+        showMessage('Медиа обновлено');
+      } else {
+        await AdminAPI.createMedia(mediaData);
+        showMessage('Медиа создано');
+      }
+      setShowMediaDialog(false);
+      setEditingMedia(null);
+      loadData();
+    } catch (error) {
+      console.error('Error saving media:', error);
+      showMessage('Ошибка сохранения медиа');
+    }
+  };
+
+  const handleDeleteMedia = async (mediaId: number) => {
+    try {
+      await AdminAPI.deleteMedia(mediaId);
+      showMessage('Медиа удалено');
+      loadData();
+    } catch (error) {
+      console.error('Error deleting media:', error);
+      showMessage('Ошибка удаления медиа');
+    }
+  };
+
   const formatArrayField = (field: string[] | null | undefined) => {
     if (!field || field.length === 0) return '-';
     return field.join(', ');
@@ -252,7 +288,7 @@ export default function AdminPage() {
       )}
       
       <Tabs defaultValue="films" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="films" className="flex items-center gap-2">
             <Film className="h-4 w-4" />
             Фильмы ({films?.length || 0})
@@ -268,6 +304,10 @@ export default function AdminPage() {
           <TabsTrigger value="countries" className="flex items-center gap-2">
             <Globe className="h-4 w-4" />
             Страны ({countries?.length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="media" className="flex items-center gap-2">
+            <Newspaper className="h-4 w-4" />
+            Медиа ({media?.length || 0})
           </TabsTrigger>
         </TabsList>
         
@@ -735,6 +775,127 @@ export default function AdminPage() {
                               variant="destructive"
                               size="sm"
                               onClick={() => handleDeleteCountry(country.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="media" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Newspaper className="h-5 w-5" />
+                  Управление медиа
+                </CardTitle>
+                <Dialog open={showMediaDialog} onOpenChange={setShowMediaDialog}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => setEditingMedia(null)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Добавить медиа
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh]">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingMedia ? 'Редактировать медиа' : 'Добавить медиа'}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <ScrollArea className="max-h-[70vh] pr-4">
+                      <MediaForm
+                        media={editingMedia}
+                        onSubmit={handleMediaSubmit}
+                        onCancel={() => setShowMediaDialog(false)}
+                      />
+                    </ScrollArea>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[600px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Тип</TableHead>
+                      <TableHead>Заголовок</TableHead>
+                      <TableHead>Категория</TableHead>
+                      <TableHead>Тип карточки</TableHead>
+                      <TableHead>Дата</TableHead>
+                      <TableHead>URL</TableHead>
+                      <TableHead>Действия</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {media?.map((item: Media) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-mono text-sm">
+                          {item.id}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {item.type || '-'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium max-w-[200px]">
+                          <div className="truncate" title={item.title || ''}>
+                            {item.title || '-'}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">
+                            {item.category || '-'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {item.card_type || '-'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3 text-gray-500" />
+                            {item.date || '-'}
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-[150px]">
+                          <div className="truncate" title={item.url || ''}>
+                            {item.url ? (
+                              <a 
+                                href={item.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-500 hover:underline"
+                              >
+                                {item.url}
+                              </a>
+                            ) : '-'}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingMedia(item);
+                                setShowMediaDialog(true);
+                              }}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteMedia(item.id)}
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>

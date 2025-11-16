@@ -33,6 +33,18 @@ interface StuffFormProps {
   onCancel: () => void;
 }
 
+// Функция для нормализации URL (добавляет протокол, если его нет)
+const normalizeImageUrl = (url: string): string => {
+  if (!url) return '';
+  if (url.startsWith('//')) {
+    return `https:${url}`;
+  }
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return `https://${url}`;
+  }
+  return url;
+};
+
 export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps) {
   const [formData, setFormData] = useState<StuffFormData>({
     kinopoisk_id: stuff?.kinopoisk_id || '',
@@ -241,7 +253,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
           {formData.image && (
             <div className="relative w-full h-64 rounded-lg overflow-hidden border">
               <Image
-                src={formData.image}
+                src={normalizeImageUrl(formData.image)}
                 alt="Фото участника"
                 fill
                 className="object-contain"

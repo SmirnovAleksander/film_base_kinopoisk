@@ -12,6 +12,26 @@ export interface Media {
   parsed_at: string;
 }
 
+export interface MediaCreate {
+  url?: string | null;
+  title?: string | null;
+  image?: string | null;
+  category?: string | null;
+  date?: string | null;
+  card_type?: string | null;
+  type?: string | null;
+}
+
+export interface MediaUpdate {
+  url?: string | null;
+  title?: string | null;
+  image?: string | null;
+  category?: string | null;
+  date?: string | null;
+  card_type?: string | null;
+  type?: string | null;
+}
+
 export interface MediaResponse {
   media: Media[];
   pagination: Record<string, any>;

@@ -13,6 +13,20 @@ class MediaBase(BaseModel):
     type: Optional[str] = Field(None, max_length=20, description="Тип контента")
 
 
+class MediaCreate(MediaBase):
+    pass
+
+
+class MediaUpdate(BaseModel):
+    url: Optional[str] = Field(None, max_length=500, description="URL медиа контента")
+    title: Optional[str] = Field(None, max_length=1000, description="Заголовок")
+    image: Optional[str] = Field(None, max_length=1000, description="URL изображения")
+    category: Optional[str] = Field(None, max_length=100, description="Категория")
+    date: Optional[str] = Field(None, max_length=100, description="Дата публикации")
+    card_type: Optional[str] = Field(None, max_length=20, description="Тип карточки")
+    type: Optional[str] = Field(None, max_length=20, description="Тип контента")
+
+
 class MediaRead(MediaBase):
     model_config = ConfigDict(from_attributes=True)
     

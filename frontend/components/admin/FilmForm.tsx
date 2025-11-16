@@ -41,6 +41,18 @@ interface FilmFormProps {
   onCancel: () => void;
 }
 
+// Функция для нормализации URL (добавляет протокол, если его нет)
+const normalizeImageUrl = (url: string): string => {
+  if (!url) return '';
+  if (url.startsWith('//')) {
+    return `https:${url}`;
+  }
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return `https://${url}`;
+  }
+  return url;
+};
+
 export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
   const [formData, setFormData] = useState<FilmFormData>({
     kinopoisk_id: film?.kinopoisk_id || '',
@@ -199,7 +211,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
           {formData.poster && (
             <div className="relative w-full h-64 rounded-lg overflow-hidden border">
               <Image
-                src={formData.poster}
+                src={normalizeImageUrl(formData.poster)}
                 alt="Постер фильма"
                 fill
                 className="object-contain"

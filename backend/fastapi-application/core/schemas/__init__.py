@@ -41,6 +41,8 @@ __all__ = (
     
     # Media schemas
     "MediaRead",
+    "MediaCreate",
+    "MediaUpdate",
     "MediaResponse",
     "MediaCategoriesResponse",
     "MediaTypesResponse",
@@ -100,6 +102,8 @@ from .user_interactions import (
 
 from .media import (
     MediaRead,
+    MediaCreate,
+    MediaUpdate,
     MediaResponse,
     MediaCategoriesResponse,
     MediaTypesResponse,
