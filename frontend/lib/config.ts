@@ -125,6 +125,20 @@ export const API_ENDPOINTS = {
       UPDATE: (id: number) => `/admin/stuff/${id}`,
       DELETE: (id: number) => `/admin/stuff/${id}`,
     },
+    GENRES: {
+      LIST: '/admin/genres',
+      CREATE: '/admin/genres',
+      DETAILS: (id: number) => `/admin/genres/${id}`,
+      UPDATE: (id: number) => `/admin/genres/${id}`,
+      DELETE: (id: number) => `/admin/genres/${id}`,
+    },
+    COUNTRIES: {
+      LIST: '/admin/countries',
+      CREATE: '/admin/countries',
+      DETAILS: (id: number) => `/admin/countries/${id}`,
+      UPDATE: (id: number) => `/admin/countries/${id}`,
+      DELETE: (id: number) => `/admin/countries/${id}`,
+    },
   },
   HEALTH: '/health',
 } as const;

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { AdminAPI } from '@/lib/api';
-import { FilmWithDetails, Stuff } from '@/lib/types';
+import { FilmWithDetails, Stuff, Genre, Country } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -19,9 +19,13 @@ import {
   Star, 
   Calendar, 
   Clock,
+  Tag,
+  Globe,
 } from 'lucide-react';
 import StuffForm from '@/components/admin/StuffForm';
 import FilmForm from '@/components/admin/FilmForm';
+import GenreForm from '@/components/admin/GenreForm';
+import CountryForm from '@/components/admin/CountryForm';
 
 interface FilmsResponse extends Array<FilmWithDetails> {}
 interface StuffResponse {
@@ -34,11 +38,17 @@ interface StuffResponse {
 export default function AdminPage() {
   const [films, setFilms] = useState<FilmsResponse | null>(null);
   const [stuff, setStuff] = useState<StuffResponse | null>(null);
+  const [genres, setGenres] = useState<Genre[] | null>(null);
+  const [countries, setCountries] = useState<Country[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [editingFilm, setEditingFilm] = useState<FilmWithDetails | null>(null);
   const [editingStuff, setEditingStuff] = useState<Stuff | null>(null);
+  const [editingGenre, setEditingGenre] = useState<Genre | null>(null);
+  const [editingCountry, setEditingCountry] = useState<Country | null>(null);
   const [showFilmDialog, setShowFilmDialog] = useState(false);
   const [showStuffDialog, setShowStuffDialog] = useState(false);
+  const [showGenreDialog, setShowGenreDialog] = useState(false);
+  const [showCountryDialog, setShowCountryDialog] = useState(false);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -53,13 +63,17 @@ export default function AdminPage() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [filmsData, stuffData] = await Promise.all([
+      const [filmsData, stuffData, genresData, countriesData] = await Promise.all([
         AdminAPI.getAllFilms(1, 100),
-        AdminAPI.getAllStuff(1, 100)
-      ]) as [FilmsResponse, StuffResponse];
+        AdminAPI.getAllStuff(1, 100),
+        AdminAPI.getAllGenres(),
+        AdminAPI.getAllCountries()
+      ]) as [FilmsResponse, StuffResponse, Genre[], Country[]];
       
       setFilms(filmsData);
       setStuff(stuffData);
+      setGenres(genresData);
+      setCountries(countriesData);
     } catch (error) {
       console.error('Error loading data:', error);
       showMessage('Ошибка загрузки данных');
@@ -126,6 +140,64 @@ export default function AdminPage() {
     }
   };
 
+  const handleGenreSubmit = async (genreData: any) => {
+    try {
+      if (editingGenre) {
+        await AdminAPI.updateGenre(editingGenre.id, genreData);
+        showMessage('Жанр обновлен');
+      } else {
+        await AdminAPI.createGenre(genreData);
+        showMessage('Жанр создан');
+      }
+      setShowGenreDialog(false);
+      setEditingGenre(null);
+      loadData();
+    } catch (error) {
+      console.error('Error saving genre:', error);
+      showMessage('Ошибка сохранения жанра');
+    }
+  };
+
+  const handleCountrySubmit = async (countryData: any) => {
+    try {
+      if (editingCountry) {
+        await AdminAPI.updateCountry(editingCountry.id, countryData);
+        showMessage('Страна обновлена');
+      } else {
+        await AdminAPI.createCountry(countryData);
+        showMessage('Страна создана');
+      }
+      setShowCountryDialog(false);
+      setEditingCountry(null);
+      loadData();
+    } catch (error) {
+      console.error('Error saving country:', error);
+      showMessage('Ошибка сохранения страны');
+    }
+  };
+
+  const handleDeleteGenre = async (genreId: number) => {
+    try {
+      await AdminAPI.deleteGenre(genreId);
+      showMessage('Жанр удален');
+      loadData();
+    } catch (error) {
+      console.error('Error deleting genre:', error);
+      showMessage('Ошибка удаления жанра');
+    }
+  };
+
+  const handleDeleteCountry = async (countryId: number) => {
+    try {
+      await AdminAPI.deleteCountry(countryId);
+      showMessage('Страна удалена');
+      loadData();
+    } catch (error) {
+      console.error('Error deleting country:', error);
+      showMessage('Ошибка удаления страны');
+    }
+  };
+
   const formatArrayField = (field: string[] | null | undefined) => {
     if (!field || field.length === 0) return '-';
     return field.join(', ');
@@ -180,7 +252,7 @@ export default function AdminPage() {
       )}
       
       <Tabs defaultValue="films" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="films" className="flex items-center gap-2">
             <Film className="h-4 w-4" />
             Фильмы ({films?.length || 0})
@@ -188,6 +260,14 @@ export default function AdminPage() {
           <TabsTrigger value="stuff" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Участники ({stuff?.total_count || 0})
+          </TabsTrigger>
+          <TabsTrigger value="genres" className="flex items-center gap-2">
+            <Tag className="h-4 w-4" />
+            Жанры ({genres?.length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="countries" className="flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            Страны ({countries?.length || 0})
           </TabsTrigger>
         </TabsList>
         
@@ -489,6 +569,172 @@ export default function AdminPage() {
                               variant="destructive"
                               size="sm"
                               onClick={() => handleDeleteStuff(person.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="genres" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Tag className="h-5 w-5" />
+                  Управление жанрами
+                </CardTitle>
+                <Dialog open={showGenreDialog} onOpenChange={setShowGenreDialog}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => setEditingGenre(null)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Добавить жанр
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingGenre ? 'Редактировать жанр' : 'Добавить жанр'}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <ScrollArea className="max-h-[70vh] pr-4">
+                      <GenreForm
+                        genre={editingGenre}
+                        onSubmit={handleGenreSubmit}
+                        onCancel={() => setShowGenreDialog(false)}
+                      />
+                    </ScrollArea>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[600px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Название</TableHead>
+                      <TableHead>Действия</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {genres?.map((genre: Genre) => (
+                      <TableRow key={genre.id}>
+                        <TableCell className="font-mono text-sm">
+                          {genre.id}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          <Badge variant="outline" className="text-sm">
+                            {genre.name}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingGenre(genre);
+                                setShowGenreDialog(true);
+                              }}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteGenre(genre.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="countries" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Управление странами
+                </CardTitle>
+                <Dialog open={showCountryDialog} onOpenChange={setShowCountryDialog}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => setEditingCountry(null)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Добавить страну
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingCountry ? 'Редактировать страну' : 'Добавить страну'}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <ScrollArea className="max-h-[70vh] pr-4">
+                      <CountryForm
+                        country={editingCountry}
+                        onSubmit={handleCountrySubmit}
+                        onCancel={() => setShowCountryDialog(false)}
+                      />
+                    </ScrollArea>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[600px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Название</TableHead>
+                      <TableHead>Действия</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {countries?.map((country: Country) => (
+                      <TableRow key={country.id}>
+                        <TableCell className="font-mono text-sm">
+                          {country.id}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          <Badge variant="outline" className="text-sm">
+                            {country.name}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingCountry(country);
+                                setShowCountryDialog(true);
+                              }}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteCountry(country.id)}
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>

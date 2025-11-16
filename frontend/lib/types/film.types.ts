@@ -163,9 +163,25 @@ export interface Genre {
   id: number;
 }
 
+export interface GenreCreate {
+  name: string;
+}
+
+export interface GenreUpdate {
+  name: string;
+}
+
 export interface Country {
   name: string;
   id: number;
+}
+
+export interface CountryCreate {
+  name: string;
+}
+
+export interface CountryUpdate {
+  name: string;
 }
 
 // Параметры поиска и фильтрации фильмов
