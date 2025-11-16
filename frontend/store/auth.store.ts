@@ -154,7 +154,6 @@ export const useAuthStore = create<AuthState>()(
     },
 
     clearAuth: () => {
-      // Очищаем данные через AuthAPI
       AuthAPI.clearAuthData();
 
       set({

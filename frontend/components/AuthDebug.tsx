@@ -20,8 +20,6 @@ export function AuthDebug() {
       token: token ? `${token.substring(0, 20)}...` : null,
       isLoading
     });
-    
-    console.log('🔍 === AUTH DIAGNOSTICS END ===');
   };
 
   if (process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_ENV === 'production') {

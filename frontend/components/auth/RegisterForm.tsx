@@ -85,7 +85,6 @@ export function RegisterForm({
     }
 
     try {
-      // Преобразуем данные в нужный формат
       const registerData = {
         email: formData.email,
         password: formData.password,
@@ -109,7 +108,6 @@ export function RegisterForm({
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Очищаем ошибку при изменении поля
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }

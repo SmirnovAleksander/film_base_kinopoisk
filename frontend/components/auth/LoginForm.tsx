@@ -36,7 +36,6 @@ export function LoginForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState('');
 
-  // Редирект после логина
   const redirectTo = searchParams?.get('redirect') || ROUTES.HOME;
 
   const validateForm = () => {
@@ -82,7 +81,6 @@ export function LoginForm({
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Очищаем ошибку при изменении поля
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }

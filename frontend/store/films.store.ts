@@ -79,7 +79,6 @@ export const useFilmsStore = create<FilmsState>((set, get) => ({
   pageSize: PAGINATION.DEFAULT_PAGE_SIZE,
   totalCount: 0,
 
-  // Действия
   fetchFilms: async (page = 1) => {
     set({ isLoading: true, currentPage: page });
     try {
@@ -117,12 +116,10 @@ export const useFilmsStore = create<FilmsState>((set, get) => ({
     const isCategoryRequest = saveTo && saveTo !== 'default';
     
     if (isCategoryRequest) {
-      // Для категорий используем отдельные состояния загрузки
       if (saveTo === 'highRated') set({ isLoadingHighRated: true });
       if (saveTo === 'russian') set({ isLoadingRussian: true });
       if (saveTo === 'usa') set({ isLoadingUSA: true });
     } else {
-      // Основной список фильмов
       set({ isLoading: true });
     }
     
@@ -130,7 +127,6 @@ export const useFilmsStore = create<FilmsState>((set, get) => ({
       const response = await FilmsAPI.filterFilms(params);
       
       if (isCategoryRequest) {
-        // Сохраняем в категории
         if (saveTo === 'highRated') {
           set({
             highRatedFilms: response.items,
@@ -150,7 +146,6 @@ export const useFilmsStore = create<FilmsState>((set, get) => ({
           });
         }
       } else {
-        // Основной список фильмов
         set({
           films: response.items,
           totalCount: response.total_count,
@@ -250,7 +245,6 @@ export const useFilmsStore = create<FilmsState>((set, get) => ({
     set({ isLoading: loading });
   },
 
-  // Категории фильмов
   fetchHighRatedFilms: async (page = 1) => {
     await get().filterFilms({
       min_rating: 8,
@@ -258,24 +252,20 @@ export const useFilmsStore = create<FilmsState>((set, get) => ({
       lang: 'ru',
       source: 'kp',
       page,
-      page_size: 6, // Меньше для главной страницы
+      page_size: 6,
     }, 'highRated');
   },
 
   fetchRussianFilms: async (page = 1) => {
-    // Убеждаемся, что у нас есть список стран
     const { countries } = get();
     if (countries.length === 0) {
       await get().fetchCountries();
     }
     
     const updatedCountries = countries.length > 0 ? countries : get().countries;
-    // Находим ID России (может быть разные варианты названия)
     const russiaCountry = updatedCountries.find(
       country =>
-        country.name.toLowerCase().includes('россия') ||
-        country.name.toLowerCase().includes('российская') ||
-        country.name.toLowerCase().includes('ussr')
+        country.name.toLowerCase().includes('россия')
     );
 
     await get().filterFilms({
@@ -283,25 +273,20 @@ export const useFilmsStore = create<FilmsState>((set, get) => ({
       lang: 'ru',
       source: 'kp',
       page,
-      page_size: 6, // Меньше для главной страницы
+      page_size: 6,
     }, 'russian');
   },
 
   fetchUSAFilms: async (page = 1) => {
-    // Убеждаемся, что у нас есть список стран
     const { countries } = get();
     if (countries.length === 0) {
       await get().fetchCountries();
     }
     
     const updatedCountries = countries.length > 0 ? countries : get().countries;
-    // Находим ID США (может быть разные варианты названия)
     const usaCountry = updatedCountries.find(
       country =>
-        country.name.toLowerCase().includes('сша') ||
-        country.name.toLowerCase().includes('соединенные') ||
-        country.name.toLowerCase().includes('america') ||
-        country.name.toLowerCase().includes('usa')
+        country.name.toLowerCase().includes('сша')
     );
 
     await get().filterFilms({
@@ -309,7 +294,7 @@ export const useFilmsStore = create<FilmsState>((set, get) => ({
       lang: 'ru',
       source: 'kp',
       page,
-      page_size: 6, // Меньше для главной страницы
+      page_size: 6,
     }, 'usa');
   },
 }));
