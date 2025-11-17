@@ -10,6 +10,7 @@ from .stuff import router as stuff_router
 from .genres import router as genres_router
 from .countries import router as countries_router
 from .media import router as media_router
+from .similar_films import router as similar_films_router
 
 router = APIRouter(
     prefix="/admin",
@@ -22,5 +23,6 @@ router.include_router(stuff_router)
 router.include_router(genres_router)
 router.include_router(countries_router)
 router.include_router(media_router)
+router.include_router(similar_films_router)
 
 __all__ = ["router"]

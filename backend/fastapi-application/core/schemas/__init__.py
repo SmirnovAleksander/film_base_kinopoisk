@@ -21,6 +21,8 @@ __all__ = (
     "FilmStillRead",
     "FilmWatchProviderRead",
     "SimilarFilmRead",
+    "SimilarFilmCreate",
+    "SimilarFilmUpdate",
     
     # User interactions schemas
     "BookmarkCreate",
@@ -80,6 +82,8 @@ from .film import (
     FilmStillRead,
     FilmWatchProviderRead,
     SimilarFilmRead,
+    SimilarFilmCreate,
+    SimilarFilmUpdate,
 )
 
 from .user_interactions import (
