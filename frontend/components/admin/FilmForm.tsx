@@ -215,6 +215,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
                 alt="Постер фильма"
                 fill
                 className="object-contain"
+                unoptimized={false}
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}

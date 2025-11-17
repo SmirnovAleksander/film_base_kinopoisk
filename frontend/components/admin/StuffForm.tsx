@@ -257,6 +257,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
                 alt="Фото участника"
                 fill
                 className="object-contain"
+                unoptimized={false}
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}

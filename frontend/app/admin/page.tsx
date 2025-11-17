@@ -6,7 +6,6 @@ import { FilmWithDetails, Stuff, Genre, Country, Media, User } from '@/lib/types
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -30,6 +29,8 @@ import GenreForm from '@/components/admin/GenreForm';
 import CountryForm from '@/components/admin/CountryForm';
 import MediaForm from '@/components/admin/MediaForm';
 import UserForm from '@/components/admin/UserForm';
+import { AdminSidebar } from '@/components/admin/admin-sidebar';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 
 interface FilmsResponse extends Array<FilmWithDetails> {}
 interface StuffResponse {
@@ -47,6 +48,7 @@ export default function AdminPage() {
   const [media, setMedia] = useState<Media[] | null>(null);
   const [users, setUsers] = useState<User[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<string>('#films');
   const [editingFilm, setEditingFilm] = useState<FilmWithDetails | null>(null);
   const [editingStuff, setEditingStuff] = useState<Stuff | null>(null);
   const [editingGenre, setEditingGenre] = useState<Genre | null>(null);
@@ -60,6 +62,17 @@ export default function AdminPage() {
   const [showMediaDialog, setShowMediaDialog] = useState(false);
   const [showUserDialog, setShowUserDialog] = useState(false);
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash || '#films';
+      setActiveTab(hash);
+    };
+    
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -291,67 +304,42 @@ export default function AdminPage() {
     return amount || '-';
   };
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case '#films':
+        return renderFilmsContent();
+      case '#stuff':
+        return renderStuffContent();
+      case '#genres':
+        return renderGenresContent();
+      case '#countries':
+        return renderCountriesContent();
+      case '#media':
+        return renderMediaContent();
+      case '#users':
+        return renderUsersContent();
+      default:
+        return renderFilmsContent();
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center min-h-96">
+      <SidebarProvider>
+        <AdminSidebar activeTab={activeTab} />
+        <SidebarInset>
+          <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Загрузка данных...</p>
           </div>
         </div>
-      </div>
+        </SidebarInset>
+      </SidebarProvider>
     );
   }
 
-  return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Админ панель</h1>
-          <p className="text-muted-foreground">
-            Управление фильмами и участниками
-          </p>
-        </div>
-      </div>
-      
-      {message && (
-        <Card className="border-green-200 bg-green-50">
-          <CardContent className="p-4">
-            <p className="text-green-800">{message}</p>
-          </CardContent>
-        </Card>
-      )}
-      
-      <Tabs defaultValue="films" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="films" className="flex items-center gap-2">
-            <Film className="h-4 w-4" />
-            Фильмы ({films?.length || 0})
-          </TabsTrigger>
-          <TabsTrigger value="stuff" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Участники ({stuff?.total_count || 0})
-          </TabsTrigger>
-          <TabsTrigger value="genres" className="flex items-center gap-2">
-            <Tag className="h-4 w-4" />
-            Жанры ({genres?.length || 0})
-          </TabsTrigger>
-          <TabsTrigger value="countries" className="flex items-center gap-2">
-            <Globe className="h-4 w-4" />
-            Страны ({countries?.length || 0})
-          </TabsTrigger>
-          <TabsTrigger value="media" className="flex items-center gap-2">
-            <Newspaper className="h-4 w-4" />
-            Медиа ({media?.length || 0})
-          </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center gap-2">
-            <UserCog className="h-4 w-4" />
-            Пользователи ({users?.length || 0})
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="films" className="space-y-4">
+  const renderFilmsContent = () => (
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -506,9 +494,9 @@ export default function AdminPage() {
               </ScrollArea>
             </CardContent>
           </Card>
-        </TabsContent>
+  );
         
-        <TabsContent value="stuff" className="space-y-4">
+  const renderStuffContent = () => (
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -661,10 +649,10 @@ export default function AdminPage() {
               </ScrollArea>
             </CardContent>
           </Card>
-        </TabsContent>
+  );
 
-        <TabsContent value="genres" className="space-y-4">
-          <Card>
+  const renderGenresContent = () => (
+    <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
@@ -744,10 +732,10 @@ export default function AdminPage() {
               </ScrollArea>
             </CardContent>
           </Card>
-        </TabsContent>
+  );
 
-        <TabsContent value="countries" className="space-y-4">
-          <Card>
+  const renderCountriesContent = () => (
+    <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
@@ -827,10 +815,10 @@ export default function AdminPage() {
               </ScrollArea>
             </CardContent>
           </Card>
-        </TabsContent>
+  );
 
-        <TabsContent value="media" className="space-y-4">
-          <Card>
+  const renderMediaContent = () => (
+    <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
@@ -948,10 +936,10 @@ export default function AdminPage() {
               </ScrollArea>
             </CardContent>
           </Card>
-        </TabsContent>
+  );
 
-        <TabsContent value="users" className="space-y-4">
-          <Card>
+  const renderUsersContent = () => (
+    <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
@@ -1066,8 +1054,39 @@ export default function AdminPage() {
               </ScrollArea>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+  );
+
+  return (
+    <SidebarProvider>
+      <AdminSidebar 
+        activeTab={activeTab}
+        counts={{
+          films: films?.length,
+          stuff: stuff?.total_count,
+          genres: genres?.length,
+          countries: countries?.length,
+          media: media?.length,
+          users: users?.length,
+        }}
+      />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+          <SidebarTrigger className="-ml-1" />
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-semibold">Админ панель</h1>
+          </div>
+        </header>
+        <div className="flex flex-1 flex-col gap-4 p-4">
+          {message && (
+            <Card className="border-green-200 bg-green-50">
+              <CardContent className="p-4">
+                <p className="text-green-800">{message}</p>
+              </CardContent>
+            </Card>
+          )}
+          {renderContent()}
     </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

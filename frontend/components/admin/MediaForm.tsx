@@ -118,6 +118,7 @@ export default function MediaForm({ media, onSubmit, onCancel }: MediaFormProps)
                 alt="Изображение медиа"
                 fill
                 className="object-contain"
+                unoptimized={false}
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
