@@ -146,6 +146,13 @@ export const API_ENDPOINTS = {
       UPDATE: (id: number) => `/admin/media/${id}`,
       DELETE: (id: number) => `/admin/media/${id}`,
     },
+    USERS: {
+      LIST: '/admin/users',
+      CREATE: '/admin/users',
+      DETAILS: (id: number) => `/admin/users/${id}`,
+      UPDATE: (id: number) => `/admin/users/${id}`,
+      DELETE: (id: number) => `/admin/users/${id}`,
+    },
   },
   HEALTH: '/health',
 } as const;

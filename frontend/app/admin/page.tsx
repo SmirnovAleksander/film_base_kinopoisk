@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { AdminAPI } from '@/lib/api';
-import { FilmWithDetails, Stuff, Genre, Country, Media } from '@/lib/types';
+import { FilmWithDetails, Stuff, Genre, Country, Media, User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -22,12 +22,14 @@ import {
   Tag,
   Globe,
   Newspaper,
+  UserCog,
 } from 'lucide-react';
 import StuffForm from '@/components/admin/StuffForm';
 import FilmForm from '@/components/admin/FilmForm';
 import GenreForm from '@/components/admin/GenreForm';
 import CountryForm from '@/components/admin/CountryForm';
 import MediaForm from '@/components/admin/MediaForm';
+import UserForm from '@/components/admin/UserForm';
 
 interface FilmsResponse extends Array<FilmWithDetails> {}
 interface StuffResponse {
@@ -43,17 +45,20 @@ export default function AdminPage() {
   const [genres, setGenres] = useState<Genre[] | null>(null);
   const [countries, setCountries] = useState<Country[] | null>(null);
   const [media, setMedia] = useState<Media[] | null>(null);
+  const [users, setUsers] = useState<User[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [editingFilm, setEditingFilm] = useState<FilmWithDetails | null>(null);
   const [editingStuff, setEditingStuff] = useState<Stuff | null>(null);
   const [editingGenre, setEditingGenre] = useState<Genre | null>(null);
   const [editingCountry, setEditingCountry] = useState<Country | null>(null);
   const [editingMedia, setEditingMedia] = useState<Media | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showFilmDialog, setShowFilmDialog] = useState(false);
   const [showStuffDialog, setShowStuffDialog] = useState(false);
   const [showGenreDialog, setShowGenreDialog] = useState(false);
   const [showCountryDialog, setShowCountryDialog] = useState(false);
   const [showMediaDialog, setShowMediaDialog] = useState(false);
+  const [showUserDialog, setShowUserDialog] = useState(false);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -68,19 +73,21 @@ export default function AdminPage() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [filmsData, stuffData, genresData, countriesData, mediaData] = await Promise.all([
+      const [filmsData, stuffData, genresData, countriesData, mediaData, usersData] = await Promise.all([
         AdminAPI.getAllFilms(1, 100),
         AdminAPI.getAllStuff(1, 100),
         AdminAPI.getAllGenres(),
         AdminAPI.getAllCountries(),
-        AdminAPI.getAllMedia(1, 100)
-      ]) as [FilmsResponse, StuffResponse, Genre[], Country[], Media[]];
+        AdminAPI.getAllMedia(1, 100),
+        AdminAPI.getAllUsers(1, 100)
+      ]) as [FilmsResponse, StuffResponse, Genre[], Country[], Media[], User[]];
       
       setFilms(filmsData);
       setStuff(stuffData);
       setGenres(genresData);
       setCountries(countriesData);
       setMedia(mediaData);
+      setUsers(usersData);
     } catch (error) {
       console.error('Error loading data:', error);
       showMessage('Ошибка загрузки данных');
@@ -234,6 +241,35 @@ export default function AdminPage() {
     }
   };
 
+  const handleUserSubmit = async (userData: any) => {
+    try {
+      if (editingUser) {
+        await AdminAPI.updateUser(editingUser.id, userData);
+        showMessage('Пользователь обновлен');
+      } else {
+        await AdminAPI.createUser(userData);
+        showMessage('Пользователь создан');
+      }
+      setShowUserDialog(false);
+      setEditingUser(null);
+      loadData();
+    } catch (error) {
+      console.error('Error saving user:', error);
+      showMessage('Ошибка сохранения пользователя');
+    }
+  };
+
+  const handleDeleteUser = async (userId: number) => {
+    try {
+      await AdminAPI.deleteUser(userId);
+      showMessage('Пользователь удален');
+      loadData();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      showMessage('Ошибка удаления пользователя');
+    }
+  };
+
   const formatArrayField = (field: string[] | null | undefined) => {
     if (!field || field.length === 0) return '-';
     return field.join(', ');
@@ -288,7 +324,7 @@ export default function AdminPage() {
       )}
       
       <Tabs defaultValue="films" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="films" className="flex items-center gap-2">
             <Film className="h-4 w-4" />
             Фильмы ({films?.length || 0})
@@ -308,6 +344,10 @@ export default function AdminPage() {
           <TabsTrigger value="media" className="flex items-center gap-2">
             <Newspaper className="h-4 w-4" />
             Медиа ({media?.length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <UserCog className="h-4 w-4" />
+            Пользователи ({users?.length || 0})
           </TabsTrigger>
         </TabsList>
         
@@ -896,6 +936,124 @@ export default function AdminPage() {
                               variant="destructive"
                               size="sm"
                               onClick={() => handleDeleteMedia(item.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="users" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <UserCog className="h-5 w-5" />
+                  Управление пользователями
+                </CardTitle>
+                <Dialog open={showUserDialog} onOpenChange={setShowUserDialog}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => setEditingUser(null)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Добавить пользователя
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[90vh]">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingUser ? 'Редактировать пользователя' : 'Добавить пользователя'}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <ScrollArea className="max-h-[70vh] pr-4">
+                      <UserForm
+                        user={editingUser}
+                        onSubmit={handleUserSubmit}
+                        onCancel={() => setShowUserDialog(false)}
+                      />
+                    </ScrollArea>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[600px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Имя пользователя</TableHead>
+                      <TableHead>Имя</TableHead>
+                      <TableHead>Фамилия</TableHead>
+                      <TableHead>Активен</TableHead>
+                      <TableHead>Суперпользователь</TableHead>
+                      <TableHead>Подтвержден</TableHead>
+                      <TableHead>Дата создания</TableHead>
+                      <TableHead>Действия</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users?.map((user: User) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-mono text-sm">
+                          {user.id}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {user.email}
+                        </TableCell>
+                        <TableCell>
+                          {user.username}
+                        </TableCell>
+                        <TableCell>
+                          {user.first_name || '-'}
+                        </TableCell>
+                        <TableCell>
+                          {user.last_name || '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={user.is_active ? "default" : "secondary"}>
+                            {user.is_active ? 'Да' : 'Нет'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={user.is_superuser ? "destructive" : "outline"}>
+                            {user.is_superuser ? 'Да' : 'Нет'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={user.is_verified ? "default" : "secondary"}>
+                            {user.is_verified ? 'Да' : 'Нет'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3 text-gray-500" />
+                            {new Date(user.created_at).toLocaleDateString('ru-RU')}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingUser(user);
+                                setShowUserDialog(true);
+                              }}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteUser(user.id)}
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
