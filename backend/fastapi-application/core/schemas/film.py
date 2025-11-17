@@ -70,6 +70,21 @@ class FilmStillRead(BaseModel):
     picture_id: str
     original_url: str
     source: str
+    film_id: int
+
+
+class FilmStillCreate(BaseModel):
+    film_id: int = Field(..., description="ID фильма")
+    picture_id: str = Field(..., max_length=50, description="ID изображения")
+    original_url: str = Field(..., description="URL оригинального изображения")
+    source: str = Field(..., max_length=16, description="Источник (stills, wall и т.п.)")
+
+
+class FilmStillUpdate(BaseModel):
+    film_id: Optional[int] = Field(None, description="ID фильма")
+    picture_id: Optional[str] = Field(None, max_length=50, description="ID изображения")
+    original_url: Optional[str] = Field(None, description="URL оригинального изображения")
+    source: Optional[str] = Field(None, max_length=16, description="Источник (stills, wall и т.п.)")
 
 
 class FilmWatchProviderRead(BaseModel):
