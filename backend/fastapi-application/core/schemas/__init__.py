@@ -61,6 +61,11 @@ __all__ = (
     "MediaTypesResponse",
     "MediaStatsResponse",
     
+    # User schemas
+    "UserRead",
+    "UserCreate",
+    "UserUpdate",
+    
     # Base schemas (common responses)
     "OperationResponse",
     "StatusResponse",
@@ -134,6 +139,12 @@ from .media import (
     MediaCategoriesResponse,
     MediaTypesResponse,
     MediaStatsResponse,
+)
+
+from .user import (
+    UserRead,
+    UserCreate,
+    UserUpdate,
 )
 
 from .base import (
