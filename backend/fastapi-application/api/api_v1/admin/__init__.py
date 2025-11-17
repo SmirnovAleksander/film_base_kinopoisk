@@ -13,6 +13,9 @@ from .media import router as media_router
 from .similar_films import router as similar_films_router
 from .film_stills import router as film_stills_router
 from .film_watch_providers import router as film_watch_providers_router
+from .film_genres import router as film_genres_router
+from .film_countries import router as film_countries_router
+from .film_stuff import router as film_stuff_router
 
 router = APIRouter(
     prefix="/admin",
@@ -28,5 +31,8 @@ router.include_router(media_router)
 router.include_router(similar_films_router)
 router.include_router(film_stills_router)
 router.include_router(film_watch_providers_router)
+router.include_router(film_genres_router)
+router.include_router(film_countries_router)
+router.include_router(film_stuff_router)
 
 __all__ = ["router"]
