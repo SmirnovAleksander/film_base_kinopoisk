@@ -94,6 +94,21 @@ class FilmWatchProviderRead(BaseModel):
     name: str
     url: str
     logo: Optional[str] = None
+    film_id: int
+
+
+class FilmWatchProviderCreate(BaseModel):
+    film_id: int = Field(..., description="ID фильма")
+    name: str = Field(..., max_length=200, description="Название провайдера")
+    url: str = Field(..., description="URL провайдера")
+    logo: Optional[str] = Field(None, description="URL логотипа")
+
+
+class FilmWatchProviderUpdate(BaseModel):
+    film_id: Optional[int] = Field(None, description="ID фильма")
+    name: Optional[str] = Field(None, max_length=200, description="Название провайдера")
+    url: Optional[str] = Field(None, description="URL провайдера")
+    logo: Optional[str] = Field(None, description="URL логотипа")
 
 
 class StuffListResponse(BaseModel):
