@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import GenreForm from '@/components/admin/GenreForm';
+import GenreForm from '@/components/admin/forms/GenreForm';
 import { Edit, Plus, Tag, Trash2 } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 

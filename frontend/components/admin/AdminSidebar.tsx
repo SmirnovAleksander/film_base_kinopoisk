@@ -10,7 +10,6 @@ import {
   UserCog,
   Home,
 } from "lucide-react"
-import { NavMain } from "@/components/admin/nav-main"
 import {
   Sidebar,
   SidebarContent,
@@ -21,6 +20,7 @@ import {
 } from "@/components/ui/sidebar"
 import Link from "next/link"
 import { ROUTES } from "@/lib/config"
+import { NavMain } from "./NavMain"
 
 interface AdminSidebarProps extends React.ComponentProps<typeof Sidebar> {
   activeTab?: string

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import CountryForm from '@/components/admin/CountryForm';
+import CountryForm from '@/components/admin/forms/CountryForm';
 import { Edit, Globe, Plus, Trash2 } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 

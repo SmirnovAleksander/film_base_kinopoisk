@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { AdminAPI } from '@/lib/api';
 import { FilmWithDetails, Stuff, Genre, Country, Media, User } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
-import { AdminSidebar } from '@/components/admin/admin-sidebar';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import FilmsSection from '@/components/admin/sections/FilmsSection';
 import StuffSection from '@/components/admin/sections/StuffSection';
@@ -12,6 +11,7 @@ import GenresSection from '@/components/admin/sections/GenresSection';
 import CountriesSection from '@/components/admin/sections/CountriesSection';
 import MediaSection from '@/components/admin/sections/MediaSection';
 import UsersSection from '@/components/admin/sections/UsersSection';
+import { AdminSidebar } from '@/components/admin/AdminSidebar';
 
 interface FilmsResponse extends Array<FilmWithDetails> {}
 interface StuffResponse {

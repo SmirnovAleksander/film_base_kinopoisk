@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import UserForm from '@/components/admin/UserForm';
+import UserForm from '@/components/admin/forms/UserForm';
 import { Calendar, Edit, Plus, Trash2, UserCog } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 
