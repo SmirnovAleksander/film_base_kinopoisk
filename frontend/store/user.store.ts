@@ -10,8 +10,6 @@ import {
   UserFilmRatingCreate,
   CommentCreate,
   CommentUpdate,
-  UserFilmHistory,
-  UserFilmHistoryResponse,
 } from '@/lib/types';
 import { PAGINATION } from '../lib/config';
 
@@ -27,11 +25,6 @@ interface UserInteractionsState {
   // Комментарии
   comments: Comment[];
   
-  // История просмотров
-  userHistory: UserFilmHistory[];
-  historyLoading: boolean;
-  historyTotalCount: number;
-  
   // Состояние загрузки
   isLoadingBookmarks: boolean;
   isLoadingRatings: boolean;
@@ -39,12 +32,10 @@ interface UserInteractionsState {
   isAddingBookmark: boolean;
   isAddingRating: boolean;
   isAddingComment: boolean;
-  isAddingToHistory: boolean;
   
   // Пагинация
   bookmarksPage: number;
   ratingsPage: number;
-  historyPage: number;
   bookmarksTotalCount: number;
   ratingsTotalCount: number;
 
@@ -70,20 +61,12 @@ interface UserInteractionsState {
   deleteComment: (commentId: number) => Promise<void>;
   clearComments: () => void;
   
-  // Действия для истории просмотров
-  fetchUserHistory: (page?: number) => Promise<void>;
-  addFilmToHistory: (filmId: number) => Promise<void>;
-  removeFilmFromHistory: (filmId: number) => Promise<void>;
-  clearHistory: () => Promise<void>;
-  
   // Вспомогательные методы
   setBookmarksPage: (page: number) => void;
   setRatingsPage: (page: number) => void;
-  setHistoryPage: (page: number) => void;
   setLoadingBookmarks: (loading: boolean) => void;
   setLoadingRatings: (loading: boolean) => void;
   setLoadingComments: (loading: boolean) => void;
-  setHistoryLoading: (loading: boolean) => void;
 }
 
 export const useUserInteractionsStore = create<UserInteractionsState>((set, get) => ({
@@ -93,17 +76,12 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
   userRatings: [],
   ratedFilmIds: new Set(),
   comments: [],
-  userHistory: [],
-  historyLoading: false,
-  historyTotalCount: 0,
-  historyPage: 1,
   isLoadingBookmarks: false,
   isLoadingRatings: false,
   isLoadingComments: false,
   isAddingBookmark: false,
   isAddingRating: false,
   isAddingComment: false,
-  isAddingToHistory: false,
   bookmarksPage: 1,
   ratingsPage: 1,
   bookmarksTotalCount: 0,
@@ -452,106 +430,6 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
     });
   },
 
-  // ========== ИСТОРИЯ ПРОСМОТРОВ ==========
-  
-  fetchUserHistory: async (page = 1) => {
-    set({ historyLoading: true, historyPage: page });
-    try {
-      // Проверяем авторизацию
-      const { isAuthenticated, user } = useAuthStore.getState();
-      if (!isAuthenticated || !user) {
-        throw new Error('Пользователь не авторизован');
-      }
-      
-      const response: UserFilmHistoryResponse = await UserInteractionsAPI.getUserHistory(page, PAGINATION.DEFAULT_PAGE_SIZE);
-      set({
-        userHistory: response.history,
-        historyTotalCount: response.total,
-        historyLoading: false,
-      });
-    } catch (error) {
-      set({ historyLoading: false, userHistory: [] });
-      throw error;
-    }
-  },
-
-  addFilmToHistory: async (filmId: number) => {
-    set({ isAddingToHistory: true });
-    try {
-      // Проверяем авторизацию
-      const { isAuthenticated, user } = useAuthStore.getState();
-      if (!isAuthenticated || !user) {
-        throw new Error('Пользователь не авторизован');
-      }
-      
-      await UserInteractionsAPI.addFilmToHistory(filmId);
-      
-      // Обновляем локальное состояние
-      const { userHistory } = get();
-      const newHistoryItem: UserFilmHistory = {
-        visited_at: new Date().toISOString(),
-        film: {
-          id: filmId,
-        } as any,
-      };
-      
-      set({
-        userHistory: [newHistoryItem, ...userHistory.slice(0, 49)], // Ограничиваем до 50 элементов
-        isAddingToHistory: false,
-      });
-    } catch (error) {
-      set({ isAddingToHistory: false });
-      throw error;
-    }
-  },
-
-  removeFilmFromHistory: async (filmId: number) => {
-    set({ isAddingToHistory: true });
-    try {
-      // Проверяем авторизацию
-      const { isAuthenticated, user } = useAuthStore.getState();
-      if (!isAuthenticated || !user) {
-        throw new Error('Пользователь не авторизован');
-      }
-      
-      await UserInteractionsAPI.removeFilmFromHistory(filmId);
-      
-      const { userHistory } = get();
-      const updatedHistory = userHistory.filter(item => item.film.id !== filmId);
-      
-      set({
-        userHistory: updatedHistory,
-        historyTotalCount: Math.max(0, get().historyTotalCount - 1),
-        isAddingToHistory: false,
-      });
-    } catch (error) {
-      set({ isAddingToHistory: false });
-      throw error;
-    }
-  },
-
-  clearHistory: async () => {
-    set({ historyLoading: true });
-    try {
-      // Проверяем авторизацию
-      const { isAuthenticated, user } = useAuthStore.getState();
-      if (!isAuthenticated || !user) {
-        throw new Error('Пользователь не авторизован');
-      }
-      
-      await UserInteractionsAPI.clearHistory();
-      set({
-        userHistory: [],
-        historyTotalCount: 0,
-        historyPage: 1,
-        historyLoading: false,
-      });
-    } catch (error) {
-      set({ historyLoading: false });
-      throw error;
-    }
-  },
-
   // ========== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ==========
   
   setBookmarksPage: (page: number) => {
@@ -560,10 +438,6 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
 
   setRatingsPage: (page: number) => {
     set({ ratingsPage: page });
-  },
-
-  setHistoryPage: (page: number) => {
-    set({ historyPage: page });
   },
 
   setLoadingBookmarks: (loading: boolean) => {
@@ -578,7 +452,4 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
     set({ isLoadingComments: loading });
   },
 
-  setHistoryLoading: (loading: boolean) => {
-    set({ historyLoading: loading });
-  },
 }));

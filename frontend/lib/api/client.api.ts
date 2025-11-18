@@ -36,7 +36,6 @@ apiClient.interceptors.request.use(
     
     // Дополнительная диагностика для отладки
     if (config.url?.includes('/bookmarks') ||
-        config.url?.includes('/history') ||
         config.url?.includes('/ratings') ||
         config.url?.includes('/users/me')) {
       console.log('🔍 Authenticated request detected - Token available:', !!token);
@@ -80,7 +79,6 @@ async (error: AxiosError) => {
     
     // Определяем, является ли запрос аутентифицированным
     const isAuthenticatedRequest = url?.includes('/bookmarks') ||
-                                  url?.includes('/history') ||
                                   url?.includes('/ratings') ||
                                   url?.includes('/users/') ||
                                   url?.includes('/comments') ||

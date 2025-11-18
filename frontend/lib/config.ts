@@ -15,7 +15,6 @@ export const ROUTES = {
   MEDIA: '/media',
   PROFILE: '/profile',
   BOOKMARKS: '/bookmarks',
-  HISTORY: '/history',
   POSTERS: (id: string | number) => `/posters/${id}`,
 } as const;
 
@@ -90,13 +89,6 @@ export const API_ENDPOINTS = {
     ADD: (filmId: number) => `/comments/${filmId}`,
     UPDATE: (commentId: number) => `/comments/${commentId}`,
     DELETE: (commentId: number) => `/comments/${commentId}`,
-  },
-  HISTORY: {
-    ADD_VISIT: (filmId: number) => `/history/films/${filmId}/visit`,
-    LIST: '/history/films',
-    CLEAR: '/history/films',
-    REMOVE: (filmId: number) => `/history/films/${filmId}`,
-    STATS: '/history/films/stats',
   },
   MEDIA: {
     LIST: '/media',

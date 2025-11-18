@@ -7,7 +7,6 @@ import {
   Search,
   Film,
   Heart,
-  History,
   User,
   LogOut,
   Menu,
@@ -62,7 +61,6 @@ export function Header() {
     { name: 'Фильмы', href: ROUTES.FILMS, icon: Film },
     { name: 'Медиа', href: ROUTES.MEDIA, icon: Image },
     { name: 'Закладки', href: ROUTES.BOOKMARKS, icon: Heart, requireAuth: true },
-    { name: 'История', href: ROUTES.HISTORY, icon: History, requireAuth: true },
   ];
 
   return (
