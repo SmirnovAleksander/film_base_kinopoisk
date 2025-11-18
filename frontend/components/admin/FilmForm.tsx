@@ -111,7 +111,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="kinopoisk_id">Kinopoisk ID</Label>
           <Input
             id="kinopoisk_id"
@@ -120,7 +120,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
             required
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="year">Год</Label>
           <Input
             id="year"
@@ -132,7 +132,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="title">Название</Label>
           <Input
             id="title"
@@ -140,7 +140,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="original_title">Оригинальное название</Label>
           <Input
             id="original_title"
@@ -150,7 +150,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
         </div>
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="tagline">Слоган</Label>
         <Input
           id="tagline"
@@ -159,7 +159,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="description">Краткое описание</Label>
         <Textarea
           id="description"
@@ -169,7 +169,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="full_description">Полное описание</Label>
         <Textarea
           id="full_description"
@@ -180,7 +180,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="duration">Длительность</Label>
           <Input
             id="duration"
@@ -189,7 +189,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
             onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="content_rating">Возрастной рейтинг</Label>
           <Input
             id="content_rating"
@@ -200,7 +200,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
         </div>
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="poster">Ссылка на постер</Label>
         <div className="space-y-2">
           <Input
@@ -226,7 +226,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="ru_premiere">Премьера в России</Label>
           <Input
             id="ru_premiere"
@@ -235,7 +235,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
             onChange={(e) => setFormData({ ...formData, ru_premiere: e.target.value })}
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="world_premiere">Мировая премьера</Label>
           <Input
             id="world_premiere"
@@ -260,7 +260,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="rating_kp">Рейтинг Кинопоиска</Label>
           <Input
             id="rating_kp"
@@ -272,7 +272,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
             onChange={(e) => setFormData({ ...formData, rating_kp: e.target.value })}
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="kp_votes_count">Количество голосов КП</Label>
           <Input
             id="kp_votes_count"
@@ -284,7 +284,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="rating_imdb">Рейтинг IMDb</Label>
           <Input
             id="rating_imdb"
@@ -296,7 +296,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
             onChange={(e) => setFormData({ ...formData, rating_imdb: e.target.value })}
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="imdb_votes_count">Количество голосов IMDb</Label>
           <Input
             id="imdb_votes_count"
@@ -308,7 +308,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="user_rating">Пользовательский рейтинг</Label>
           <Input
             id="user_rating"
@@ -320,7 +320,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
             onChange={(e) => setFormData({ ...formData, user_rating: e.target.value })}
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="user_rating_count">Количество пользовательских оценок</Label>
           <Input
             id="user_rating_count"
@@ -335,7 +335,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
       <div className="space-y-4">
         <Label>Кассовые сборы</Label>
         <div className="grid grid-cols-3 gap-4">
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="budget">Бюджет</Label>
             <Input
               id="budget"
@@ -344,7 +344,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
               onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
             />
           </div>
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="usa_box_office">Сборы в США</Label>
             <Input
               id="usa_box_office"
@@ -353,7 +353,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
               onChange={(e) => setFormData({ ...formData, usa_box_office: e.target.value })}
             />
           </div>
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="rus_box_office">Сборы в России</Label>
             <Input
               id="rus_box_office"

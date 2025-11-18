@@ -91,7 +91,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="kinopoisk_id">Kinopoisk ID</Label>
           <Input
             id="kinopoisk_id"
@@ -100,7 +100,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
             required
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="age">Возраст</Label>
           <Input
             id="age"
@@ -112,7 +112,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="name">Имя</Label>
           <Input
             id="name"
@@ -120,7 +120,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="original_name">Оригинальное имя</Label>
           <Input
             id="original_name"
@@ -131,7 +131,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="height">Рост</Label>
           <Input
             id="height"
@@ -140,7 +140,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
             onChange={(e) => setFormData({ ...formData, height: e.target.value })}
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="zodiac">Знак зодиака</Label>
           <Input
             id="zodiac"
@@ -151,7 +151,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="birthday_day_month">День рождения</Label>
           <Input
             id="birthday_day_month"
@@ -160,7 +160,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
             onChange={(e) => setFormData({ ...formData, birthday_day_month: e.target.value })}
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="total_films">Количество фильмов</Label>
           <Input
             id="total_films"
@@ -172,7 +172,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="career_start_year">Начало карьеры</Label>
           <Input
             id="career_start_year"
@@ -181,7 +181,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
             onChange={(e) => setFormData({ ...formData, career_start_year: e.target.value })}
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="career_end_year">Конец карьеры</Label>
           <Input
             id="career_end_year"
@@ -192,7 +192,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
         </div>
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="career">Карьера (через запятую)</Label>
         <Input
           id="career"
@@ -202,7 +202,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="ganres">Жанры (через запятую)</Label>
         <Input
           id="ganres"
@@ -212,7 +212,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="birthplace">Место рождения (через запятую)</Label>
         <Input
           id="birthplace"
@@ -222,7 +222,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="spouse">Супруг(а) (через запятую)</Label>
         <Input
           id="spouse"
@@ -232,7 +232,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="children">Дети (через запятую)</Label>
         <Input
           id="children"
@@ -242,7 +242,7 @@ export default function StuffForm({ stuff, onSubmit, onCancel }: StuffFormProps)
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="image">Ссылка на фото</Label>
         <div className="space-y-2">
           <Input

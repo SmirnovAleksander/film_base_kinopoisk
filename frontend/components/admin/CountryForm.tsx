@@ -32,7 +32,7 @@ export default function CountryForm({ country, onSubmit, onCancel }: CountryForm
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="name">Название страны</Label>
         <Input
           id="name"

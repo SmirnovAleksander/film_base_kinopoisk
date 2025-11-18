@@ -5,7 +5,6 @@ import { AdminAPI } from '@/lib/api';
 import { FilmWithDetails, Stuff, Genre, Country, Media, User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -55,12 +54,6 @@ export default function AdminPage() {
   const [editingCountry, setEditingCountry] = useState<Country | null>(null);
   const [editingMedia, setEditingMedia] = useState<Media | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [showFilmDialog, setShowFilmDialog] = useState(false);
-  const [showStuffDialog, setShowStuffDialog] = useState(false);
-  const [showGenreDialog, setShowGenreDialog] = useState(false);
-  const [showCountryDialog, setShowCountryDialog] = useState(false);
-  const [showMediaDialog, setShowMediaDialog] = useState(false);
-  const [showUserDialog, setShowUserDialog] = useState(false);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -118,7 +111,6 @@ export default function AdminPage() {
         await AdminAPI.createFilm(filmData);
         showMessage('Фильм создан');
       }
-      setShowFilmDialog(false);
       setEditingFilm(null);
       loadData();
     } catch (error) {
@@ -136,7 +128,6 @@ export default function AdminPage() {
         await AdminAPI.createStuff(stuffData);
         showMessage('Участник создан');
       }
-      setShowStuffDialog(false);
       setEditingStuff(null);
       loadData();
     } catch (error) {
@@ -176,7 +167,6 @@ export default function AdminPage() {
         await AdminAPI.createGenre(genreData);
         showMessage('Жанр создан');
       }
-      setShowGenreDialog(false);
       setEditingGenre(null);
       loadData();
     } catch (error) {
@@ -194,7 +184,6 @@ export default function AdminPage() {
         await AdminAPI.createCountry(countryData);
         showMessage('Страна создана');
       }
-      setShowCountryDialog(false);
       setEditingCountry(null);
       loadData();
     } catch (error) {
@@ -234,7 +223,6 @@ export default function AdminPage() {
         await AdminAPI.createMedia(mediaData);
         showMessage('Медиа создано');
       }
-      setShowMediaDialog(false);
       setEditingMedia(null);
       loadData();
     } catch (error) {
@@ -263,7 +251,6 @@ export default function AdminPage() {
         await AdminAPI.createUser(userData);
         showMessage('Пользователь создан');
       }
-      setShowUserDialog(false);
       setEditingUser(null);
       loadData();
     } catch (error) {
@@ -339,41 +326,48 @@ export default function AdminPage() {
     );
   }
 
-  const renderFilmsContent = () => (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Film className="h-5 w-5" />
-                  Управление фильмами
-                </CardTitle>
-                <Dialog open={showFilmDialog} onOpenChange={setShowFilmDialog}>
-                  <DialogTrigger asChild>
-                    <Button onClick={() => setEditingFilm(null)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Добавить фильм
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[90vh]">
-                    <DialogHeader>
-                      <DialogTitle>
-                        {editingFilm ? 'Редактировать фильм' : 'Добавить фильм'}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <ScrollArea className="max-h-[70vh] pr-4">
-                      <FilmForm
-                        film={editingFilm}
-                        onSubmit={handleFilmSubmit}
-                        onCancel={() => setShowFilmDialog(false)}
-                      />
-                    </ScrollArea>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[600px]">
-                <Table>
+  const renderFilmsContent = () => {
+    if (editingFilm !== null) {
+      return (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Film className="h-5 w-5" />
+                {editingFilm ? 'Редактировать фильм' : 'Добавить фильм'}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea>
+              <FilmForm
+                film={editingFilm}
+                onSubmit={handleFilmSubmit}
+                onCancel={() => setEditingFilm(null)}
+              />
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Film className="h-5 w-5" />
+              Управление фильмами
+            </CardTitle>
+            <Button onClick={() => setEditingFilm(null)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Добавить фильм
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[600px]">
+            <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>ID</TableHead>
@@ -471,10 +465,7 @@ export default function AdminPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                setEditingFilm(film);
-                                setShowFilmDialog(true);
-                              }}
+                              onClick={() => setEditingFilm(film)}
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
@@ -494,41 +485,49 @@ export default function AdminPage() {
               </ScrollArea>
             </CardContent>
           </Card>
-  );
-        
-  const renderStuffContent = () => (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Управление участниками
-                </CardTitle>
-                <Dialog open={showStuffDialog} onOpenChange={setShowStuffDialog}>
-                  <DialogTrigger asChild>
-                    <Button onClick={() => setEditingStuff(null)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Добавить участника
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[90vh]">
-                    <DialogHeader>
-                      <DialogTitle>
-                        {editingStuff ? 'Редактировать участника' : 'Добавить участника'}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <ScrollArea className="max-h-[70vh] pr-4">
-                      <StuffForm
-                        stuff={editingStuff}
-                        onSubmit={handleStuffSubmit}
-                        onCancel={() => setShowStuffDialog(false)}
-                      />
-                    </ScrollArea>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </CardHeader>
-            <CardContent>
+      );
+    };
+
+  const renderStuffContent = () => {
+    if (editingStuff !== null) {
+      return (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                {editingStuff ? 'Редактировать участника' : 'Добавить участника'}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea>
+              <StuffForm
+                stuff={editingStuff}
+                onSubmit={handleStuffSubmit}
+                onCancel={() => setEditingStuff(null)}
+              />
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Управление участниками
+            </CardTitle>
+            <Button onClick={() => setEditingStuff(null)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Добавить участника
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
               <ScrollArea className="h-[600px]">
                 <Table>
                   <TableHeader>
@@ -626,10 +625,7 @@ export default function AdminPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                setEditingStuff(person);
-                                setShowStuffDialog(true);
-                              }}
+                              onClick={() => setEditingStuff(person)}
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
@@ -649,41 +645,49 @@ export default function AdminPage() {
               </ScrollArea>
             </CardContent>
           </Card>
-  );
+      );
+    };
 
-  const renderGenresContent = () => (
-    <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Tag className="h-5 w-5" />
-                  Управление жанрами
-                </CardTitle>
-                <Dialog open={showGenreDialog} onOpenChange={setShowGenreDialog}>
-                  <DialogTrigger asChild>
-                    <Button onClick={() => setEditingGenre(null)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Добавить жанр
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle>
-                        {editingGenre ? 'Редактировать жанр' : 'Добавить жанр'}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <ScrollArea className="max-h-[70vh] pr-4">
-                      <GenreForm
-                        genre={editingGenre}
-                        onSubmit={handleGenreSubmit}
-                        onCancel={() => setShowGenreDialog(false)}
-                      />
-                    </ScrollArea>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </CardHeader>
-            <CardContent>
+  const renderGenresContent = () => {
+    if (editingGenre !== null) {
+      return (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Tag className="h-5 w-5" />
+                {editingGenre ? 'Редактировать жанр' : 'Добавить жанр'}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea>
+              <GenreForm
+                genre={editingGenre}
+                onSubmit={handleGenreSubmit}
+                onCancel={() => setEditingGenre(null)}
+              />
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Tag className="h-5 w-5" />
+              Управление жанрами
+            </CardTitle>
+            <Button onClick={() => setEditingGenre(null)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Добавить жанр
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
               <ScrollArea className="h-[600px]">
                 <Table>
                   <TableHeader>
@@ -709,10 +713,7 @@ export default function AdminPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                setEditingGenre(genre);
-                                setShowGenreDialog(true);
-                              }}
+                              onClick={() => setEditingGenre(genre)}
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
@@ -732,41 +733,49 @@ export default function AdminPage() {
               </ScrollArea>
             </CardContent>
           </Card>
-  );
+      );
+    };
 
-  const renderCountriesContent = () => (
-    <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Globe className="h-5 w-5" />
-                  Управление странами
-                </CardTitle>
-                <Dialog open={showCountryDialog} onOpenChange={setShowCountryDialog}>
-                  <DialogTrigger asChild>
-                    <Button onClick={() => setEditingCountry(null)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Добавить страну
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle>
-                        {editingCountry ? 'Редактировать страну' : 'Добавить страну'}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <ScrollArea className="max-h-[70vh] pr-4">
-                      <CountryForm
-                        country={editingCountry}
-                        onSubmit={handleCountrySubmit}
-                        onCancel={() => setShowCountryDialog(false)}
-                      />
-                    </ScrollArea>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </CardHeader>
-            <CardContent>
+  const renderCountriesContent = () => {
+    if (editingCountry !== null) {
+      return (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                {editingCountry ? 'Редактировать страну' : 'Добавить страну'}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea>
+              <CountryForm
+                country={editingCountry}
+                onSubmit={handleCountrySubmit}
+                onCancel={() => setEditingCountry(null)}
+              />
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              Управление странами
+            </CardTitle>
+            <Button onClick={() => setEditingCountry(null)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Добавить страну
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
               <ScrollArea className="h-[600px]">
                 <Table>
                   <TableHeader>
@@ -792,10 +801,7 @@ export default function AdminPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                setEditingCountry(country);
-                                setShowCountryDialog(true);
-                              }}
+                              onClick={() => setEditingCountry(country)}
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
@@ -815,41 +821,49 @@ export default function AdminPage() {
               </ScrollArea>
             </CardContent>
           </Card>
-  );
+      );
+    };
 
-  const renderMediaContent = () => (
-    <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Newspaper className="h-5 w-5" />
-                  Управление медиа
-                </CardTitle>
-                <Dialog open={showMediaDialog} onOpenChange={setShowMediaDialog}>
-                  <DialogTrigger asChild>
-                    <Button onClick={() => setEditingMedia(null)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Добавить медиа
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[90vh]">
-                    <DialogHeader>
-                      <DialogTitle>
-                        {editingMedia ? 'Редактировать медиа' : 'Добавить медиа'}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <ScrollArea className="max-h-[70vh] pr-4">
-                      <MediaForm
-                        media={editingMedia}
-                        onSubmit={handleMediaSubmit}
-                        onCancel={() => setShowMediaDialog(false)}
-                      />
-                    </ScrollArea>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </CardHeader>
-            <CardContent>
+  const renderMediaContent = () => {
+    if (editingMedia !== null) {
+      return (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Newspaper className="h-5 w-5" />
+                {editingMedia ? 'Редактировать медиа' : 'Добавить медиа'}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea>
+              <MediaForm
+                media={editingMedia}
+                onSubmit={handleMediaSubmit}
+                onCancel={() => setEditingMedia(null)}
+              />
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Newspaper className="h-5 w-5" />
+              Управление медиа
+            </CardTitle>
+            <Button onClick={() => setEditingMedia(null)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Добавить медиа
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
               <ScrollArea className="h-[600px]">
                 <Table>
                   <TableHeader>
@@ -913,10 +927,7 @@ export default function AdminPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                setEditingMedia(item);
-                                setShowMediaDialog(true);
-                              }}
+                              onClick={() => setEditingMedia(item)}
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
@@ -936,41 +947,49 @@ export default function AdminPage() {
               </ScrollArea>
             </CardContent>
           </Card>
-  );
+      );
+    };
 
-  const renderUsersContent = () => (
-    <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <UserCog className="h-5 w-5" />
-                  Управление пользователями
-                </CardTitle>
-                <Dialog open={showUserDialog} onOpenChange={setShowUserDialog}>
-                  <DialogTrigger asChild>
-                    <Button onClick={() => setEditingUser(null)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Добавить пользователя
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[90vh]">
-                    <DialogHeader>
-                      <DialogTitle>
-                        {editingUser ? 'Редактировать пользователя' : 'Добавить пользователя'}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <ScrollArea className="max-h-[70vh] pr-4">
-                      <UserForm
-                        user={editingUser}
-                        onSubmit={handleUserSubmit}
-                        onCancel={() => setShowUserDialog(false)}
-                      />
-                    </ScrollArea>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </CardHeader>
-            <CardContent>
+  const renderUsersContent = () => {
+    if (editingUser !== null) {
+      return (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <UserCog className="h-5 w-5" />
+                {editingUser ? 'Редактировать пользователя' : 'Добавить пользователя'}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea>
+              <UserForm
+                user={editingUser}
+                onSubmit={handleUserSubmit}
+                onCancel={() => setEditingUser(null)}
+              />
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <UserCog className="h-5 w-5" />
+              Управление пользователями
+            </CardTitle>
+            <Button onClick={() => setEditingUser(null)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Добавить пользователя
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
               <ScrollArea className="h-[600px]">
                 <Table>
                   <TableHeader>
@@ -1031,10 +1050,7 @@ export default function AdminPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                setEditingUser(user);
-                                setShowUserDialog(true);
-                              }}
+                              onClick={() => setEditingUser(user)}
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
@@ -1054,7 +1070,8 @@ export default function AdminPage() {
               </ScrollArea>
             </CardContent>
           </Card>
-  );
+      );
+    };
 
   return (
     <SidebarProvider>

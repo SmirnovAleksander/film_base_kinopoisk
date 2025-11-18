@@ -64,7 +64,7 @@ export default function MediaForm({ media, onSubmit, onCancel }: MediaFormProps)
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="type">Тип контента</Label>
         <Select
           value={formData.type}
@@ -82,7 +82,7 @@ export default function MediaForm({ media, onSubmit, onCancel }: MediaFormProps)
         </Select>
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="url">URL</Label>
         <Input
           id="url"
@@ -92,7 +92,7 @@ export default function MediaForm({ media, onSubmit, onCancel }: MediaFormProps)
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="title">Заголовок</Label>
         <Input
           id="title"
@@ -102,7 +102,7 @@ export default function MediaForm({ media, onSubmit, onCancel }: MediaFormProps)
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="image">Ссылка на изображение</Label>
         <div className="space-y-2">
           <Input
@@ -129,7 +129,7 @@ export default function MediaForm({ media, onSubmit, onCancel }: MediaFormProps)
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="category">Категория</Label>
           <Input
             id="category"
@@ -138,7 +138,7 @@ export default function MediaForm({ media, onSubmit, onCancel }: MediaFormProps)
             placeholder="Категория"
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="card_type">Тип карточки</Label>
           <Input
             id="card_type"
@@ -149,7 +149,7 @@ export default function MediaForm({ media, onSubmit, onCancel }: MediaFormProps)
         </div>
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="date">Дата публикации</Label>
         <Input
           id="date"

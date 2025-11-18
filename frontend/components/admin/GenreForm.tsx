@@ -32,7 +32,7 @@ export default function GenreForm({ genre, onSubmit, onCancel }: GenreFormProps)
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
+      <div className="space-y-2">
         <Label htmlFor="name">Название жанра</Label>
         <Input
           id="name"

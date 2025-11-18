@@ -71,7 +71,7 @@ export default function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
@@ -81,7 +81,7 @@ export default function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
             required
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="username">Имя пользователя</Label>
           <Input
             id="username"
@@ -93,7 +93,7 @@ export default function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
       </div>
 
       {!user && (
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="password">Пароль</Label>
           <Input
             id="password"
@@ -107,7 +107,7 @@ export default function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
       )}
 
       {user && (
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="password">Новый пароль (оставьте пустым, чтобы не менять)</Label>
           <Input
             id="password"
@@ -120,7 +120,7 @@ export default function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
       )}
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="first_name">Имя</Label>
           <Input
             id="first_name"
@@ -128,7 +128,7 @@ export default function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
             onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="last_name">Фамилия</Label>
           <Input
             id="last_name"
