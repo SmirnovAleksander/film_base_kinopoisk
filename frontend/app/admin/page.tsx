@@ -48,12 +48,12 @@ export default function AdminPage() {
   const [users, setUsers] = useState<User[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>('#films');
-  const [editingFilm, setEditingFilm] = useState<FilmWithDetails | null>(null);
-  const [editingStuff, setEditingStuff] = useState<Stuff | null>(null);
-  const [editingGenre, setEditingGenre] = useState<Genre | null>(null);
-  const [editingCountry, setEditingCountry] = useState<Country | null>(null);
-  const [editingMedia, setEditingMedia] = useState<Media | null>(null);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingFilm, setEditingFilm] = useState<FilmWithDetails | null | undefined>(undefined);
+  const [editingStuff, setEditingStuff] = useState<Stuff | null | undefined>(undefined);
+  const [editingGenre, setEditingGenre] = useState<Genre | null | undefined>(undefined);
+  const [editingCountry, setEditingCountry] = useState<Country | null | undefined>(undefined);
+  const [editingMedia, setEditingMedia] = useState<Media | null | undefined>(undefined);
+  const [editingUser, setEditingUser] = useState<User | null | undefined>(undefined);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -111,7 +111,7 @@ export default function AdminPage() {
         await AdminAPI.createFilm(filmData);
         showMessage('Фильм создан');
       }
-      setEditingFilm(null);
+      setEditingFilm(undefined);
       loadData();
     } catch (error) {
       console.error('Error saving film:', error);
@@ -128,7 +128,7 @@ export default function AdminPage() {
         await AdminAPI.createStuff(stuffData);
         showMessage('Участник создан');
       }
-      setEditingStuff(null);
+      setEditingStuff(undefined);
       loadData();
     } catch (error) {
       console.error('Error saving stuff:', error);
@@ -167,7 +167,7 @@ export default function AdminPage() {
         await AdminAPI.createGenre(genreData);
         showMessage('Жанр создан');
       }
-      setEditingGenre(null);
+      setEditingGenre(undefined);
       loadData();
     } catch (error) {
       console.error('Error saving genre:', error);
@@ -184,7 +184,7 @@ export default function AdminPage() {
         await AdminAPI.createCountry(countryData);
         showMessage('Страна создана');
       }
-      setEditingCountry(null);
+      setEditingCountry(undefined);
       loadData();
     } catch (error) {
       console.error('Error saving country:', error);
@@ -223,7 +223,7 @@ export default function AdminPage() {
         await AdminAPI.createMedia(mediaData);
         showMessage('Медиа создано');
       }
-      setEditingMedia(null);
+      setEditingMedia(undefined);
       loadData();
     } catch (error) {
       console.error('Error saving media:', error);
@@ -251,7 +251,7 @@ export default function AdminPage() {
         await AdminAPI.createUser(userData);
         showMessage('Пользователь создан');
       }
-      setEditingUser(null);
+      setEditingUser(undefined);
       loadData();
     } catch (error) {
       console.error('Error saving user:', error);
@@ -327,23 +327,24 @@ export default function AdminPage() {
   }
 
   const renderFilmsContent = () => {
-    if (editingFilm !== null) {
+    if (editingFilm !== undefined) {
+      const isCreating = editingFilm === null;
       return (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Film className="h-5 w-5" />
-                {editingFilm ? 'Редактировать фильм' : 'Добавить фильм'}
+                {isCreating ? 'Добавить фильм' : 'Редактировать фильм'}
               </CardTitle>
             </div>
           </CardHeader>
           <CardContent>
             <ScrollArea>
               <FilmForm
-                film={editingFilm}
+                film={isCreating ? null : editingFilm}
                 onSubmit={handleFilmSubmit}
-                onCancel={() => setEditingFilm(null)}
+                onCancel={() => setEditingFilm(undefined)}
               />
             </ScrollArea>
           </CardContent>
@@ -352,22 +353,22 @@ export default function AdminPage() {
     }
 
     return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Film className="h-5 w-5" />
-              Управление фильмами
-            </CardTitle>
-            <Button onClick={() => setEditingFilm(null)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Добавить фильм
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[600px]">
-            <Table>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Film className="h-5 w-5" />
+                  Управление фильмами
+                </CardTitle>
+                    <Button onClick={() => setEditingFilm(null)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Добавить фильм
+                    </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[600px]">
+                <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>ID</TableHead>
@@ -489,7 +490,7 @@ export default function AdminPage() {
     };
 
   const renderStuffContent = () => {
-    if (editingStuff !== null) {
+    if (editingStuff !== null && editingStuff !== undefined) {
       return (
         <Card>
           <CardHeader>
@@ -505,7 +506,31 @@ export default function AdminPage() {
               <StuffForm
                 stuff={editingStuff}
                 onSubmit={handleStuffSubmit}
-                onCancel={() => setEditingStuff(null)}
+                onCancel={() => setEditingStuff(undefined)}
+              />
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (editingStuff === null) {
+      return (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Добавить участника
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea>
+              <StuffForm
+                stuff={null}
+                onSubmit={handleStuffSubmit}
+                onCancel={() => setEditingStuff(undefined)}
               />
             </ScrollArea>
           </CardContent>
@@ -527,7 +552,7 @@ export default function AdminPage() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+            <CardContent>
               <ScrollArea className="h-[600px]">
                 <Table>
                   <TableHeader>
@@ -649,14 +674,14 @@ export default function AdminPage() {
     };
 
   const renderGenresContent = () => {
-    if (editingGenre !== null) {
+    if (editingGenre !== null && editingGenre !== undefined) {
       return (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Tag className="h-5 w-5" />
-                {editingGenre ? 'Редактировать жанр' : 'Добавить жанр'}
+                Редактировать жанр
               </CardTitle>
             </div>
           </CardHeader>
@@ -665,7 +690,31 @@ export default function AdminPage() {
               <GenreForm
                 genre={editingGenre}
                 onSubmit={handleGenreSubmit}
-                onCancel={() => setEditingGenre(null)}
+                onCancel={() => setEditingGenre(undefined)}
+              />
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (editingGenre === null) {
+      return (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Tag className="h-5 w-5" />
+                Добавить жанр
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea>
+              <GenreForm
+                genre={null}
+                onSubmit={handleGenreSubmit}
+                onCancel={() => setEditingGenre(undefined)}
               />
             </ScrollArea>
           </CardContent>
@@ -737,14 +786,14 @@ export default function AdminPage() {
     };
 
   const renderCountriesContent = () => {
-    if (editingCountry !== null) {
+    if (editingCountry !== null && editingCountry !== undefined) {
       return (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Globe className="h-5 w-5" />
-                {editingCountry ? 'Редактировать страну' : 'Добавить страну'}
+                Редактировать страну
               </CardTitle>
             </div>
           </CardHeader>
@@ -753,7 +802,31 @@ export default function AdminPage() {
               <CountryForm
                 country={editingCountry}
                 onSubmit={handleCountrySubmit}
-                onCancel={() => setEditingCountry(null)}
+                onCancel={() => setEditingCountry(undefined)}
+              />
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (editingCountry === null) {
+      return (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                Добавить страну
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea>
+              <CountryForm
+                country={null}
+                onSubmit={handleCountrySubmit}
+                onCancel={() => setEditingCountry(undefined)}
               />
             </ScrollArea>
           </CardContent>
@@ -825,14 +898,14 @@ export default function AdminPage() {
     };
 
   const renderMediaContent = () => {
-    if (editingMedia !== null) {
+    if (editingMedia !== null && editingMedia !== undefined) {
       return (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Newspaper className="h-5 w-5" />
-                {editingMedia ? 'Редактировать медиа' : 'Добавить медиа'}
+                Редактировать медиа
               </CardTitle>
             </div>
           </CardHeader>
@@ -841,7 +914,31 @@ export default function AdminPage() {
               <MediaForm
                 media={editingMedia}
                 onSubmit={handleMediaSubmit}
-                onCancel={() => setEditingMedia(null)}
+                onCancel={() => setEditingMedia(undefined)}
+              />
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (editingMedia === null) {
+      return (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Newspaper className="h-5 w-5" />
+                Добавить медиа
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea>
+              <MediaForm
+                media={null}
+                onSubmit={handleMediaSubmit}
+                onCancel={() => setEditingMedia(undefined)}
               />
             </ScrollArea>
           </CardContent>
@@ -951,14 +1048,14 @@ export default function AdminPage() {
     };
 
   const renderUsersContent = () => {
-    if (editingUser !== null) {
+    if (editingUser !== null && editingUser !== undefined) {
       return (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <UserCog className="h-5 w-5" />
-                {editingUser ? 'Редактировать пользователя' : 'Добавить пользователя'}
+                Редактировать пользователя
               </CardTitle>
             </div>
           </CardHeader>
@@ -967,7 +1064,31 @@ export default function AdminPage() {
               <UserForm
                 user={editingUser}
                 onSubmit={handleUserSubmit}
-                onCancel={() => setEditingUser(null)}
+                onCancel={() => setEditingUser(undefined)}
+              />
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (editingUser === null) {
+      return (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <UserCog className="h-5 w-5" />
+                Добавить пользователя
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea>
+              <UserForm
+                user={null}
+                onSubmit={handleUserSubmit}
+                onCancel={() => setEditingUser(undefined)}
               />
             </ScrollArea>
           </CardContent>
