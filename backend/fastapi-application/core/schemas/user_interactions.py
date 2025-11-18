@@ -100,23 +100,3 @@ class UserRatingsResponse(BaseModel):
     total_count: int
 
 
-class UserFilmHistoryRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    
-    visited_at: datetime
-    film: FilmRead
-
-
-class UserFilmHistoryResponse(BaseModel):
-    """Ответ для истории просмотров"""
-    history: List[UserFilmHistoryRead]
-    total: int
-
-
-class UserFilmHistoryStats(BaseModel):
-    """Статистика истории просмотров"""
-    total_visits: int
-    visits_7d: int
-    visits_30d: int
-    favorite_genre: Optional[str] = None
-    favorite_genre_count: int = 0

@@ -8,7 +8,6 @@ from .films import router as films_router
 from .bookmarks import router as bookmarks_router
 from .comments import router as comments_router
 from .ratings import router as ratings_router
-from .history import router as history_router
 from .media import router as media_router
 from .stuff import router as stuff_router
 from .admin import router as admin_router
@@ -29,7 +28,6 @@ router.include_router(films_router)
 router.include_router(bookmarks_router)
 router.include_router(comments_router)
 router.include_router(ratings_router)
-router.include_router(history_router)
 router.include_router(media_router)
 router.include_router(stuff_router)
 

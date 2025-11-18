@@ -7,7 +7,7 @@ from .base import Base
 from .mixins.int_id_pk import IntIdPkMixin
 
 if TYPE_CHECKING:
-    from .user_interactions import Bookmark, Comment, UserFilmRating, UserFilmHistory
+    from .user_interactions import Bookmark, Comment, UserFilmRating
 
 
 class Film(Base, IntIdPkMixin):
@@ -54,7 +54,6 @@ class Film(Base, IntIdPkMixin):
     bookmarks: Mapped[List["Bookmark"]] = relationship("Bookmark", back_populates="film", cascade="all, delete-orphan")
     comments: Mapped[List["Comment"]] = relationship("Comment", back_populates="film", cascade="all, delete-orphan")
     ratings: Mapped[List["UserFilmRating"]] = relationship("UserFilmRating", back_populates="film", cascade="all, delete-orphan")
-    history: Mapped[List["UserFilmHistory"]] = relationship("UserFilmHistory", back_populates="film", cascade="all, delete-orphan")
     stills: Mapped[List["FilmStill"]] = relationship("FilmStill", back_populates="film", cascade="all, delete-orphan")
     watch_providers: Mapped[List["FilmWatchProvider"]] = relationship("FilmWatchProvider", back_populates="film", cascade="all, delete-orphan")
     similar_films: Mapped[List["SimilarFilm"]] = relationship("SimilarFilm", back_populates="film", cascade="all, delete-orphan")

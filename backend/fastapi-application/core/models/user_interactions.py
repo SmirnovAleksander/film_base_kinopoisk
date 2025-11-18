@@ -66,18 +66,3 @@ class UserFilmRating(Base, IntIdPkMixin):
     )
 
 
-class UserFilmHistory(Base, IntIdPkMixin):
-    """Модель истории просмотров пользователя"""
-    __tablename__ = "user_film_history"
-    
-    user_id: Mapped[UserIdType] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    film_id: Mapped[int] = mapped_column(Integer, ForeignKey("film.id", ondelete="CASCADE"))
-    visited_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-    
-    # Связи
-    user: Mapped["User"] = relationship("User", back_populates="history")
-    film: Mapped["Film"] = relationship("Film", back_populates="history")
-    
-    __table_args__ = (
-        UniqueConstraint("user_id", "film_id", name="uq_history_user_film"),
-    )

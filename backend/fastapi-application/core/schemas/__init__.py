@@ -48,9 +48,6 @@ __all__ = (
     "UserFilmRatingRead",
     "FilmAverageRatingRead",
     "UserRatingsResponse",
-    "UserFilmHistoryRead",
-    "UserFilmHistoryResponse",
-    "UserFilmHistoryStats",
     
     # Media schemas
     "MediaRead",
@@ -126,9 +123,6 @@ from .user_interactions import (
     UserFilmRatingRead,
     FilmAverageRatingRead,
     UserRatingsResponse,
-    UserFilmHistoryRead,
-    UserFilmHistoryResponse,
-    UserFilmHistoryStats,
 )
 
 from .media import (

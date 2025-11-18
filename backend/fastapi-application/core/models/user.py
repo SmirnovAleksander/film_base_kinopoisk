@@ -14,7 +14,7 @@ from core.types.user_id import UserIdType
 
 if typing.TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
-    from .user_interactions import Bookmark, Comment, UserFilmRating, UserFilmHistory
+    from .user_interactions import Bookmark, Comment, UserFilmRating
 
 class User(Base, IntIdPkMixin, SQLAlchemyBaseUserTable[UserIdType]):
     # Дополнительные поля пользователя
@@ -28,7 +28,6 @@ class User(Base, IntIdPkMixin, SQLAlchemyBaseUserTable[UserIdType]):
     bookmarks: Mapped[List["Bookmark"]] = relationship("Bookmark", back_populates="user")
     comments: Mapped[List["Comment"]] = relationship("Comment", back_populates="user")
     ratings: Mapped[List["UserFilmRating"]] = relationship("UserFilmRating", back_populates="user")
-    history: Mapped[List["UserFilmHistory"]] = relationship("UserFilmHistory", back_populates="user")
 
     @classmethod
     def get_db(cls, session: "AsyncSession"):
