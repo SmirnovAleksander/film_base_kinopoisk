@@ -3,33 +3,15 @@
 import { useState, useEffect } from 'react';
 import { AdminAPI } from '@/lib/api';
 import { FilmWithDetails, Stuff, Genre, Country, Media, User } from '@/lib/types';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Edit, 
-  Trash2, 
-  Plus, 
-  Film, 
-  Users, 
-  Star, 
-  Calendar, 
-  Clock,
-  Tag,
-  Globe,
-  Newspaper,
-  UserCog,
-} from 'lucide-react';
-import StuffForm from '@/components/admin/StuffForm';
-import FilmForm from '@/components/admin/FilmForm';
-import GenreForm from '@/components/admin/GenreForm';
-import CountryForm from '@/components/admin/CountryForm';
-import MediaForm from '@/components/admin/MediaForm';
-import UserForm from '@/components/admin/UserForm';
+import { Card, CardContent } from '@/components/ui/card';
 import { AdminSidebar } from '@/components/admin/admin-sidebar';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import FilmsSection from '@/components/admin/sections/FilmsSection';
+import StuffSection from '@/components/admin/sections/StuffSection';
+import GenresSection from '@/components/admin/sections/GenresSection';
+import CountriesSection from '@/components/admin/sections/CountriesSection';
+import MediaSection from '@/components/admin/sections/MediaSection';
+import UsersSection from '@/components/admin/sections/UsersSection';
 
 interface FilmsResponse extends Array<FilmWithDetails> {}
 interface StuffResponse {
@@ -270,43 +252,78 @@ export default function AdminPage() {
     }
   };
 
-  const formatArrayField = (field: string[] | null | undefined) => {
-    if (!field || field.length === 0) return '-';
-    return field.join(', ');
-  };
-
-  const formatRating = (rating: number | null | undefined) => {
-    return rating ? rating.toFixed(1) : '-';
-  };
-
-  const formatYear = (year: number | null | undefined) => {
-    return year || '-';
-  };
-
-  const formatDuration = (duration: string | null | undefined) => {
-    return duration || '-';
-  };
-
-  const formatBoxOffice = (amount: string | null | undefined) => {
-    return amount || '-';
-  };
-
   const renderContent = () => {
     switch (activeTab) {
       case '#films':
-        return renderFilmsContent();
+        return (
+          <FilmsSection
+            films={films}
+            editingFilm={editingFilm}
+            setEditingFilm={setEditingFilm}
+            onSubmit={handleFilmSubmit}
+            onDelete={handleDeleteFilm}
+          />
+        );
       case '#stuff':
-        return renderStuffContent();
+        return (
+          <StuffSection
+            stuff={stuff}
+            editingStuff={editingStuff}
+            setEditingStuff={setEditingStuff}
+            onSubmit={handleStuffSubmit}
+            onDelete={handleDeleteStuff}
+          />
+        );
       case '#genres':
-        return renderGenresContent();
+        return (
+          <GenresSection
+            genres={genres}
+            editingGenre={editingGenre}
+            setEditingGenre={setEditingGenre}
+            onSubmit={handleGenreSubmit}
+            onDelete={handleDeleteGenre}
+          />
+        );
       case '#countries':
-        return renderCountriesContent();
+        return (
+          <CountriesSection
+            countries={countries}
+            editingCountry={editingCountry}
+            setEditingCountry={setEditingCountry}
+            onSubmit={handleCountrySubmit}
+            onDelete={handleDeleteCountry}
+          />
+        );
       case '#media':
-        return renderMediaContent();
+        return (
+          <MediaSection
+            media={media}
+            editingMedia={editingMedia}
+            setEditingMedia={setEditingMedia}
+            onSubmit={handleMediaSubmit}
+            onDelete={handleDeleteMedia}
+          />
+        );
       case '#users':
-        return renderUsersContent();
+        return (
+          <UsersSection
+            users={users}
+            editingUser={editingUser}
+            setEditingUser={setEditingUser}
+            onSubmit={handleUserSubmit}
+            onDelete={handleDeleteUser}
+          />
+        );
       default:
-        return renderFilmsContent();
+        return (
+          <FilmsSection
+            films={films}
+            editingFilm={editingFilm}
+            setEditingFilm={setEditingFilm}
+            onSubmit={handleFilmSubmit}
+            onDelete={handleDeleteFilm}
+          />
+        );
     }
   };
 
@@ -326,874 +343,7 @@ export default function AdminPage() {
     );
   }
 
-  const renderFilmsContent = () => {
-    if (editingFilm !== undefined) {
-      const isCreating = editingFilm === null;
-      return (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Film className="h-5 w-5" />
-                {isCreating ? 'Добавить фильм' : 'Редактировать фильм'}
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea>
-              <FilmForm
-                film={isCreating ? null : editingFilm}
-                onSubmit={handleFilmSubmit}
-                onCancel={() => setEditingFilm(undefined)}
-              />
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    return (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Film className="h-5 w-5" />
-                  Управление фильмами
-                </CardTitle>
-                    <Button onClick={() => setEditingFilm(null)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Добавить фильм
-                    </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[600px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>kpID</TableHead>
-                      <TableHead>Название</TableHead>
-                      <TableHead>Оригинальное название</TableHead>
-                      <TableHead>Год</TableHead>
-                      <TableHead>Жанры</TableHead>
-                      <TableHead>Страны</TableHead>
-                      <TableHead>Рейтинг КП</TableHead>
-                      <TableHead>Рейтинг IMDb</TableHead>
-                      <TableHead>Длительность</TableHead>
-                      <TableHead>Премьера</TableHead>
-                      <TableHead>Действия</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {films?.map((film: FilmWithDetails) => (
-                      <TableRow key={film.id}>
-                        <TableCell className="font-mono text-sm">
-                          {film.id}
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {film.kinopoisk_id}
-                        </TableCell>
-                        <TableCell className="font-medium max-w-[200px]">
-                          <div className="truncate" title={film.title || ''}>
-                            {film.title || '-'}
-                          </div>
-                        </TableCell>
-                        <TableCell className="max-w-[200px]">
-                          <div className="truncate" title={film.original_title || ''}>
-                            {film.original_title || '-'}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">
-                            {formatYear(film.year)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="max-w-[150px]">
-                          <div className="flex flex-wrap gap-1">
-                            {film.genres?.slice(0, 2).map((genre: { id: number; name: string }) => (
-                              <Badge key={genre.id} variant="outline" className="text-xs">
-                                {genre.name}
-                              </Badge>
-                            ))}
-                            {film.genres && film.genres.length > 2 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{film.genres.length - 2}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="max-w-[120px]">
-                          <div className="flex flex-wrap gap-1">
-                            {film.countries?.slice(0, 2).map((country: { id: number; name: string }) => (
-                              <Badge key={country.id} variant="outline" className="text-xs">
-                                {country.name}
-                              </Badge>
-                            ))}
-                            {film.countries && film.countries.length > 2 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{film.countries.length - 2}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Star className="h-3 w-3 text-yellow-500" />
-                            {formatRating(film.rating_kp)}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Star className="h-3 w-3 text-blue-500" />
-                            {formatRating(film.rating_imdb)}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3 text-gray-500" />
-                            {formatDuration(film.duration)}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3 text-gray-500" />
-                            {film.ru_premiere || '-'}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setEditingFilm(film)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeleteFilm(film.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-      );
-    };
-
-  const renderStuffContent = () => {
-    if (editingStuff !== null && editingStuff !== undefined) {
-      return (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                {editingStuff ? 'Редактировать участника' : 'Добавить участника'}
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea>
-              <StuffForm
-                stuff={editingStuff}
-                onSubmit={handleStuffSubmit}
-                onCancel={() => setEditingStuff(undefined)}
-              />
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    if (editingStuff === null) {
-      return (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Добавить участника
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea>
-              <StuffForm
-                stuff={null}
-                onSubmit={handleStuffSubmit}
-                onCancel={() => setEditingStuff(undefined)}
-              />
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Управление участниками
-            </CardTitle>
-            <Button onClick={() => setEditingStuff(null)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Добавить участника
-            </Button>
-          </div>
-        </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[600px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>kpID</TableHead>
-                      <TableHead>Имя</TableHead>
-                      <TableHead>Оригинальное имя</TableHead>
-                      <TableHead>Карьера</TableHead>
-                      <TableHead>Жанры</TableHead>
-                      <TableHead>Возраст</TableHead>
-                      <TableHead>Год рождения</TableHead>
-                      <TableHead>Место рождения</TableHead>
-                      <TableHead>Фильмов</TableHead>
-                      <TableHead>Рост</TableHead>
-                      <TableHead>Действия</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {stuff?.items?.map((person: Stuff) => (
-                      <TableRow key={person.id}>
-                        <TableCell className="font-mono text-sm">
-                          {person.id}
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {person.kinopoisk_id}
-                        </TableCell>
-                        <TableCell className="font-medium max-w-[150px]">
-                          <div className="truncate" title={person.name || ''}>
-                            {person.name || '-'}
-                          </div>
-                        </TableCell>
-                        <TableCell className="max-w-[150px]">
-                          <div className="truncate" title={person.original_name || ''}>
-                            {person.original_name || '-'}
-                          </div>
-                        </TableCell>
-                        <TableCell className="max-w-[120px]">
-                          <div className="flex flex-wrap gap-1">
-                            {person.career?.slice(0, 2).map((career: string, index: number) => (
-                              <Badge key={index} variant="outline" className="text-xs">
-                                {career}
-                              </Badge>
-                            ))}
-                            {person.career && person.career.length > 2 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{person.career.length - 2}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="max-w-[100px]">
-                          <div className="flex flex-wrap gap-1">
-                            {person.ganres?.slice(0, 2).map((genre: string, index: number) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
-                                {genre}
-                              </Badge>
-                            ))}
-                            {person.ganres && person.ganres.length > 2 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{person.ganres.length - 2}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {person.age || '-'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3 text-gray-500" />
-                            {person.birthday_day_month || '-'}
-                          </div>
-                        </TableCell>
-                        <TableCell className="max-w-[100px]">
-                          <div className="truncate" title={formatArrayField(person.birthplace)}>
-                            {formatArrayField(person.birthplace)}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Film className="h-3 w-3 text-gray-500" />
-                            {person.total_films || '-'}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {person.height || '-'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setEditingStuff(person)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeleteStuff(person.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-      );
-    };
-
-  const renderGenresContent = () => {
-    if (editingGenre !== null && editingGenre !== undefined) {
-      return (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Tag className="h-5 w-5" />
-                Редактировать жанр
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea>
-              <GenreForm
-                genre={editingGenre}
-                onSubmit={handleGenreSubmit}
-                onCancel={() => setEditingGenre(undefined)}
-              />
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    if (editingGenre === null) {
-      return (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Tag className="h-5 w-5" />
-                Добавить жанр
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea>
-              <GenreForm
-                genre={null}
-                onSubmit={handleGenreSubmit}
-                onCancel={() => setEditingGenre(undefined)}
-              />
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Tag className="h-5 w-5" />
-              Управление жанрами
-            </CardTitle>
-            <Button onClick={() => setEditingGenre(null)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Добавить жанр
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-              <ScrollArea className="h-[600px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Название</TableHead>
-                      <TableHead>Действия</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {genres?.map((genre: Genre) => (
-                      <TableRow key={genre.id}>
-                        <TableCell className="font-mono text-sm">
-                          {genre.id}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          <Badge variant="outline" className="text-sm">
-                            {genre.name}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setEditingGenre(genre)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeleteGenre(genre.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-      );
-    };
-
-  const renderCountriesContent = () => {
-    if (editingCountry !== null && editingCountry !== undefined) {
-      return (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5" />
-                Редактировать страну
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea>
-              <CountryForm
-                country={editingCountry}
-                onSubmit={handleCountrySubmit}
-                onCancel={() => setEditingCountry(undefined)}
-              />
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    if (editingCountry === null) {
-      return (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5" />
-                Добавить страну
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea>
-              <CountryForm
-                country={null}
-                onSubmit={handleCountrySubmit}
-                onCancel={() => setEditingCountry(undefined)}
-              />
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Globe className="h-5 w-5" />
-              Управление странами
-            </CardTitle>
-            <Button onClick={() => setEditingCountry(null)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Добавить страну
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-              <ScrollArea className="h-[600px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Название</TableHead>
-                      <TableHead>Действия</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {countries?.map((country: Country) => (
-                      <TableRow key={country.id}>
-                        <TableCell className="font-mono text-sm">
-                          {country.id}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          <Badge variant="outline" className="text-sm">
-                            {country.name}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setEditingCountry(country)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeleteCountry(country.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-      );
-    };
-
-  const renderMediaContent = () => {
-    if (editingMedia !== null && editingMedia !== undefined) {
-      return (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Newspaper className="h-5 w-5" />
-                Редактировать медиа
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea>
-              <MediaForm
-                media={editingMedia}
-                onSubmit={handleMediaSubmit}
-                onCancel={() => setEditingMedia(undefined)}
-              />
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    if (editingMedia === null) {
-      return (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Newspaper className="h-5 w-5" />
-                Добавить медиа
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea>
-              <MediaForm
-                media={null}
-                onSubmit={handleMediaSubmit}
-                onCancel={() => setEditingMedia(undefined)}
-              />
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Newspaper className="h-5 w-5" />
-              Управление медиа
-            </CardTitle>
-            <Button onClick={() => setEditingMedia(null)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Добавить медиа
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-              <ScrollArea className="h-[600px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Тип</TableHead>
-                      <TableHead>Заголовок</TableHead>
-                      <TableHead>Категория</TableHead>
-                      <TableHead>Тип карточки</TableHead>
-                      <TableHead>Дата</TableHead>
-                      <TableHead>URL</TableHead>
-                      <TableHead>Действия</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {media?.map((item: Media) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-mono text-sm">
-                          {item.id}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {item.type || '-'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-medium max-w-[200px]">
-                          <div className="truncate" title={item.title || ''}>
-                            {item.title || '-'}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">
-                            {item.category || '-'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {item.card_type || '-'}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3 text-gray-500" />
-                            {item.date || '-'}
-                          </div>
-                        </TableCell>
-                        <TableCell className="max-w-[150px]">
-                          <div className="truncate" title={item.url || ''}>
-                            {item.url ? (
-                              <a 
-                                href={item.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-blue-500 hover:underline"
-                              >
-                                {item.url}
-                              </a>
-                            ) : '-'}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setEditingMedia(item)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeleteMedia(item.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-      );
-    };
-
-  const renderUsersContent = () => {
-    if (editingUser !== null && editingUser !== undefined) {
-      return (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <UserCog className="h-5 w-5" />
-                Редактировать пользователя
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea>
-              <UserForm
-                user={editingUser}
-                onSubmit={handleUserSubmit}
-                onCancel={() => setEditingUser(undefined)}
-              />
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    if (editingUser === null) {
-      return (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <UserCog className="h-5 w-5" />
-                Добавить пользователя
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea>
-              <UserForm
-                user={null}
-                onSubmit={handleUserSubmit}
-                onCancel={() => setEditingUser(undefined)}
-              />
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <UserCog className="h-5 w-5" />
-              Управление пользователями
-            </CardTitle>
-            <Button onClick={() => setEditingUser(null)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Добавить пользователя
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-              <ScrollArea className="h-[600px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Имя пользователя</TableHead>
-                      <TableHead>Имя</TableHead>
-                      <TableHead>Фамилия</TableHead>
-                      <TableHead>Активен</TableHead>
-                      <TableHead>Суперпользователь</TableHead>
-                      <TableHead>Подтвержден</TableHead>
-                      <TableHead>Дата создания</TableHead>
-                      <TableHead>Действия</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users?.map((user: User) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-mono text-sm">
-                          {user.id}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {user.email}
-                        </TableCell>
-                        <TableCell>
-                          {user.username}
-                        </TableCell>
-                        <TableCell>
-                          {user.first_name || '-'}
-                        </TableCell>
-                        <TableCell>
-                          {user.last_name || '-'}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={user.is_active ? "default" : "secondary"}>
-                            {user.is_active ? 'Да' : 'Нет'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={user.is_superuser ? "destructive" : "outline"}>
-                            {user.is_superuser ? 'Да' : 'Нет'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={user.is_verified ? "default" : "secondary"}>
-                            {user.is_verified ? 'Да' : 'Нет'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3 text-gray-500" />
-                            {new Date(user.created_at).toLocaleDateString('ru-RU')}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setEditingUser(user)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeleteUser(user.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-      );
-    };
-
+  
   return (
     <SidebarProvider>
       <AdminSidebar 
