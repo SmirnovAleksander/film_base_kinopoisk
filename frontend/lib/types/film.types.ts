@@ -221,3 +221,115 @@ export interface FilmStills {
   stills: Still[];
   wall: Still[];
 }
+
+// Типы для связанных сущностей фильма
+export interface FilmStill {
+  id: number;
+  film_id: number;
+  picture_id: string;
+  original_url: string;
+  source: string; // 'stills' или 'wall'
+}
+
+export interface FilmStillCreate {
+  film_id: number;
+  picture_id: string;
+  original_url: string;
+  source: string;
+}
+
+export interface FilmStillUpdate {
+  picture_id?: string | null;
+  original_url?: string | null;
+  source?: string | null;
+}
+
+export interface FilmWatchProviderRead {
+  id: number;
+  film_id: number;
+  name: string;
+  url: string;
+  logo?: string | null;
+}
+
+export interface FilmWatchProviderCreate {
+  film_id: number;
+  name: string;
+  url: string;
+  logo?: string | null;
+}
+
+export interface FilmWatchProviderUpdate {
+  film_id?: number | null;
+  name?: string | null;
+  url?: string | null;
+  logo?: string | null;
+}
+
+export interface SimilarFilmRead {
+  id: number;
+  film_id: number;
+  similar_film_id: string;
+  similar_film_title: string;
+  similar_film_year?: string | null;
+  similar_film_genres?: string[] | null;
+  similar_film_poster?: string | null;
+  similar_film_rating?: string | null;
+}
+
+export interface SimilarFilmCreate {
+  film_id: number;
+  similar_film_id: string;
+  similar_film_title: string;
+  similar_film_year?: string | null;
+  similar_film_genres?: string[] | null;
+  similar_film_poster?: string | null;
+  similar_film_rating?: string | null;
+}
+
+export interface SimilarFilmUpdate {
+  similar_film_title?: string | null;
+  similar_film_year?: string | null;
+  similar_film_genres?: string[] | null;
+  similar_film_poster?: string | null;
+  similar_film_rating?: string | null;
+}
+
+export interface FilmGenreRead {
+  id: number;
+  film_id: number;
+  genre_id: number;
+}
+
+export interface FilmGenreCreate {
+  film_id: number;
+  genre_id: number;
+}
+
+export interface FilmCountryRead {
+  id: number;
+  film_id: number;
+  country_id: number;
+}
+
+export interface FilmCountryCreate {
+  film_id: number;
+  country_id: number;
+}
+
+export interface FilmStuffRead {
+  id: number;
+  film_id: number;
+  stuff_id: number;
+  role?: string | null;
+}
+
+export interface FilmStuffCreate {
+  film_id: number;
+  stuff_id: number;
+  role?: string | null;
+}
+
+export interface FilmStuffUpdate {
+  role?: string | null;
+}
