@@ -21,98 +21,61 @@ apiClient.interceptors.request.use(
   (config: RequestConfig) => {
     // Всегда получаем свежий токен из localStorage
     const token = AuthAPI.getAuthToken();
-    console.log('🔑 Request interceptor - Token:', token ? `${token.substring(0, 20)}...` : 'null');
-    console.log('🔑 Request interceptor - URL:', config.url);
-    console.log('🔑 Request interceptor - Method:', config.method?.toUpperCase());
-    
+
     if (token) {
       // Удаляем существующий Authorization header и добавляем новый
       delete config.headers.Authorization;
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('✅ Added/Updated Authorization header:', `Bearer ${token.substring(0, 20)}...`);
-    } else {
-      console.warn('⚠️ No token available for authenticated request:', config.url);
     }
-    
-    // Дополнительная диагностика для отладки
-    if (config.url?.includes('/bookmarks') ||
-        config.url?.includes('/ratings') ||
-        config.url?.includes('/users/me')) {
-      console.log('🔍 Authenticated request detected - Token available:', !!token);
-    }
-    
+
     return config;
   },
   (error) => {
-    console.error('❌ Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
 // Интерцептор для обработки ответов и обновления токенов
 apiClient.interceptors.response.use(
-(response: AxiosResponse) => {
-  console.log('✅ Response interceptor - Success:', response.config.url);
-  return response;
-},
-async (error: AxiosError) => {
-  const originalRequest = error.config as RequestConfig;
-  const status = error.response?.status;
-  const url = originalRequest?.url;
-  
-  console.log('❌ Response interceptor - Error:', status, url);
-   
-  // Диагностика состояния авторизации при ошибке 401
-  if (status === 401) {
-    const token = AuthAPI.getAuthToken();
-    console.log('🔍 401 Error Diagnostics:');
-    console.log('🔍 - Token available:', !!token);
-    console.log('🔍 - Token value:', token ? `${token.substring(0, 20)}...` : 'null');
-    console.log('🔍 - Request URL:', url);
-    console.log('🔍 - Request method:', originalRequest?.method);
-    console.log('🔍 - Request headers Authorization:', originalRequest?.headers?.Authorization ? 'present' : 'missing');
-  }
+  (response: AxiosResponse) => {
+    return response;
+  },
+  async (error: AxiosError) => {
+    const originalRequest = error.config as RequestConfig;
+    const status = error.response?.status;
+    const url = originalRequest?.url;
 
-  // Если ошибка 401 и не первая попытка
-  if (status === 401 && !originalRequest._retry) {
-    originalRequest._retry = true;
-    
-    // Определяем, является ли запрос аутентифицированным
-    const isAuthenticatedRequest = url?.includes('/bookmarks') ||
-                                  url?.includes('/ratings') ||
-                                  url?.includes('/users/') ||
-                                  url?.includes('/comments') ||
-                                  originalRequest?.headers?.Authorization;
+    // Если ошибка 401 и не первая попытка
+    if (status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
 
-    if (isAuthenticatedRequest) {
-      console.warn('🔑 Authenticated request failed with 401 - Clearing auth data');
-      
-      try {
-        // Очищаем localStorage
-        AuthAPI.clearAuthData();
-        console.warn('🔑 Авторизация истекла. Требуется повторный вход.');
-        
-        // Отправляем кастомное событие для уведомления UI
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('auth:expired', {
-            detail: { message: 'Сессия истекла. Пожалуйста, войдите снова.' }
-          }));
+      // Определяем, является ли запрос аутентифицированным
+      const isAuthenticatedRequest = url?.includes('/bookmarks') ||
+        url?.includes('/ratings') ||
+        url?.includes('/users/') ||
+        url?.includes('/comments') ||
+        originalRequest?.headers?.Authorization;
+
+      if (isAuthenticatedRequest) {
+        try {
+          // Очищаем localStorage
+          AuthAPI.clearAuthData();
+
+          // Отправляем кастомное событие для уведомления UI
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('auth:expired', {
+              detail: { message: 'Сессия истекла. Пожалуйста, войдите снова.' }
+            }));
+          }
+        } catch (refreshError) {
+          // Если произошла ошибка при очистке
+          AuthAPI.clearAuthData();
         }
-      } catch (refreshError) {
-        // Если произошла ошибка при очистке
-        AuthAPI.clearAuthData();
-        console.error('❌ Ошибка при очистке авторизации:', refreshError);
       }
-    } else {
-      console.log('🔍 Non-authenticated request failed with 401 - Ignoring');
     }
-  } else if (status === 401) {
-    // Вторая попытка с тем же токеном
-    console.warn('🔑 Повторная ошибка 401 для:', url);
-  }
 
-  return Promise.reject(error);
-}
+    return Promise.reject(error);
+  }
 );
 
 // Функция для проверки, авторизован ли пользователь
@@ -151,14 +114,14 @@ export const handleApiError = (error: AxiosError): string => {
       return Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage;
     }
   }
-  
+
   return 'Произошла неизвестная ошибка.';
 };
 
 // Утилита для создания URL с параметрами запроса
 export const buildQueryString = (params: Record<string, any>): string => {
   const searchParams = new URLSearchParams();
-  
+
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
       if (Array.isArray(value)) {
@@ -168,7 +131,7 @@ export const buildQueryString = (params: Record<string, any>): string => {
       }
     }
   });
-  
+
   const queryString = searchParams.toString();
   return queryString ? `?${queryString}` : '';
 };

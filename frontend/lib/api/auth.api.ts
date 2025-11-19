@@ -139,6 +139,13 @@ export class AuthAPI {
     // Сохраняем токен в Cookie
     Cookies.set(TOKEN_KEY, accessToken, COOKIE_OPTIONS);
 
+    // Если пользователь админ, ставим специальную куку для middleware
+    if (user.is_superuser) {
+      Cookies.set('is_admin', 'true', COOKIE_OPTIONS);
+    } else {
+      Cookies.remove('is_admin', { path: '/' });
+    }
+
     // Сохраняем пользователя в localStorage (для быстрого доступа на клиенте)
     if (typeof window !== 'undefined') {
       try {
@@ -149,7 +156,6 @@ export class AuthAPI {
     }
 
     authEvents.emit(); // Уведомляем об изменении
-    console.log('🔑 AuthAPI: Auth data stored (Token in Cookie, User in LocalStorage)');
   }
 
   static getAuthToken(): string | null {
@@ -177,8 +183,9 @@ export class AuthAPI {
   }
 
   static clearAuthData(): void {
-    // Удаляем токен из Cookie
+    // Удаляем токен и админскую куку
     Cookies.remove(TOKEN_KEY, { path: '/' });
+    Cookies.remove('is_admin', { path: '/' });
 
     // Удаляем данные из localStorage
     if (typeof window !== 'undefined') {
@@ -190,7 +197,6 @@ export class AuthAPI {
     }
 
     authEvents.emit(); // Уведомляем об очистке
-    console.log('🔑 AuthAPI: Auth data cleared');
   }
 
   // Проверка актуальности токена
@@ -201,14 +207,5 @@ export class AuthAPI {
   // Подписка на изменения токена
   static onAuthChange(callback: () => void): () => void {
     return authEvents.onChange(callback);
-  }
-
-  // Диагностика
-  static debugAuth(): void {
-    const token = Cookies.get(TOKEN_KEY);
-    console.log('🔍 AuthAPI Debug: Token in Cookie:', !!token);
-    if (typeof window !== 'undefined') {
-      console.log('🔍 AuthAPI Debug: User in LocalStorage:', !!localStorage.getItem(USER_KEY));
-    }
   }
 }

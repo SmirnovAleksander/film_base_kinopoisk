@@ -18,6 +18,14 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(url);
     }
 
+    // Admin route protection
+    if (pathname.startsWith('/admin')) {
+        const isAdmin = request.cookies.get('is_admin')?.value === 'true';
+        if (!isAdmin) {
+            return NextResponse.redirect(new URL('/', request.url));
+        }
+    }
+
     if (isAuthRoute && token) {
         return NextResponse.redirect(new URL('/', request.url));
     }
