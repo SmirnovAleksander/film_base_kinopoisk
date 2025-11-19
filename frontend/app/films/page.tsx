@@ -2,14 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Filter, Search, SortAsc, SortDesc } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
 import {
   Pagination,
   PaginationContent,
@@ -19,7 +12,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { FilmCard, FilmCardSkeleton } from '@/components/film';
+import { FilmCard, FilmCardSkeleton, FilmsFilters } from '@/components/film';
 import { useFilmsStore } from '@/store';
 import { FilmFilterParams } from '@/lib/types';
 
@@ -45,17 +38,6 @@ export default function FilmsPage() {
     setPage,
   } = useFilmsStore();
 
-  const [localSearchQuery, setLocalSearchQuery] = useState('');
-  const [localFilters, setLocalFilters] = useState<FilmFilterParams>({});
-  const [sortBy, setSortBy] = useState<'title' | 'year' | 'rating'>('title');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [showFilters, setShowFilters] = useState(false);
-  
-  // Значения для слайдеров
-  const currentYear = new Date().getFullYear();
-  const [yearRange, setYearRange] = useState<[number, number]>([1890, currentYear]);
-  const [ratingRange, setRatingRange] = useState<[number, number]>([1, 10]);
-
   // Инициализация данных
   useEffect(() => {
     fetchGenres();
@@ -72,8 +54,8 @@ export default function FilmsPage() {
     const minRating = searchParams.get('min_rating');
     const maxRating = searchParams.get('max_rating');
 
-    if (search) {
-      handleSearch(search);
+    if (search && search.trim()) {
+      handleSearch(search.trim());
     } else {
       // Загружаем все фильмы
       filterFilms({ page: 1, page_size: pageSize });
@@ -92,58 +74,43 @@ export default function FilmsPage() {
         max_rating: maxRating ? parseFloat(maxRating) : undefined,
       };
       filterFilms(filterParams);
-      
-      // Обновляем слайдеры если есть значения в URL
-      if (startYear || endYear) {
-        setYearRange([
-          startYear ? parseInt(startYear) : 1890,
-          endYear ? parseInt(endYear) : currentYear
-        ]);
-      }
-      if (minRating || maxRating) {
-        setRatingRange([
-          minRating ? parseFloat(minRating) : 1,
-          maxRating ? parseFloat(maxRating) : 10
-        ]);
-      }
     }
-  }, [searchParams, currentYear]);
-
-  const handleSearch = async (query?: string) => {
-    const searchTerm = query || localSearchQuery;
-    if (!searchTerm.trim()) return;
-
-    setSearchQuery(searchTerm);
+  }, [searchParams]);
+      
+  // Обработчики для FilmsFilters
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
     await searchFilms({
-      query: searchTerm.trim(),
+      query: query.trim(),
       page: 1,
       page_size: pageSize,
     });
   };
 
-  const handleFilterApply = async () => {
-    const filterParams: FilmFilterParams = {
-      ...localFilters,
-      page: 1,
-      page_size: pageSize,
-      start_year: yearRange[0],
-      end_year: yearRange[1],
-      min_rating: ratingRange[0],
-      max_rating: ratingRange[1],
-    };
-
+  const handleFilterApply = async (filterParams: FilmFilterParams) => {
     setFilters(filterParams);
     await filterFilms(filterParams);
-    setShowFilters(false);
   };
 
   const handleFilterReset = () => {
-    setLocalFilters({});
+    setFilters({});
     setSearchQuery('');
-    setLocalSearchQuery('');
-    setYearRange([1890, currentYear]);
-    setRatingRange([1, 10]);
     filterFilms({ page: 1, page_size: pageSize });
+  };
+
+  const handleFilterRemove = async (key: keyof FilmFilterParams) => {
+    const newFilters = { ...filters };
+    delete newFilters[key];
+    
+    // Специальная обработка для поискового запроса
+    if (key === 'query' as any) {
+      setSearchQuery('');
+      await filterFilms({ page: 1, page_size: pageSize });
+      return;
+    }
+
+    setFilters(newFilters);
+    await filterFilms({ ...newFilters, page: 1 });
   };
 
   const handlePageChange = async (page: number) => {
@@ -161,15 +128,6 @@ export default function FilmsPage() {
     }
   };
 
-  // Обработчики для слайдеров
-  const handleYearRangeChange = (value: number[]) => {
-    setYearRange([value[0], value[1]]);
-  };
-
-  const handleRatingRangeChange = (value: number[]) => {
-    setRatingRange([value[0], value[1]]);
-  };
-
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
@@ -181,302 +139,20 @@ export default function FilmsPage() {
         </p>
       </div>
 
-      {/* Поиск и фильтры */}
-      <div className="mb-8 space-y-4">
-        {/* Поиск */}
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <Input
-              placeholder="Поиск фильмов..."
-              value={localSearchQuery}
-              onChange={(e) => setLocalSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-full"
-            />
-          </div>
-          <Button onClick={() => handleSearch()} disabled={!localSearchQuery.trim()}>
-            <Search className="h-4 w-4 mr-2" />
-            Поиск
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => setShowFilters(!showFilters)}
-            className={showFilters ? 'bg-accent' : ''}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Фильтры
-          </Button>
-        </div>
-
-        {/* Панель фильтров */}
-        {showFilters && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Фильтры</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Жанр */}
-                <div className="space-y-2">
-                  <Label htmlFor="genre">Жанр</Label>
-                  <Select
-                    value={localFilters.genre_id?.toString() || 'all'}
-                    onValueChange={(value) =>
-                      setLocalFilters(prev => ({
-                        ...prev,
-                        genre_id: value === 'all' ? undefined : parseInt(value)
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Выберите жанр" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Все жанры</SelectItem>
-                      {genres.map((genre) => (
-                        <SelectItem key={genre.id} value={genre.id.toString()}>
-                          {genre.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Страна */}
-                <div className="space-y-2">
-                  <Label htmlFor="country">Страна</Label>
-                  <Select
-                    value={localFilters.country_id?.toString() || 'all'}
-                    onValueChange={(value) =>
-                      setLocalFilters(prev => ({
-                        ...prev,
-                        country_id: value === 'all' ? undefined : parseInt(value)
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Выберите страну" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Все страны</SelectItem>
-                      {countries.map((country) => (
-                        <SelectItem key={country.id} value={country.id.toString()}>
-                          {country.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Год выпуска */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label>Год выпуска</Label>
-                    <div className="flex gap-2 text-sm text-muted-foreground">
-                      <span>{yearRange[0]}</span>
-                      <span>-</span>
-                      <span>{yearRange[1]}</span>
-                    </div>
-                  </div>
-                  <Slider
-                    min={1890}
-                    max={currentYear}
-                    step={1}
-                    value={yearRange}
-                    onValueChange={handleYearRangeChange}
-                    className="w-full"
-                  />
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="С"
-                      type="number"
-                      min="1890"
-                      max={currentYear.toString()}
-                      value={yearRange[0]}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value) || 1890;
-                        const newRange: [number, number] = [Math.min(value, yearRange[1]), yearRange[1]];
-                        setYearRange(newRange);
-                      }}
-                    />
-                    <Input
-                      placeholder="По"
-                      type="number"
-                      min="1890"
-                      max={currentYear.toString()}
-                      value={yearRange[1]}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value) || currentYear;
-                        const newRange: [number, number] = [yearRange[0], Math.max(value, yearRange[0])];
-                        setYearRange(newRange);
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Рейтинг */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label>Рейтинг</Label>
-                    <div className="flex gap-2 text-sm text-muted-foreground">
-                      <span>{ratingRange[0]}</span>
-                      <span>-</span>
-                      <span>{ratingRange[1]}</span>
-                    </div>
-                  </div>
-                  <Slider
-                    min={1}
-                    max={10}
-                    step={0.1}
-                    value={ratingRange}
-                    onValueChange={handleRatingRangeChange}
-                    className="w-full"
-                  />
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Мин"
-                      type="number"
-                      min="1"
-                      max="10"
-                      step="0.1"
-                      value={ratingRange[0]}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value) || 1;
-                        const newRange: [number, number] = [Math.min(value, ratingRange[1]), ratingRange[1]];
-                        setRatingRange(newRange);
-                      }}
-                    />
-                    <Input
-                      placeholder="Макс"
-                      type="number"
-                      min="1"
-                      max="10"
-                      step="0.1"
-                      value={ratingRange[1]}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value) || 10;
-                        const newRange: [number, number] = [ratingRange[0], Math.max(value, ratingRange[0])];
-                        setRatingRange(newRange);
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-4">
-                <Button onClick={handleFilterApply}>
-                  Применить фильтры
-                </Button>
-                <Button variant="outline" onClick={handleFilterReset}>
-                  Сбросить
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Активные фильтры */}
-        {(searchQuery || Object.keys(filters).length > 0) && (
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-sm text-muted-foreground">Активные фильтры:</span>
-            
-            {searchQuery && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                Поиск: {searchQuery}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-auto p-0 ml-1"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setLocalSearchQuery('');
-                    filterFilms({ page: 1, page_size: pageSize });
-                  }}
-                >
-                  ×
-                </Button>
-              </Badge>
-            )}
-            
-            {filters.genre_id && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                Жанр: {genres.find(g => g.id === filters.genre_id)?.name}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-auto p-0 ml-1"
-                  onClick={() => {
-                    setFilters({ ...filters, genre_id: undefined });
-                    filterFilms({ ...filters, genre_id: undefined, page: 1 });
-                  }}
-                >
-                  ×
-                </Button>
-              </Badge>
-            )}
-
-            {/* Другие фильтры */}
-            {(filters.start_year || filters.end_year || filters.min_rating || filters.max_rating) && (
-              <div className="flex items-center gap-2">
-                {/* Год выпуска (скрываем если дефолтные значения) */}
-                {(filters.start_year || filters.end_year) &&
-                 !(filters.start_year === 1890 && filters.end_year === currentYear) && (
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    Год: {filters.start_year}-{filters.end_year}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-auto p-0 ml-1"
-                      onClick={() => {
-                        setYearRange([1890, currentYear]);
-                        const newFilters = { ...filters };
-                        delete newFilters.start_year;
-                        delete newFilters.end_year;
-                        setFilters(newFilters);
-                        filterFilms({ ...newFilters, page: 1 });
-                      }}
-                    >
-                      ×
-                    </Button>
-                  </Badge>
-                )}
-                
-                {/* Рейтинг (скрываем если дефолтные значения) */}
-                {(filters.min_rating || filters.max_rating) &&
-                 !(filters.min_rating === 1 && filters.max_rating === 10) && (
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    Рейтинг: {filters.min_rating}-{filters.max_rating}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-auto p-0 ml-1"
-                      onClick={() => {
-                        setRatingRange([1, 10]);
-                        const newFilters = { ...filters };
-                        delete newFilters.min_rating;
-                        delete newFilters.max_rating;
-                        setFilters(newFilters);
-                        filterFilms({ ...newFilters, page: 1 });
-                      }}
-                    >
-                      ×
-                    </Button>
-                  </Badge>
-                )}
-              </div>
-            )}
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleFilterReset}
-              className="text-muted-foreground"
-            >
-              Очистить все
-            </Button>
-          </div>
-        )}
-      </div>
+      <FilmsFilters
+        genres={genres}
+        countries={countries}
+        searchQuery={searchQuery}
+        filters={filters}
+        totalCount={totalCount}
+        isLoading={isLoading}
+        isSearching={isSearching}
+        onSearch={handleSearch}
+        onFilterApply={handleFilterApply}
+        onFilterReset={handleFilterReset}
+        onFilterRemove={handleFilterRemove}
+        pageSize={pageSize}
+      />
 
       {/* Список фильмов */}
       <div className="space-y-6">
