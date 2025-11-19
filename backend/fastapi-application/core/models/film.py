@@ -29,9 +29,9 @@ class Film(Base, IntIdPkMixin):
     duration: Mapped[Optional[str]] = mapped_column(String(50))
     
     # Рейтинги
-    rating_kp: Mapped[Optional[float]] = mapped_column(DECIMAL(3, 1))
+    rating_kp: Mapped[Optional[float]] = mapped_column(DECIMAL(3, 1), index=True)
     kp_votes_count: Mapped[Optional[str]] = mapped_column(String(50))
-    rating_imdb: Mapped[Optional[float]] = mapped_column(DECIMAL(3, 1))
+    rating_imdb: Mapped[Optional[float]] = mapped_column(DECIMAL(3, 1), index=True)
     imdb_votes_count: Mapped[Optional[str]] = mapped_column(String(50))
     user_rating: Mapped[Optional[float]] = mapped_column(DECIMAL(3, 1))
     user_rating_count: Mapped[int] = mapped_column(Integer, default=0)

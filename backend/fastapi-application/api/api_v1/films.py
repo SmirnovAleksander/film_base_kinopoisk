@@ -94,7 +94,7 @@ async def search_films(
     stmt = (
         select(Film)
         .where(search_column.ilike(pattern))
-        .order_by(Film.id)
+        .order_by(Film.rating_kp.desc().nullslast(), Film.id)
         .offset(offset)
         .limit(page_size)
     )

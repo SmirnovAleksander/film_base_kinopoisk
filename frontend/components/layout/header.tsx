@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -15,7 +15,7 @@ import {
   Moon,
   Monitor,
   Settings,
-  Image
+  Image as ImageIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,17 +35,59 @@ import {
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme as useNextTheme } from 'next-themes';
 import { ROUTES } from '@/lib/config';
+import { FilmsAPI } from '@/lib/api';
+import Image from 'next/image';
 
 export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const { user, logout, isAuthenticated } = useAuth();
   const { theme, setTheme } = useNextTheme();
   const router = useRouter();
+
+  // Эффект для живого поиска с debounce
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (searchQuery.trim().length > 0) {
+      setIsSearching(true);
+      searchTimeoutRef.current = setTimeout(async () => {
+        try {
+          const response = await FilmsAPI.searchFilms({
+            query: searchQuery.trim(),
+            page_size: 5
+          });
+          setSearchResults(response.items);
+        } catch (error) {
+          console.error('Search error:', error);
+          setSearchResults([]);
+        } finally {
+          setIsSearching(false);
+        }
+      }, 500); // 500ms delay
+    } else {
+      setSearchResults([]);
+      setIsSearching(false);
+    }
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`${ROUTES.FILMS}?search=${encodeURIComponent(searchQuery.trim())}`);
+      setIsSearchOpen(false);
     }
   };
 
@@ -60,7 +102,7 @@ export function Header() {
 
   const navigation = [
     { name: 'Фильмы', href: ROUTES.FILMS, icon: Film },
-    { name: 'Медиа', href: ROUTES.MEDIA, icon: Image },
+    { name: 'Медиа', href: ROUTES.MEDIA, icon: ImageIcon },
     { name: 'Закладки', href: ROUTES.BOOKMARKS, icon: Heart, requireAuth: true },
     { name: 'История', href: ROUTES.HISTORY, icon: History },
   ];
@@ -75,18 +117,94 @@ export function Header() {
         </Link>
 
         {/* Поиск - десктоп */}
-        <form onSubmit={handleSearch} className="flex-1 max-w-md mr-6 hidden md:block">
-          <div className="relative">
+        <div className="flex-1 max-w-md mr-6 hidden md:block relative">
+          <form onSubmit={handleSearch} className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Поиск фильмов..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setIsSearchOpen(true);
+              }}
+              onFocus={() => setIsSearchOpen(true)}
               className="pl-10"
             />
-          </div>
-        </form>
+          </form>
+
+          {/* Выпадающий список результатов */}
+          {isSearchOpen && searchQuery.trim().length > 0 && (
+            <>
+              <div
+                className="fixed inset-0 z-40 bg-transparent"
+                onClick={() => setIsSearchOpen(false)}
+              />
+              <div className="absolute top-full left-0 right-0 mt-2 bg-popover border rounded-md shadow-lg overflow-hidden z-50">
+                {isSearching ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    Поиск...
+                  </div>
+                ) : searchResults.length > 0 ? (
+                  <div className="max-h-[400px] overflow-y-auto">
+                    {searchResults.map((film) => (
+                      <Link
+                        key={film.id}
+                        href={ROUTES.FILM_DETAILS(film.id)}
+                        className="flex items-start gap-3 p-3 hover:bg-accent transition-colors"
+                        onClick={() => {
+                          setIsSearchOpen(false);
+                          setSearchQuery('');
+                        }}
+                      >
+                        {film.poster ? (
+                          <div className="relative w-10 h-14 shrink-0">
+                            <Image
+                              src={film.poster}
+                              alt={film.title || 'Film'}
+                              fill
+                              className="object-cover rounded-sm"
+                              sizes="40px"
+                              unoptimized
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-14 bg-muted rounded-sm flex items-center justify-center shrink-0">
+                            <Film className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {film.title || film.original_title}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                            {film.year && <span>{film.year}</span>}
+                            {film.rating_kp && (
+                              <span className="text-green-500 font-medium">
+                                {film.rating_kp}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                    <Link
+                      href={`${ROUTES.FILMS}?search=${encodeURIComponent(searchQuery.trim())}`}
+                      className="block p-3 text-center text-sm text-primary hover:bg-accent border-t"
+                      onClick={() => setIsSearchOpen(false)}
+                    >
+                      Показать все результаты
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    Ничего не найдено
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Навигация - десктоп */}
         <nav className="hidden md:flex items-center space-x-6 mr-6">
