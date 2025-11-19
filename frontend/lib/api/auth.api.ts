@@ -5,6 +5,15 @@ import {
   User,
 } from '@/lib/types';
 import { API_ENDPOINTS, STORAGE_KEYS } from '@/lib/config';
+import Cookies from 'js-cookie';
+
+// Cookie options
+const COOKIE_OPTIONS = {
+  expires: 7, // 7 days
+  path: '/',
+  sameSite: 'Strict' as const,
+  secure: process.env.NODE_ENV === 'production',
+};
 
 // LocalStorage ключи
 const TOKEN_KEY = STORAGE_KEYS.AUTH_TOKEN;
@@ -61,9 +70,9 @@ export class AuthAPI {
 
   // Выход из системы
   static async logout(): Promise<void> {
-    // Очищаем localStorage
+    // Очищаем данные
     this.clearAuthData();
-    
+
     // Отправляем запрос на сервер для завершения сессии
     try {
       await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT);
@@ -125,68 +134,41 @@ export class AuthAPI {
     return response.data;
   }
 
-  // Утилиты для работы с localStorage
+  // Утилиты для работы с Auth Data
   static setAuthData(accessToken: string, user: User): void {
-    if (typeof window === 'undefined') {
-      console.warn('🔑 AuthAPI: Cannot set auth data - not in browser environment');
-      return;
+    // Сохраняем токен в Cookie
+    Cookies.set(TOKEN_KEY, accessToken, COOKIE_OPTIONS);
+
+    // Сохраняем пользователя в localStorage (для быстрого доступа на клиенте)
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
+      } catch (error) {
+        console.error('Failed to store user data in localStorage:', error);
+      }
     }
-    
-    if (!this.isLocalStorageAvailable()) {
-      console.error('🔑 AuthAPI: localStorage not available');
-      return;
-    }
-    
-    try {
-      // Сохраняем в localStorage
-      localStorage.setItem(TOKEN_KEY, accessToken);
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
-      authEvents.emit(); // Уведомляем об изменении токена
-      console.log('🔑 AuthAPI: Auth data stored in localStorage');
-      console.log('🔑 AuthAPI: Token length:', accessToken.length);
-      console.log('🔑 AuthAPI: User:', user.username);
-    } catch (error) {
-      console.error('Failed to store auth data:', error);
-    }
+
+    authEvents.emit(); // Уведомляем об изменении
+    console.log('🔑 AuthAPI: Auth data stored (Token in Cookie, User in LocalStorage)');
   }
 
   static getAuthToken(): string | null {
     if (typeof window === 'undefined') {
-      console.log('🔑 AuthAPI: getAuthToken called on server side');
       return null;
     }
-    
-    if (!this.isLocalStorageAvailable()) {
-      console.error('🔑 AuthAPI: localStorage not available');
-      return null;
-    }
-    
-    try {
-      const token = localStorage.getItem(TOKEN_KEY);
-      console.log('🔑 AuthAPI: Retrieved token:', token ? `${token.substring(0, 20)}...` : 'null');
-      console.log('🔑 AuthAPI: localStorage keys:', Object.keys(localStorage));
-      return token;
-    } catch (error) {
-      console.error('Failed to get auth token:', error);
-      return null;
-    }
+    // Получаем токен из Cookie
+    const token = Cookies.get(TOKEN_KEY);
+    return token || null;
   }
 
   static getUserData(): User | null {
     if (typeof window === 'undefined') {
-      console.log('🔑 AuthAPI: getUserData called on server side');
       return null;
     }
-    
-    if (!this.isLocalStorageAvailable()) {
-      console.error('🔑 AuthAPI: localStorage not available');
-      return null;
-    }
-    
+
     try {
       const userData = localStorage.getItem(USER_KEY);
       const parsed = userData ? JSON.parse(userData) : null;
-      console.log('🔑 AuthAPI: Retrieved user data:', parsed?.username || 'null');
       return parsed;
     } catch (error) {
       console.error('Failed to get user data:', error);
@@ -195,29 +177,25 @@ export class AuthAPI {
   }
 
   static clearAuthData(): void {
-    if (typeof window === 'undefined') {
-      console.warn('🔑 AuthAPI: Cannot clear auth data - not in browser environment');
-      return;
+    // Удаляем токен из Cookie
+    Cookies.remove(TOKEN_KEY, { path: '/' });
+
+    // Удаляем данные из localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(USER_KEY);
+      } catch (error) {
+        console.error('Failed to clear user data from localStorage:', error);
+      }
     }
-    
-    if (!this.isLocalStorageAvailable()) {
-      console.error('🔑 AuthAPI: localStorage not available');
-      return;
-    }
-    
-    try {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(USER_KEY);
-      authEvents.emit(); // Уведомляем об очистке токена
-      console.log('🔑 AuthAPI: Auth data cleared from localStorage');
-    } catch (error) {
-      console.error('Failed to clear auth data:', error);
-    }
+
+    authEvents.emit(); // Уведомляем об очистке
+    console.log('🔑 AuthAPI: Auth data cleared');
   }
 
   // Проверка актуальности токена
   static isTokenValid(): boolean {
-    return this.getAuthToken() !== null;
+    return !!this.getAuthToken();
   }
 
   // Подписка на изменения токена
@@ -225,44 +203,12 @@ export class AuthAPI {
     return authEvents.onChange(callback);
   }
 
-  // Проверка доступности localStorage
-  static isLocalStorageAvailable(): boolean {
-    if (typeof window === 'undefined') return false;
-    
-    try {
-      const test = '__localStorage_test__';
-      localStorage.setItem(test, test);
-      localStorage.removeItem(test);
-      return true;
-    } catch (error) {
-      console.error('localStorage not available:', error);
-      return false;
-    }
-  }
-
-  // Диагностика состояния localStorage
-  static debugLocalStorage(): void {
-    if (typeof window === 'undefined') {
-      console.log('🔍 AuthAPI Debug: Running on server side');
-      return;
-    }
-    
-    console.log('🔍 AuthAPI Debug: localStorage available:', this.isLocalStorageAvailable());
-    console.log('🔍 AuthAPI Debug: localStorage keys:', Object.keys(localStorage));
-    console.log('🔍 AuthAPI Debug: TOKEN_KEY exists:', localStorage.getItem(TOKEN_KEY) !== null);
-    console.log('🔍 AuthAPI Debug: USER_KEY exists:', localStorage.getItem(USER_KEY) !== null);
-    console.log('🔍 AuthAPI Debug: Token value:', localStorage.getItem(TOKEN_KEY) ? `${localStorage.getItem(TOKEN_KEY)?.substring(0, 20)}...` : 'null');
-    
-    try {
-      const userData = localStorage.getItem(USER_KEY);
-      if (userData) {
-        const parsed = JSON.parse(userData);
-        console.log('🔍 AuthAPI Debug: User data:', parsed);
-      } else {
-        console.log('🔍 AuthAPI Debug: No user data');
-      }
-    } catch (error) {
-      console.log('🔍 AuthAPI Debug: Error parsing user data:', error);
+  // Диагностика
+  static debugAuth(): void {
+    const token = Cookies.get(TOKEN_KEY);
+    console.log('🔍 AuthAPI Debug: Token in Cookie:', !!token);
+    if (typeof window !== 'undefined') {
+      console.log('🔍 AuthAPI Debug: User in LocalStorage:', !!localStorage.getItem(USER_KEY));
     }
   }
 }

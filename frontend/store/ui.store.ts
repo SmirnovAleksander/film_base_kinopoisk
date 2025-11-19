@@ -3,8 +3,7 @@ import { create } from 'zustand';
 interface UIState {
   sidebarOpen: boolean;
   loading: boolean;
-  
-  // Действия
+
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
   setLoading: (loading: boolean) => void;
