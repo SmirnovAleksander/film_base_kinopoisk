@@ -11,7 +11,7 @@ interface AuthState {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  
+
   // Действия
   login: (data: LoginData) => Promise<void>;
   register: (data: RegisterData) => Promise<User>;
@@ -34,17 +34,12 @@ export const useAuthStore = create<AuthState>()(
       try {
         // OAuth2 вход - получаем только access_token
         const { access_token, token_type } = await AuthAPI.login(data);
-        console.log('🔍 Login response:', {
-          access_token: access_token.substring(0, 20) + '...',
-          token_type
-        });
-        
+
         // Сохраняем токен в localStorage через AuthAPI
         AuthAPI.setAuthData(access_token, {} as User);
-        
+
         // Получаем данные пользователя с валидным токеном
         const user = await AuthAPI.getCurrentUser();
-        console.log('🔍 User data:', user);
 
         // Обновляем localStorage с реальными данными пользователя
         AuthAPI.setAuthData(access_token, user);
@@ -55,7 +50,6 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: true,
           isLoading: false,
         });
-        console.log('🔑 AuthStore: Login successful');
       } catch (error) {
         set({ isLoading: false });
         // Очищаем частичные данные в случае ошибки
@@ -68,7 +62,7 @@ export const useAuthStore = create<AuthState>()(
       set({ isLoading: true });
       try {
         const user = await AuthAPI.register(data);
-        
+
         // После регистрации нужно войти в систему
         set({ isLoading: false });
         return user;
@@ -95,14 +89,12 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: false,
           isLoading: false,
         });
-        console.log('🔑 AuthStore: Logout completed');
       }
     },
 
     getCurrentUser: async () => {
       const token = AuthAPI.getAuthToken();
       if (!token) {
-        console.warn('getCurrentUser: No token available');
         get().clearAuth();
         throw new Error('No token available');
       }
@@ -110,7 +102,7 @@ export const useAuthStore = create<AuthState>()(
       set({ isLoading: true });
       try {
         const user = await AuthAPI.getCurrentUser();
-        
+
         set({
           user,
           isAuthenticated: true,
@@ -119,16 +111,15 @@ export const useAuthStore = create<AuthState>()(
         });
       } catch (error) {
         set({ isLoading: false });
-        
+
         // Если ошибка авторизации (401), очищаем состояние
         if ((error as any)?.response?.status === 401) {
-          console.warn('getCurrentUser: Token expired or invalid, clearing auth');
           get().clearAuth();
         } else {
           // Для других ошибок логируем, но не очищаем состояние
           console.error('getCurrentUser error:', error);
         }
-        
+
         throw error;
       }
     },
@@ -142,7 +133,7 @@ export const useAuthStore = create<AuthState>()(
       set({ isLoading: true });
       try {
         const updatedUser = await AuthAPI.updateProfile(userData);
-        
+
         set({
           user: updatedUser,
           isLoading: false,
