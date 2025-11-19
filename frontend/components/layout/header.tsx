@@ -11,6 +11,7 @@ import {
   LogOut,
   Menu,
   Sun,
+  History,
   Moon,
   Monitor,
   Settings,
@@ -61,6 +62,7 @@ export function Header() {
     { name: 'Фильмы', href: ROUTES.FILMS, icon: Film },
     { name: 'Медиа', href: ROUTES.MEDIA, icon: Image },
     { name: 'Закладки', href: ROUTES.BOOKMARKS, icon: Heart, requireAuth: true },
+    { name: 'История', href: ROUTES.HISTORY, icon: History },
   ];
 
   return (
@@ -90,7 +92,7 @@ export function Header() {
         <nav className="hidden md:flex items-center space-x-6 mr-6">
           {navigation.map((item) => {
             if (item.requireAuth && !isAuthenticated) return null;
-            
+
             const Icon = item.icon;
             return (
               <Link
@@ -216,7 +218,7 @@ export function Header() {
                 <nav className="flex flex-col space-y-2 px-2">
                   {navigation.map((item) => {
                     if (item.requireAuth && !isAuthenticated) return null;
-                    
+
                     const Icon = item.icon;
                     return (
                       <Link

@@ -14,6 +14,7 @@ export const ROUTES = {
   STUFF_DETAILS: (id: string | number) => `/stuff/${id}`,
   MEDIA: '/media',
   PROFILE: '/profile',
+  HISTORY: '/history',
   BOOKMARKS: '/bookmarks',
   POSTERS: (id: string | number) => `/posters/${id}`,
 } as const;

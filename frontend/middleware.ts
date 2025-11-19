@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
     const token = request.cookies.get('film-base-token')?.value;
     const { pathname } = request.nextUrl;
 
-    const protectedRoutes = ['/profile', '/bookmarks', '/history', '/admin'];
+    const protectedRoutes = ['/profile', '/bookmarks', '/admin'];
 
     const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];
 

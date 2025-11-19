@@ -30,7 +30,7 @@ import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { FilmCard, FilmCardSkeleton, MiniPersonCard, StillCard, StillCardSkeleton } from '@/components/film';
 import { StarRating } from '@/components/film';
-import { useFilmsStore, useUserInteractionsStore, useAuthStore } from '@/store';
+import { useFilmsStore, useUserInteractionsStore, useAuthStore, useHistoryStore } from '@/store';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 import { ROUTES } from '@/lib/config';
@@ -41,7 +41,7 @@ import FilmStillsCarousel from '@/components/carousel/FilmStillsCarousel';
 export default function FilmDetailsPage() {
   const params = useParams();
   const filmId = parseInt(params.id as string);
-  
+
   const { currentFilm, fetchFilmDetails, isLoading } = useFilmsStore();
   const {
     comments,
@@ -58,6 +58,7 @@ export default function FilmDetailsPage() {
   } = useUserInteractionsStore();
   const { user } = useAuthStore();
   const { isAuthenticated } = useAuth();
+  const { addToHistory } = useHistoryStore();
 
   const [newComment, setNewComment] = useState('');
   const [filmStuff, setFilmStuff] = useState<any[]>([]);
@@ -68,8 +69,8 @@ export default function FilmDetailsPage() {
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
   const [similarFilms, setSimilarFilms] = useState<any[]>([]);
   const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
-  const [similarFilmStatuses, setSimilarFilmStatuses] = useState<{[kinopoiskId: string]: {existsInDb: boolean, filmData?: any}}>({});
-  
+  const [similarFilmStatuses, setSimilarFilmStatuses] = useState<{ [kinopoiskId: string]: { existsInDb: boolean, filmData?: any } }>({});
+
   // Состояние для редактирования комментариев
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingContent, setEditingContent] = useState('');
@@ -84,6 +85,19 @@ export default function FilmDetailsPage() {
       loadSimilarFilms();
     }
   }, [filmId]);
+
+  // Добавляем в историю просмотров
+  useEffect(() => {
+    if (currentFilm) {
+      addToHistory({
+        id: currentFilm.id,
+        type: 'film',
+        title: currentFilm.title || currentFilm.original_title || 'Фильм',
+        image: currentFilm.poster,
+        description: currentFilm.year ? String(currentFilm.year) : undefined,
+      });
+    }
+  }, [currentFilm, addToHistory]);
 
   const loadFilmStuff = async () => {
     try {
@@ -125,10 +139,10 @@ export default function FilmDetailsPage() {
     try {
       setIsLoadingSimilar(true);
       const similar = await FilmsAPI.getSimilarFilms(filmId);
-      
+
       // Проверяем доступность каждого фильма в базе
-      const filmStatuses: {[kinopoiskId: string]: {existsInDb: boolean, filmData?: any}} = {};
-      
+      const filmStatuses: { [kinopoiskId: string]: { existsInDb: boolean, filmData?: any } } = {};
+
       for (const similarFilm of similar) {
         const kinopoiskId = similarFilm.similar_film_id;
         try {
@@ -139,7 +153,7 @@ export default function FilmDetailsPage() {
           filmStatuses[kinopoiskId] = { existsInDb: false };
         }
       }
-      
+
       setSimilarFilmStatuses(filmStatuses);
       setSimilarFilms(similar);
     } catch (error) {
@@ -441,7 +455,7 @@ export default function FilmDetailsPage() {
                     </p>
                   </div>
                 )}
-                
+
                 {currentFilm.description && (
                   <div>
                     <h4 className="font-semibold mb-3 text-lg">Краткое описание</h4>
@@ -614,28 +628,28 @@ export default function FilmDetailsPage() {
                     {similarFilms.map((film) => {
                       const kinopoiskId = film.similar_film_id;
                       const filmStatus = similarFilmStatuses[kinopoiskId];
-                      
+
                       if (filmStatus?.existsInDb && filmStatus.filmData) {
                         // Фильм есть в базе - используем обычную ссылку
                         return (
                           <FilmCard
-                              key={film.id}
-                              film={{
-                                id: filmStatus.filmData.id,
-                                kinopoisk_id: filmStatus.filmData.kinopoisk_id,
-                                title: filmStatus.filmData.title,
-                                original_title: filmStatus.filmData.original_title,
-                                poster: filmStatus.filmData.poster,
-                                year: filmStatus.filmData.year,
-                                rating_kp: filmStatus.filmData.rating_kp,
-                                rating_imdb: filmStatus.filmData.rating_imdb,
-                                description: filmStatus.filmData.description,
-                                duration: filmStatus.filmData.duration,
-                                user_rating: filmStatus.filmData.user_rating,
-                                user_rating_count: filmStatus.filmData.user_rating_count,
-                                is_family_friendly: filmStatus.filmData.is_family_friendly || false,
-                              }}
-                            />
+                            key={film.id}
+                            film={{
+                              id: filmStatus.filmData.id,
+                              kinopoisk_id: filmStatus.filmData.kinopoisk_id,
+                              title: filmStatus.filmData.title,
+                              original_title: filmStatus.filmData.original_title,
+                              poster: filmStatus.filmData.poster,
+                              year: filmStatus.filmData.year,
+                              rating_kp: filmStatus.filmData.rating_kp,
+                              rating_imdb: filmStatus.filmData.rating_imdb,
+                              description: filmStatus.filmData.description,
+                              duration: filmStatus.filmData.duration,
+                              user_rating: filmStatus.filmData.user_rating,
+                              user_rating_count: filmStatus.filmData.user_rating_count,
+                              is_family_friendly: filmStatus.filmData.is_family_friendly || false,
+                            }}
+                          />
                         );
                       } else {
                         // Фильма нет в базе - используем FilmCard с флагом isExternal
@@ -687,8 +701,8 @@ export default function FilmDetailsPage() {
                     className="min-h-[120px] resize-none"
                     disabled={isAddingComment}
                   />
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     disabled={!newComment.trim() || isAddingComment}
                     className="shadow-lg"
                   >
@@ -760,7 +774,7 @@ export default function FilmDetailsPage() {
                           </div>
                         )}
                       </div>
-                      
+
                       {comment.is_deleted ? (
                         <p className="text-muted-foreground italic">
                           [Комментарий удален]
@@ -798,14 +812,8 @@ export default function FilmDetailsPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground text-lg mb-2">
-                    Комментариев пока нет
-                  </p>
-                  <p className="text-muted-foreground">
-                    Будьте первым, кто оставит отзыв!
-                  </p>
+                <div className="text-center py-8 text-muted-foreground">
+                  Комментариев пока нет. Будьте первым!
                 </div>
               )}
             </CardContent>

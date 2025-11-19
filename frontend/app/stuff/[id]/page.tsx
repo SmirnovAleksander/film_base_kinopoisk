@@ -14,21 +14,36 @@ import Link from 'next/link';
 import { ROUTES } from '@/lib/config';
 import { StuffAPI } from '@/lib/api';
 import { Stuff } from '@/lib/types';
+import { useHistoryStore } from '@/store';
 
 export default function StuffDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const stuffId = parseInt(params.id as string);
-  
+
   const [stuff, setStuff] = useState<Stuff | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const { addToHistory } = useHistoryStore();
 
   useEffect(() => {
     if (stuffId) {
       loadStuffDetails();
     }
   }, [stuffId]);
+
+  // Добавляем в историю просмотров
+  useEffect(() => {
+    if (stuff) {
+      addToHistory({
+        id: stuff.id,
+        type: 'person',
+        title: stuff.name || stuff.original_name || 'Персона',
+        image: stuff.image,
+        description: stuff.career ? stuff.career.join(', ') : undefined,
+      });
+    }
+  }, [stuff, addToHistory]);
 
   const loadStuffDetails = async () => {
     try {
@@ -76,7 +91,7 @@ export default function StuffDetailsPage() {
             </Link>
           </Button>
         </div>
-        
+
         <Card className="text-center py-12">
           <CardContent>
             <p className="text-red-500 mb-4">{error}</p>
