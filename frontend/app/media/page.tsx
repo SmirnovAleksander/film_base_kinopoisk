@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -101,11 +102,11 @@ export default function MediaPage() {
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Медиа контент</h1>
-      
+
       <div className="space-y-6">
         {/* Фильтры */}
         <div className="grid gap-4 md:grid-cols-3">
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="category">Категория</Label>
             <Select value={selectedCategory} onValueChange={handleCategoryChange}>
               <SelectTrigger>
@@ -121,8 +122,8 @@ export default function MediaPage() {
               </SelectContent>
             </Select>
           </div>
-          
-          <div>
+
+          <div className="space-y-2">
             <Label htmlFor="type">Тип</Label>
             <Select value={selectedType} onValueChange={handleTypeChange}>
               <SelectTrigger>
@@ -138,7 +139,7 @@ export default function MediaPage() {
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="flex items-end">
             <Button
               variant="outline"
@@ -160,50 +161,54 @@ export default function MediaPage() {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {media.map((item) => (
-              <Card key={item.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="aspect-w-16 aspect-h-9 w-full mb-4">
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        alt={item.title || 'Медиа'}
-                        className="object-cover rounded-md w-full h-48"
-                      />
-                    ) : (
-                      <div className="bg-gray-200 rounded-md w-full h-48 flex items-center justify-center">
-                        <span className="text-gray-400">Нет изображения</span>
-                      </div>
-                    )}
-                  </div>
-                  <CardTitle className="text-lg line-clamp-2">
-                    {item.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {item.category && (
-                      <Badge variant="secondary">{item.category}</Badge>
-                    )}
-                    
-                    {item.type && (
-                      <Badge variant="outline">{item.type}</Badge>
-                    )}
-                    
+              <Card
+                key={item.id}
+                className={`group relative overflow-hidden h-[400px] border-0 ${item.url ? 'cursor-pointer' : ''}`}
+                onClick={() => item.url && window.open(item.url, '_blank')}
+              >
+                {/* Background Image */}
+                <div className="absolute inset-0">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.title || 'Медиа'}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-zinc-800 flex items-center justify-center">
+                      <span className="text-zinc-500">Нет изображения</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/50 to-transparent opacity-80 transition-opacity group-hover:opacity-90" />
+
+                {/* Content */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-white flex flex-col justify-end h-full">
+                  <div className="transform transition-transform duration-300 translate-y-2 group-hover:translate-y-0">
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {item.category && (
+                        <Badge variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0 backdrop-blur-sm">
+                          {item.category}
+                        </Badge>
+                      )}
+                      {item.type && (
+                        <Badge variant="outline" className="text-white border-white/40 backdrop-blur-sm">
+                          {item.type}
+                        </Badge>
+                      )}
+                    </div>
+
+                    <h3 className="text-xl font-bold leading-tight mb-2 line-clamp-3 group-hover:line-clamp-none">
+                      {item.title}
+                    </h3>
+
                     {item.card_type && (
-                      <Badge variant="outline">{item.card_type}</Badge>
-                    )}
-                    
-                    <p className="text-sm text-gray-600">
-                      Дата создания: {new Date(item.parsed_at).toLocaleDateString()}
-                    </p>
-                    
-                    {item.date && (
-                      <p className="text-sm text-gray-600">
-                        Дата: {new Date(item.date).toLocaleDateString()}
-                      </p>
+                      <p className="text-sm text-gray-300 mb-2">{item.card_type}</p>
                     )}
                   </div>
-                </CardContent>
+                </div>
               </Card>
             ))}
           </div>
@@ -219,7 +224,7 @@ export default function MediaPage() {
             >
               Предыдущая
             </Button>
-            
+
             <div className="flex space-x-1">
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const page = i + 1;
@@ -234,7 +239,7 @@ export default function MediaPage() {
                 );
               })}
             </div>
-            
+
             <Button
               variant="outline"
               disabled={currentPage === totalPages}
