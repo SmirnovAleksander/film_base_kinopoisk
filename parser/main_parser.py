@@ -170,7 +170,7 @@ class MainParser:
                 film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
                 picture_id VARCHAR(20) NOT NULL,
                 original_url TEXT NOT NULL,
-                source VARCHAR(16) NOT NULL CHECK (source IN ('stills','wall')),
+                source VARCHAR(16) NOT NULL,
                 UNIQUE(film_id, picture_id, source)
             )
             """,
@@ -478,7 +478,7 @@ class MainParser:
                 return
             
             # Фильтруем только разрешенные категории
-            allowed_types = {'stills', 'wall', 'shooting'}
+            allowed_types = {'stills', 'wall', 'shooting', 'screenshots', 'promo'}
             filtered_categories = [cat for cat in all_categories if cat['type'] in allowed_types]
             
             if not filtered_categories:
@@ -522,19 +522,13 @@ class MainParser:
             total_saved = 0
             total_errors = 0
             
-            # Сначала обновим ограничение БД для поля source с полным списком типов
+            # Удаляем ограничение БД для поля source, если оно есть
             try:
                 cursor.execute("ALTER TABLE film_still DROP CONSTRAINT IF EXISTS film_still_source_check")
-                # Добавляем все возможные типы включая screenshots
-                # allowed_types = ('stills', 'wall', 'shooting', 'posters', 'fanart', 'promo', 'covers', 'images', 'gallery', 'photos', 'screenshots')
-                # Только разрешенные типы: 'stills', 'wall', 'shooting'
-                allowed_types = ('stills', 'wall', 'shooting', 'screenshots', 'promo')
-                constraint_sql = f"ALTER TABLE film_still ADD CONSTRAINT film_still_source_check CHECK (source IN {allowed_types})"
-                cursor.execute(constraint_sql)
-                print("✅ Обновлено ограничение БД для поля 'source'")
+                self.db_connection.commit()
             except Exception as e:
-                print(f"⚠️ Не удалось обновить ограничение БД: {e}")
-                # Продолжаем работу даже если не удалось обновить ограничение
+                print(f"⚠️ Не удалось удалить ограничение БД: {e}")
+                self.db_connection.rollback()
             
             for image_type, images in grouped_items.items():
                 for image_data in images:
