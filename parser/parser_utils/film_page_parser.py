@@ -671,14 +671,7 @@ class FilmPageParser:
                 film_data['actors'] = actors
 
         # Извлекаем провайдеров для просмотра (сторонние источники)
-        def _normalize_url(url: str) -> str:
-            if not url:
-                return url
-            if url.startswith('//'):
-                return 'https:' + url
-            if not url.startswith('http'):
-                return 'https://' + url
-            return url
+
 
         providers: List[Dict] = []
 
@@ -698,7 +691,7 @@ class FilmPageParser:
                     if logo_src is None:
                         inner_img = a.find('img')
                         logo_src = inner_img.get('src') if inner_img and inner_img.get('src') else None
-                logo_url = _normalize_url(logo_src) if logo_src else None
+                logo_url = self._normalize_url(logo_src) if logo_src else None
                 if href and name:
                     providers.append({'name': name, 'url': href, 'logo': logo_url})
 
@@ -710,7 +703,7 @@ class FilmPageParser:
                 name = name_el.get_text(strip=True) if name_el else None
                 logo_img = a.find('img', {'data-tid': 'd813cf42'}) or a.find('img')
                 logo_src = logo_img.get('src') if logo_img and logo_img.get('src') else None
-                logo_url = _normalize_url(logo_src) if logo_src else None
+                logo_url = self._normalize_url(logo_src) if logo_src else None
                 if href and name:
                     providers.append({'name': name, 'url': href, 'logo': logo_url})
 
@@ -722,13 +715,85 @@ class FilmPageParser:
                 if name_el and img and img.get('src') and ('get-ott' in img.get('src') or 'ott' in img.get('src')):
                     name = name_el.get_text(strip=True)
                     href = a.get('href')
-                    logo_url = _normalize_url(img.get('src'))
+                    logo_url = self._normalize_url(img.get('src'))
                     providers.append({'name': name, 'url': href, 'logo': logo_url})
+
+        # Вариант 4: Парсинг из JSON (Apollo State)
+        if not providers:
+            json_providers = self._extract_watchability_from_json()
+            if json_providers:
+                providers.extend(json_providers)
 
         if providers:
             film_data['watch_providers'] = providers
         
         return film_data
+    
+    def _extract_watchability_from_json(self) -> List[Dict]:
+        """Извлекает провайдеров из JSON данных (__NEXT_DATA__)"""
+        providers = []
+        try:
+            # Ищем скрипт с id="__NEXT_DATA__"
+            script = self.soup.find('script', id='__NEXT_DATA__')
+            if not script or not script.string:
+                return providers
+            
+            try:
+                data = json.loads(script.string)
+                
+                # Рекурсивная функция для поиска ключа watchability
+                def find_watchability(obj):
+                    if isinstance(obj, dict):
+                        for key, value in obj.items():
+                            if key.startswith('watchability') and isinstance(value, dict):
+                                if 'items' in value and isinstance(value['items'], list):
+                                    return value
+                            
+                            # Рекурсивный поиск в значениях
+                            if isinstance(value, (dict, list)):
+                                result = find_watchability(value)
+                                if result:
+                                    return result
+                    elif isinstance(obj, list):
+                        for item in obj:
+                            result = find_watchability(item)
+                            if result:
+                                return result
+                    return None
+
+                watchability = find_watchability(data.get('props', {}))
+
+                if watchability and 'items' in watchability:
+                    for item in watchability['items']:
+                        if item.get('__typename') == 'Watchability':
+                            platform = item.get('platform')
+                            url = item.get('url')
+                            
+                            if platform and url:
+                                name = platform.get('name')
+                                logo = platform.get('logo')
+                                avatars_url = logo.get('avatarsUrl') if logo else None
+                                
+                                if name:
+                                    # Проверяем дубликаты
+                                    if not any(p['name'] == name for p in providers):
+                                        logo_url = self._normalize_url(avatars_url)
+                                        if logo_url and not logo_url.endswith('/72x72'):
+                                            logo_url = f"{logo_url}/72x72"
+                                            
+                                        providers.append({
+                                            'name': name,
+                                            'url': url,
+                                            'logo': logo_url
+                                        })
+            except Exception as e:
+                # print(f"Ошибка при разборе JSON __NEXT_DATA__: {e}")
+                pass
+                        
+        except Exception as e:
+            print(f"Ошибка при поиске watchability: {e}")
+            
+        return providers
     
     def _extract_from_meta(self) -> Dict:
         """Минимально: берём timeRequired из JSON-LD и сохраняем как есть."""
@@ -796,6 +861,17 @@ class FilmPageParser:
         except Exception:
             pass
         return result
+
+    def _normalize_url(self, url: str) -> str:
+        """Нормализует URL, добавляя протокол если нужно"""
+        if not url:
+            return url
+        if url.startswith('//'):
+            return 'https:' + url
+        if not url.startswith('http'):
+            return 'https://' + url
+        return url
+
     
     def save_to_json(self, film_data: Dict, output_file: str = 'output/film_details.json'):
         """

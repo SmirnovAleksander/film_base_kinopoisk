@@ -206,9 +206,9 @@ class MainParser:
             
             # URL страницы со списком фильмов
             if page == 1:
-                page_url = "https://www.kinopoisk.ru/lists/movies/?b=films&b=high_rated"
+                page_url = "https://www.kinopoisk.ru/lists/movies/top250/"
             else:
-                page_url = f"https://www.kinopoisk.ru/lists/movies/?b=films&b=high_rated/?page={page}"
+                page_url = f"https://www.kinopoisk.ru/lists/movies/top250/?page={page}"
             
             try:
                 # Парсим список фильмов
