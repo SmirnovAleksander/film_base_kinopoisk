@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks';
 import { ROUTES } from '@/lib/config';
 import { handleApiError } from '@/lib/api';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -19,10 +19,10 @@ interface LoginFormProps {
   onSuccess?: () => void;
 }
 
-export function LoginForm({ 
-  className = '', 
-  showRedirectLink = true, 
-  onSuccess 
+export function LoginForm({
+  className = '',
+  showRedirectLink = true,
+  onSuccess
 }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -168,15 +168,15 @@ export function LoginForm({
               <div className="text-center space-y-2">
                 <p className="text-sm text-muted-foreground">
                   Нет аккаунта?{' '}
-                  <Link 
-                    href={ROUTES.REGISTER} 
+                  <Link
+                    href={ROUTES.REGISTER}
                     className="text-primary hover:underline font-medium"
                   >
                     Зарегистрироваться
                   </Link>
                 </p>
-                <Link 
-                  href="/forgot-password" 
+                <Link
+                  href="/forgot-password"
                   className="text-sm text-muted-foreground hover:text-primary hover:underline"
                 >
                   Забыли пароль?

@@ -1,5 +1,5 @@
-export { useAuthStore } from './auth.store';
-export { useFilmsStore } from './films.store';
-export { useUserInteractionsStore } from './user.store';
-export { useUIStore } from './ui.store';
-export { useHistoryStore } from './history.store';
+export * from './auth.store';
+export * from './films.store';
+export * from './user.store';
+export * from './ui.store';
+export * from './history.store';

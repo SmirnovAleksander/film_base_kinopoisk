@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUserInteractionsStore } from '@/store';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks';
 
 interface StarRatingProps {
   filmId: number;
@@ -82,14 +82,13 @@ export function StarRating({
       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => {
         const isFilled = displayRating >= rating;
         const isHalfFilled = displayRating >= rating - 0.5 && displayRating < rating;
-        
+
         return (
           <Button
             key={rating}
             variant="ghost"
-            className={`p-2 rounded-full h-auto w-auto ${
-              interactive ? 'cursor-pointer hover:bg-yellow-500/10' : 'cursor-default'
-            } transition-colors duration-200`}
+            className={`p-2 rounded-full h-auto w-auto ${interactive ? 'cursor-pointer hover:bg-yellow-500/10' : 'cursor-default'
+              } transition-colors duration-200`}
             onClick={() => handleStarClick(rating)}
             onMouseEnter={() => handleStarHover(rating)}
             disabled={!interactive || isAddingRating}
@@ -100,7 +99,7 @@ export function StarRating({
                 className={`${sizeClasses[size]} text-muted-foreground`}
                 fill="none"
               />
-              
+
               {/* Звезда-оценка (желтая) */}
               {(isFilled || (isHalfFilled && displayRating >= rating - 0.5)) && (
                 <Star
@@ -112,7 +111,7 @@ export function StarRating({
           </Button>
         );
       })}
-      
+
       {userRating > 0 && (
         <span className="text-sm text-muted-foreground ml-2">
           {userRating.toFixed(1)}

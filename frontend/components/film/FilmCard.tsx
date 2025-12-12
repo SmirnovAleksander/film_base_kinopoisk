@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUserInteractionsStore } from '@/store';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks';
 import { ROUTES } from '@/lib/config';
 import { formatDuration } from '@/lib/utils';
 import { Film } from '@/lib/types';
@@ -25,9 +25,9 @@ interface FilmCardProps {
 export function FilmCard({ film, showActions = true, isExternal = false, externalUrl, className }: FilmCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
-  
+
   const { isAuthenticated } = useAuth();
-  
+
   const {
     bookmarkedFilmIds,
     addBookmark,
@@ -56,10 +56,10 @@ export function FilmCard({ film, showActions = true, isExternal = false, externa
   const handleBookmarkToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (isExternal) return;
     if (!isAuthenticated) return;
-    
+
     if (isBookmarked) {
       await removeBookmark(film.id);
     } else {
@@ -80,15 +80,15 @@ export function FilmCard({ film, showActions = true, isExternal = false, externa
 
   const LinkWrapper = isExternal && externalUrl
     ? ({ children }: { children: React.ReactNode }) => (
-        <a href={externalUrl} target="_blank" rel="noopener noreferrer" className="block">
-          {children}
-        </a>
-      )
+      <a href={externalUrl} target="_blank" rel="noopener noreferrer" className="block">
+        {children}
+      </a>
+    )
     : ({ children }: { children: React.ReactNode }) => (
-        <Link href={ROUTES.FILM_DETAILS(film.id)} className="block">
-          {children}
-        </Link>
-      );
+      <Link href={ROUTES.FILM_DETAILS(film.id)} className="block">
+        {children}
+      </Link>
+    );
 
   const cardContent = (
     <>
@@ -102,9 +102,8 @@ export function FilmCard({ film, showActions = true, isExternal = false, externa
             src={posterUrl}
             alt={film.title || 'Без названия'}
             fill
-            className={`object-cover transition-transform duration-200 group-hover:scale-105 ${
-              !imageLoaded ? 'opacity-0' : 'opacity-100'
-            }`}
+            className={`object-cover transition-transform duration-200 group-hover:scale-105 ${!imageLoaded ? 'opacity-0' : 'opacity-100'
+              }`}
             onLoad={() => setImageLoaded(true)}
             onError={handleImageError}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -115,7 +114,7 @@ export function FilmCard({ film, showActions = true, isExternal = false, externa
             <span className="text-muted-foreground">Нет постера</span>
           </div>
         )}
-        
+
         {/* Оверлей с рейтингом */}
         <div className="absolute top-2 right-2 flex flex-col gap-1">
           {film.rating_kp && (
@@ -211,7 +210,7 @@ export function FilmCard({ film, showActions = true, isExternal = false, externa
             {film.description || film.full_description}
           </p>
         )}
-        
+
         {/* Индикатор внешнего источника */}
         {isExternal && (
           <div className="mt-2">

@@ -6,7 +6,7 @@ import { Play, Star, TrendingUp, Film, Heart, Flag, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FilmCard, FilmCardSkeleton } from '@/components/film/FilmCard';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks';
 import { useFilmsStore } from '@/store';
 import { ROUTES } from '@/lib/config';
 
@@ -74,7 +74,7 @@ export default function HomePage() {
               Всё что нужно для управления вашей кинотекой
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card className="text-center">
               <CardHeader>
@@ -137,7 +137,7 @@ export default function HomePage() {
               <Link href={ROUTES.FILMS}>Смотреть все</Link>
             </Button>
           </div>
-          
+
           {isLoadingHighRated ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -164,7 +164,7 @@ export default function HomePage() {
               <Link href={ROUTES.FILMS}>Смотреть все</Link>
             </Button>
           </div>
-          
+
           {isLoadingRussian ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -191,7 +191,7 @@ export default function HomePage() {
               <Link href={ROUTES.FILMS}>Смотреть все</Link>
             </Button>
           </div>
-          
+
           {isLoadingUSA ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
               {Array.from({ length: 6 }).map((_, i) => (

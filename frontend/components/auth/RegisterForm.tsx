@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks';
 import { ROUTES } from '@/lib/config';
 import { handleApiError } from '@/lib/api';
 import { useRouter } from 'next/navigation';
@@ -18,10 +18,10 @@ interface RegisterFormProps {
   onSuccess?: () => void;
 }
 
-export function RegisterForm({ 
-  className = '', 
-  showRedirectLink = true, 
-  onSuccess 
+export function RegisterForm({
+  className = '',
+  showRedirectLink = true,
+  onSuccess
 }: RegisterFormProps) {
   const router = useRouter();
   const { register, isLoading } = useAuth();
@@ -92,7 +92,7 @@ export function RegisterForm({
         first_name: formData.first_name,
         last_name: formData.last_name,
       };
-      
+
       await register(registerData);
       router.push(ROUTES.LOGIN);
       router.refresh();
@@ -284,8 +284,8 @@ export function RegisterForm({
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 Уже есть аккаунт?{' '}
-                <Link 
-                  href={ROUTES.LOGIN} 
+                <Link
+                  href={ROUTES.LOGIN}
                   className="text-primary hover:underline font-medium"
                 >
                   Войти

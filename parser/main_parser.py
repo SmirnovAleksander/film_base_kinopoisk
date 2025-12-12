@@ -478,7 +478,7 @@ class MainParser:
                 return
             
             # Фильтруем только разрешенные категории
-            allowed_types = {'stills', 'wall', 'shooting', 'screenshots', 'promo'}
+            allowed_types = {'stills', 'wall', 'shooting', 'screenshots'}
             filtered_categories = [cat for cat in all_categories if cat['type'] in allowed_types]
             
             if not filtered_categories:

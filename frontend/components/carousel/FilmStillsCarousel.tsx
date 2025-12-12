@@ -10,7 +10,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import './css/embla.css';
+import './styles/embla.css';
 
 type Still = {
   id: string;
@@ -28,10 +28,10 @@ const TWEEN_FACTOR_BASE = 0.84;
 const numberWithinRange = (number: number, min: number, max: number): number =>
   Math.min(Math.max(number, min), max);
 
-export function FilmStillsCarousel({ 
-  stills, 
-  options = { loop: true }, 
-  className = '' 
+export function FilmStillsCarousel({
+  stills,
+  options = { loop: true },
+  className = ''
 }: FilmStillsCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel(options);
   const tweenFactor = useRef(0);
@@ -181,11 +181,10 @@ export function FilmStillsCarousel({
             <button
               key={index}
               onClick={() => scrollTo(index)}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                index === selectedIndex
-                  ? 'bg-primary'
-                  : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-              }`}
+              className={`w-2 h-2 rounded-full transition-colors ${index === selectedIndex
+                ? 'bg-primary'
+                : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                }`}
               aria-label={`Перейти к кадру ${index + 1}`}
             />
           ))}

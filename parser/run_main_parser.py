@@ -16,7 +16,9 @@ def main():
         parser = MainParser()
         
         # Запускаем парсинг
-        parser.parse_all_films(start_page=1, max_pages=2)  # Начинаем с 2 страниц для теста
+        # Используем настройки из конфига
+        from config import PARSING_CONFIG
+        parser.parse_all_films(start_page=PARSING_CONFIG['START_PAGE'], max_pages=PARSING_CONFIG['MAX_PAGES'])
         
     except KeyboardInterrupt:
         print("\n⏹️ Парсинг остановлен пользователем")

@@ -32,7 +32,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks';
 import { useTheme as useNextTheme } from 'next-themes';
 import { ROUTES } from '@/lib/config';
 import { FilmsAPI } from '@/lib/api';
