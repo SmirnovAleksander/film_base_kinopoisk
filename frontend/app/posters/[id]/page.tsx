@@ -20,16 +20,37 @@ import { StillCard, StillCardSkeleton } from '@/components/film';
 import { FilmsAPI } from '@/lib/api';
 import { useFilmsStore } from '@/store';
 import { ROUTES } from '@/lib/config';
-import type { FilmStills } from '@/lib/types/film.types';
+import type { FilmStills, FilmStillType } from '@/lib/types/film.types';
+
+// Названия категорий на русском
+const getCategoryLabel = (type: FilmStillType): string => {
+  const labels: Record<FilmStillType, string> = {
+    stills: 'Кадры из фильма',
+    wall: 'Обои',
+    shooting: 'Со съемок',
+    screenshots: 'Скриншоты'
+  };
+  return labels[type];
+};
 
 export default function PostersPage() {
   const params = useParams();
   const filmId = parseInt(params.id as string);
   
   const { currentFilm } = useFilmsStore();
-  const [filmStills, setFilmStills] = useState<FilmStills>({ stills: [], wall: [] });
+  const [filmStills, setFilmStills] = useState<FilmStills>({});
   const [isLoadingStills, setIsLoadingStills] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Получаем доступные типы (только те, которые есть в данных)
+  const availableTypes = Object.keys(filmStills).filter(key => 
+    filmStills[key as keyof FilmStills] && filmStills[key as keyof FilmStills]!.length > 0
+  ) as Array<keyof FilmStills>;
+  
+  // Получаем общее количество всех изображений
+  const totalCount = availableTypes.reduce((sum, type) => 
+    sum + (filmStills[type]?.length || 0), 0
+  );
 
   useEffect(() => {
     if (filmId) {
@@ -123,18 +144,13 @@ export default function PostersPage() {
           </div>
           
           {/* Статистика */}
-          {(filmStills.stills.length > 0 || filmStills.wall.length > 0) && (
-            <div className="flex gap-2">
-              {filmStills.stills.length > 0 && (
-                <Badge variant="secondary">
-                  Кадры: {filmStills.stills.length}
+          {availableTypes.length > 0 && (
+            <div className="flex gap-2 flex-wrap">
+              {availableTypes.map((type) => (
+                <Badge key={type} variant="secondary">
+                  {getCategoryLabel(type as FilmStillType)}: {filmStills[type]?.length || 0}
                 </Badge>
-              )}
-              {filmStills.wall.length > 0 && (
-                <Badge variant="secondary">
-                  Обои: {filmStills.wall.length}
-                </Badge>
-              )}
+              ))}
             </div>
           )}
         </div>
@@ -142,70 +158,44 @@ export default function PostersPage() {
         <Separator />
 
         {/* Контент */}
-        {(filmStills.stills.length > 0 || filmStills.wall.length > 0) ? (
-          <Tabs defaultValue="stills" className="space-y-8">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="stills" className="flex items-center gap-2">
-                <ImageIcon className="h-4 w-4" />
-                Кадры из фильма {filmStills.stills.length > 0 && `(${filmStills.stills.length})`}
-              </TabsTrigger>
-              <TabsTrigger value="wall" className="flex items-center gap-2">
-                <Maximize2 className="h-4 w-4" />
-                Обои {filmStills.wall.length > 0 && `(${filmStills.wall.length})`}
-              </TabsTrigger>
+        {availableTypes.length > 0 ? (
+          <Tabs defaultValue={availableTypes[0] as string} className="space-y-8">
+            <TabsList className={`grid w-full ${availableTypes.length === 1 ? 'grid-cols-1' : availableTypes.length === 2 ? 'grid-cols-2' : availableTypes.length === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
+              {availableTypes.map((type) => (
+                <TabsTrigger key={type} value={type} className="flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" />
+                  {getCategoryLabel(type as FilmStillType)} ({filmStills[type]?.length || 0})
+                </TabsTrigger>
+              ))}
             </TabsList>
 
-            <TabsContent value="stills" className="space-y-6">
-              {filmStills.stills.length > 0 ? (
-                <div className={
-                  viewMode === 'grid' 
-                    ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4'
-                    : 'space-y-4'
-                }>
-                  {filmStills.stills.map((still) => (
-                    <div key={still.id}>
-                      <StillCard still={still} className={viewMode === 'list' ? 'w-full max-w-md mx-auto' : ''} />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground text-lg mb-2">
-                    Кадры из фильма отсутствуют
-                  </p>
-                  <p className="text-muted-foreground">
-                    В ближайшее время будут добавлены изображения
-                  </p>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="wall" className="space-y-6">
-              {filmStills.wall.length > 0 ? (
-                <div className={
-                  viewMode === 'grid' 
-                    ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4'
-                    : 'space-y-4'
-                }>
-                  {filmStills.wall.map((wall) => (
-                    <div key={wall.id}>
-                      <StillCard still={wall} className={viewMode === 'list' ? 'w-full max-w-md mx-auto' : ''} />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Maximize2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground text-lg mb-2">
-                    Обои отсутствуют
-                  </p>
-                  <p className="text-muted-foreground">
-                    В ближайшее время будут добавлены изображения
-                  </p>
-                </div>
-              )}
-            </TabsContent>
+            {availableTypes.map((type) => (
+              <TabsContent key={type} value={type} className="space-y-6">
+                {filmStills[type] && filmStills[type]!.length > 0 ? (
+                  <div className={
+                    viewMode === 'grid' 
+                      ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4'
+                      : 'space-y-4'
+                  }>
+                    {filmStills[type]!.map((still) => (
+                      <div key={still.id}>
+                        <StillCard still={still} className={viewMode === 'list' ? 'w-full max-w-md mx-auto' : ''} />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground text-lg mb-2">
+                      {getCategoryLabel(type as FilmStillType)} отсутствуют
+                    </p>
+                    <p className="text-muted-foreground">
+                      В ближайшее время будут добавлены изображения
+                    </p>
+                  </div>
+                )}
+              </TabsContent>
+            ))}
           </Tabs>
         ) : (
           <div className="text-center py-12">

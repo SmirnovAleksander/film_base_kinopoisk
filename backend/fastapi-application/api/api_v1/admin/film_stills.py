@@ -16,7 +16,7 @@ router = APIRouter(
     dependencies=[Depends(current_active_superuser)],
 )
 
-ALLOWED_SOURCES = {"stills", "wall"}
+ALLOWED_SOURCES = {"stills", "wall", "shooting", "screenshots"}
 
 
 @router.post("", response_model=FilmStillRead, summary="Создать кадр фильма")

@@ -217,9 +217,14 @@ export interface Still {
   original: string;
 }
 
+// Разрешенные типы для film stills
+export type FilmStillType = 'stills' | 'wall' | 'shooting' | 'screenshots';
+
 export interface FilmStills {
-  stills: Still[];
-  wall: Still[];
+  stills?: Still[];
+  wall?: Still[];
+  shooting?: Still[];
+  screenshots?: Still[];
 }
 
 // Типы для связанных сущностей фильма
@@ -228,7 +233,7 @@ export interface FilmStill {
   film_id: number;
   picture_id: string;
   original_url: string;
-  source: string; // 'stills' или 'wall'
+  source: FilmStillType; // 'stills', 'wall', 'shooting', 'screenshots'
 }
 
 export interface FilmStillCreate {

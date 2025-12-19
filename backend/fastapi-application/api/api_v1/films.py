@@ -301,6 +301,9 @@ async def get_film_stills(
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     """Получить кадры и обои фильма"""
+    # Разрешенные типы
+    ALLOWED_TYPES = {"stills", "wall", "shooting", "screenshots"}
+    
     stmt = (
         select(FilmStill)
         .where(FilmStill.film_id == film_id)
@@ -309,17 +312,18 @@ async def get_film_stills(
     result = await session.execute(stmt)
     stills = result.scalars().all()
     
-    # Группируем по источнику
-    grouped = {"stills": [], "wall": []}
+    # Группируем по источнику, включая только разрешенные типы
+    grouped = {type_name: [] for type_name in ALLOWED_TYPES}
     for still in stills:
         still_data = {
             "id": still.picture_id,
             "original": still.original_url
         }
-        if still.source in grouped:
+        if still.source in ALLOWED_TYPES:
             grouped[still.source].append(still_data)
     
-    return grouped
+    # Убираем пустые массивы для более чистого ответа
+    return {k: v for k, v in grouped.items() if v}
 
 
 @router.get("/{film_id}/stuff", response_model=List[StuffRead], summary="Участники фильма")

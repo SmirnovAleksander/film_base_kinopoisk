@@ -63,7 +63,7 @@ export default function FilmDetailsPage() {
   const [newComment, setNewComment] = useState('');
   const [filmStuff, setFilmStuff] = useState<any[]>([]);
   const [isLoadingStuff, setIsLoadingStuff] = useState(false);
-  const [filmStills, setFilmStills] = useState<FilmStills>({ stills: [], wall: [] });
+  const [filmStills, setFilmStills] = useState<FilmStills>({});
   const [isLoadingStills, setIsLoadingStills] = useState(false);
   const [recommendedFilms, setRecommendedFilms] = useState<any[]>([]);
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
@@ -209,6 +209,9 @@ export default function FilmDetailsPage() {
   };
 
   const isBookmarked = bookmarkedFilmIds.has(filmId);
+
+  // Показываем только категорию stills на странице фильма
+  const stillsData = filmStills.stills && filmStills.stills.length > 0 ? filmStills.stills : null;
 
   // Функция копирования URL
   const handleShare = async () => {
@@ -539,41 +542,38 @@ export default function FilmDetailsPage() {
         )}
 
         {/* Кадры из фильма */}
-        {(filmStills.stills.length > 0) && (
+        {stillsData && (
           <section className="space-y-8">
-            {/* Stills */}
-            {filmStills.stills.length > 0 && (
-              <Card className="border-0 shadow-xl">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-2xl">Кадры из фильма</CardTitle>
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={ROUTES.POSTERS(filmId)}>
-                        <ImageIcon className="h-4 w-4 mr-2" />
-                        Посмотреть все ({filmStills.stills.length})
-                      </Link>
-                    </Button>
+            <Card className="border-0 shadow-xl">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-2xl">Кадры из фильма</CardTitle>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={ROUTES.POSTERS(filmId)}>
+                      <ImageIcon className="h-4 w-4 mr-2" />
+                      Посмотреть все ({stillsData.length})
+                    </Link>
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {isLoadingStills ? (
+                  <div className="flex gap-4 overflow-hidden">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div key={i} className="shrink-0 w-md">
+                        <StillCardSkeleton />
+                      </div>
+                    ))}
                   </div>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingStills ? (
-                    <div className="flex gap-4 overflow-hidden">
-                      {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="shrink-0 w-md">
-                          <StillCardSkeleton />
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <FilmStillsCarousel
-                      stills={filmStills.stills}
-                      options={carouselOptions}
-                      className="w-full"
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            )}
+                ) : (
+                  <FilmStillsCarousel
+                    stills={stillsData}
+                    options={carouselOptions}
+                    className="w-full"
+                  />
+                )}
+              </CardContent>
+            </Card>
           </section>
         )}
 
