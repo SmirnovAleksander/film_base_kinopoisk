@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
         hostname: '*.yandex.net',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'encrypted-tbn0.gstatic.com',
+        pathname: '/**',
+      },
     ],
   },
 };

@@ -19,7 +19,8 @@ import {
   Edit,
   Trash2,
   Send,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,6 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import Link from 'next/link';
 import { FilmCard, FilmCardSkeleton, MiniPersonCard, StillCardSkeleton } from '@/components/film';
 import { StarRating } from '@/components/film';
@@ -35,7 +37,7 @@ import { useAuth } from '@/hooks';
 import { toast } from 'sonner';
 import { ROUTES } from '@/lib/config';
 import { FilmsAPI } from '@/lib/api';
-import type { FilmStills } from '@/lib/types/film.types';
+import type { FilmStills, FilmWatchProvider } from '@/lib/types/film.types';
 import FilmStillsCarousel from '@/components/carousel/FilmStillsCarousel';
 
 export default function FilmDetailsPage() {
@@ -70,6 +72,8 @@ export default function FilmDetailsPage() {
   const [similarFilms, setSimilarFilms] = useState<any[]>([]);
   const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
   const [similarFilmStatuses, setSimilarFilmStatuses] = useState<{ [kinopoiskId: string]: { existsInDb: boolean, filmData?: any } }>({});
+  const [watchProviders, setWatchProviders] = useState<FilmWatchProvider[]>([]);
+  const [isLoadingWatchProviders, setIsLoadingWatchProviders] = useState(false);
 
   // Состояние для редактирования комментариев
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
@@ -83,6 +87,7 @@ export default function FilmDetailsPage() {
       loadFilmStills();
       loadRecommendedFilms();
       loadSimilarFilms();
+      loadWatchProviders();
     }
   }, [filmId]);
 
@@ -163,6 +168,18 @@ export default function FilmDetailsPage() {
     }
   };
 
+  const loadWatchProviders = async () => {
+    try {
+      setIsLoadingWatchProviders(true);
+      const providers = await FilmsAPI.getFilmWatchProviders(filmId);
+      setWatchProviders(providers);
+    } catch (error) {
+      console.error('Error loading watch providers:', error);
+    } finally {
+      setIsLoadingWatchProviders(false);
+    }
+  };
+
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || !user) return;
@@ -212,6 +229,17 @@ export default function FilmDetailsPage() {
 
   // Показываем только категорию stills на странице фильма
   const stillsData = filmStills.stills && filmStills.stills.length > 0 ? filmStills.stills : null;
+
+  // Добавляем статический провайдер reyohoho к списку провайдеров
+  const allWatchProviders = currentFilm?.kinopoisk_id ? [
+    ...watchProviders,
+    {
+      id: 0, // Временный ID для статического провайдера
+      name: 'reyohoho',
+      url: `https://reyohoho.github.io/reyohoho/movie/${currentFilm.kinopoisk_id}`,
+      logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQS06Lv3qkW0IXtMqy_xll0d87wjMNS1vqx3Q&s',
+    } as FilmWatchProvider
+  ] : watchProviders;
 
   // Функция копирования URL
   const handleShare = async () => {
@@ -501,6 +529,82 @@ export default function FilmDetailsPage() {
                     </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          </section>
+        )}
+
+         {/* Провайдеры для просмотра */}
+         {allWatchProviders.length > 0 && (
+          <section className="space-y-6">
+            <Card className="border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-2xl flex items-center gap-2">
+                  <Play className="h-6 w-6" />
+                  Где смотреть
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                 {isLoadingWatchProviders ? (
+                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+                     {Array.from({ length: 8 }).map((_, i) => (
+                       <div key={i} className="space-y-2">
+                         <Skeleton className="h-12 w-full rounded-lg" />
+                         <Skeleton className="h-3 w-3/4 mx-auto" />
+                       </div>
+                     ))}
+                   </div>
+                 ) : (
+                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+                     {allWatchProviders.map((provider, index) => {
+                       const isReyohoho = provider.name === 'reyohoho';
+                       const providerCard = (
+                         <a
+                           key={provider.id || `reyohoho-${index}`}
+                           href={provider.url}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="group flex flex-col items-center gap-2 p-3 rounded-lg border border-border hover:border-primary hover:bg-accent transition-all duration-200"
+                         >
+                           {provider.logo ? (
+                             <div className="relative w-12 h-12 flex items-center justify-center">
+                               <Image
+                                 src={provider.logo}
+                                 alt={provider.name}
+                                 fill
+                                 className="object-contain"
+                                 unoptimized
+                               />
+                             </div>
+                           ) : (
+                             <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                               <Play className="h-6 w-6 text-muted-foreground" />
+                             </div>
+                           )}
+                           <span className="text-xs font-medium text-center group-hover:text-primary transition-colors line-clamp-2 leading-tight">
+                             {provider.name}
+                           </span>
+                           <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-0.5" />
+                         </a>
+                       );
+
+                       if (isReyohoho) {
+                         return (
+                           <Tooltip key={provider.id || `reyohoho-${index}`}>
+                             <TooltipTrigger asChild>
+                               {providerCard}
+                             </TooltipTrigger>
+                             <TooltipContent>
+                               <p>Бесплатно</p>
+                             </TooltipContent>
+                           </Tooltip>
+                         );
+                       }
+
+                       return providerCard;
+                     })}
+                   </div>
+                 )}
               </CardContent>
             </Card>
           </section>
