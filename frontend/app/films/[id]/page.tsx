@@ -610,6 +610,32 @@ export default function FilmDetailsPage() {
           </section>
         )}
 
+        {/* Плеер фильма */}
+        {currentFilm?.kinopoisk_id && (
+          <section className="space-y-6">
+            <Card className="border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-2xl flex items-center gap-2">
+                  <Play className="h-6 w-6" />
+                  Просмотр фильма
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="relative w-full rounded-lg overflow-hidden border border-border bg-muted/30">
+                  <iframe
+                    src={`https://flcksbr.top/film/${currentFilm.kinopoisk_id}/?utm_referrer=organic.kinopoisk.ru`}
+                    className="w-full aspect-video"
+                    allowFullScreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    style={{ minHeight: '1000px' }}
+                    title={`Плеер для фильма ${currentFilm.title || currentFilm.original_title || ''}`}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        )}
+
         {/* Участники */}
         {filmStuff.length > 0 && (
           <section className="space-y-6">
