@@ -303,9 +303,19 @@ export default function FilmDetailsPage() {
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg" />
                     <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Button className="w-full" size="lg">
+                      <Button 
+                        className="w-full" 
+                        size="lg"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const playerSection = document.getElementById('film-player');
+                          if (playerSection) {
+                            playerSection.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                          }
+                        }}
+                      >
                         <Play className="h-4 w-4 mr-2" />
-                        Смотреть трейлер
+                        Смотреть фильм
                       </Button>
                     </div>
                   </div>
@@ -612,7 +622,7 @@ export default function FilmDetailsPage() {
 
         {/* Плеер фильма */}
         {currentFilm?.kinopoisk_id && (
-          <section className="space-y-6">
+          <section id="film-player" className="space-y-6">
             <Card className="border-0 shadow-xl">
               <CardHeader>
                 <CardTitle className="text-2xl flex items-center gap-2">
