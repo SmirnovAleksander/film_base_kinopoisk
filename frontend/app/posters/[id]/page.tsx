@@ -84,7 +84,7 @@ export default function PostersPage() {
                 <Skeleton className="h-8 w-64" />
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {Array.from({ length: 12 }).map((_, j) => (
                     <StillCardSkeleton key={j} />
                   ))}
@@ -174,12 +174,16 @@ export default function PostersPage() {
                 {filmStills[type] && filmStills[type]!.length > 0 ? (
                   <div className={
                     viewMode === 'grid' 
-                      ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4'
+                      ? 'grid grid-cols-1 sm:grid-cols-3 gap-4'
                       : 'space-y-4'
                   }>
                     {filmStills[type]!.map((still) => (
                       <div key={still.id}>
-                        <StillCard still={still} className={viewMode === 'list' ? 'w-full max-w-md mx-auto' : ''} />
+                        <StillCard 
+                          still={still} 
+                          className={viewMode === 'list' ? 'w-full max-w-4xl mx-auto' : ''}
+                          unoptimized={viewMode === 'list'}
+                        />
                       </div>
                     ))}
                   </div>

@@ -2,9 +2,11 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
+import { X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface StillCardProps {
   still: {
@@ -12,9 +14,10 @@ interface StillCardProps {
     original: string;
   };
   className?: string;
+  unoptimized?: boolean;
 }
 
-export function StillCard({ still, className = '' }: StillCardProps) {
+export function StillCard({ still, className = '', unoptimized = false }: StillCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
@@ -50,7 +53,7 @@ export function StillCard({ still, className = '' }: StillCardProps) {
                     onLoad={handleImageLoad}
                     onError={handleImageError}
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    unoptimized={true}
+                    unoptimized={unoptimized}
                   />
                 ) : (
                   <div className="w-full h-full bg-muted flex items-center justify-center">
@@ -60,6 +63,39 @@ export function StillCard({ still, className = '' }: StillCardProps) {
               </div>
             </div>
           </DialogTrigger>
+          {still.original && !imageError && (
+            <DialogContent 
+              className="w-[95vw] h-[95vh] max-w-[95vw] max-h-[95vh] p-2 bg-transparent border-none focus:outline-none flex items-center justify-center"
+              showCloseButton={false}
+            >
+              <DialogTitle className="sr-only">
+                Кадр из фильма {still.id}
+              </DialogTitle>
+              <div className="relative w-full h-full flex items-center justify-center">
+                <div className="relative inline-block">
+                  <Image
+                    src={still.original}
+                    alt={`Кадр из фильма ${still.id}`}
+                    width={1920}
+                    height={1080}
+                    className="max-w-[93vw] max-h-[93vh] w-auto h-auto object-contain rounded-lg"
+                    unoptimized={true}
+                    priority
+                  />
+                  <DialogClose asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full w-10 h-10 z-10 shadow-lg"
+                    >
+                      <X className="h-5 w-5" />
+                      <span className="sr-only">Закрыть</span>
+                    </Button>
+                  </DialogClose>
+                </div>
+              </div>
+            </DialogContent>
+          )}
         </Dialog>
       </CardContent>
     </Card>
