@@ -184,3 +184,5 @@ parser/parser_utils/images/
 parser/parser_utils/output/
 
 .idea
+
+parser/output

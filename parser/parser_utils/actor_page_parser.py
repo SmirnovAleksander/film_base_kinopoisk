@@ -226,30 +226,6 @@ class ActorPageParser:
         """Извлекает данные из HTML элементов"""
         actor_data = {}
         
-        # # Извлекаем основное имя актера (data-tid="f22e0093")
-        # name_elem = self.soup.find('h1', {'data-tid': 'f22e0093'})
-        # if name_elem:
-        #     actor_data['name'] = name_elem.get_text(strip=True)
-        
-        # # Извлекаем английское имя актера (data-tid="7cdbd36a")
-        # original_name_elem = self.soup.find('div', {'data-tid': '7cdbd36a'})
-        # if original_name_elem:
-        #     actor_data['original_name'] = original_name_elem.get_text(strip=True)
-        
-        # # Извлекаем карьеру/роли (data-test-id="career")
-        # career_elem = self.soup.find('div', {'data-test-id': 'career'})
-        # if career_elem:
-        #     # Находим все кнопки с ролями (data-tid="e150c550")
-        #     role_buttons = career_elem.find_all('button', {'data-tid': 'e150c550'})
-        #     roles = []
-        #     for button in role_buttons:
-        #         role_text = button.get_text(strip=True)
-        #         if role_text:
-        #             roles.append(role_text)
-            
-        #     if roles:
-        #         actor_data['career'] = roles
-        
         # Извлекаем жанры (контейнер data-tid="e32f6be5", кнопки data-tid="9758b27c")
         genres_container = self.soup.find('div', {'data-tid': 'e32f6be5'})
         if genres_container:
@@ -384,7 +360,6 @@ class ActorPageParser:
         photo_elem = self.soup.find('img', {'data-tid': 'd813cf42'})
         if photo_elem and photo_elem.get('src'):
             photo_url = photo_elem.get('src')
-            # Нормализуем URL - добавляем https:// если нужно
             if photo_url.startswith('//'):
                 photo_url = 'https:' + photo_url
             elif not photo_url.startswith('http'):
@@ -419,7 +394,7 @@ class ActorPageParser:
                         # Оригинальное имя / альтернативное
                         if node.get('alternateName'):
                             result['original_name'] = str(node.get('alternateName'))
-                        # Пол (в JSON-LD может быть URL, например http://schema.org/Male)
+                        # Пол
                         if node.get('gender'):
                             gender_raw = node.get('gender')
                             try:
@@ -437,19 +412,7 @@ class ActorPageParser:
                                 result['career'] = [str(x) for x in job_title if x]
                             else:
                                 result['career'] = [str(job_title)]
-                        # # Изображение (image)
-                        # image_value = node.get('image')
-                        # if image_value:
-                        #     try:
-                        #         img = str(image_value)
-                        #         if img.startswith('//'):
-                        #             img = 'https:' + img
-                        #         elif not img.startswith('http'):
-                        #             img = 'https://' + img
-                        #         result['image'] = img
-                        #     except Exception:
-                        #         pass
-                        # Дата рождения (ISO YYYY-MM-DD)
+                      
                         if node.get('birthDate'):
                             result['birth_date'] = str(node.get('birthDate'))
                             # Также попробуем заполнить год, если ещё не заполнен

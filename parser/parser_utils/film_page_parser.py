@@ -225,29 +225,12 @@ class FilmPageParser:
     def _extract_from_html(self) -> Dict:
         """Извлекает данные из HTML элементов"""
         film_data = {}
-        
-        # # Извлекаем название фильма (data-tid="75209b22")
-        # title_elem = self.soup.find('span', {'data-tid': '75209b22'})
-        # if title_elem:
-        #     title_text = title_elem.get_text(strip=True)
-        #     # Убираем дату в скобках из названия (например, "1+1 (2011)" -> "1+1")
-        #     title_clean = re.sub(r'\s*\(\d{4}\)\s*$', '', title_text)
-        #     film_data['title'] = title_clean
-        
-        # # Извлекаем оригинальное название (data-tid="eb6be89")
-        # original_title_elem = self.soup.find('span', {'data-tid': 'eb6be89'})
-        # if original_title_elem:
-        #     film_data['original_title'] = original_title_elem.get_text(strip=True)
-        
+            
         # Извлекаем описание (data-tid="bfd38da2")
         description_elem = self.soup.find('p', {'data-tid': 'bfd38da2'})
         if description_elem:
             film_data['description'] = description_elem.get_text(strip=True)
         
-        # # Извлекаем полное описание (data-tid="bbb11238")
-        # full_description_elem = self.soup.find('p', {'data-tid': 'bbb11238'})
-        # if full_description_elem:
-        #     film_data['full_description'] = full_description_elem.get_text(strip=True)
         
         # Извлекаем рейтинг Кинопоиска (data-tid="939058a8")
         kp_rating_elem = self.soup.find('span', {'data-tid': '939058a8'})
