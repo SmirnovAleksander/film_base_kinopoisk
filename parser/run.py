@@ -27,21 +27,21 @@ def print_menu():
     print("  3. Парсер страницы актера (локальный)")
     print("  4. Парсер галереи кадров (локальный)")
     print("  5. Парсер новостей (локальный)")
+    print("  6. Парсер страницы сериала (локальный)")
     
     print("\n🌐 ОНЛАЙН ПАРСЕРЫ (с сайта):")
-    print("  6. Парсер всех фильмов (онлайн)")
-    print("  7. Парсер страницы фильма (онлайн)")
-    print("  8. Парсер страницы актера (онлайн)")
-    print("  9. Парсер галереи кадров (онлайн)")
-    print(" 10. Парсер новостей (онлайн)")
+    print("  7. Парсер всех фильмов (онлайн)")
+    print("  8. Парсер страницы фильма (онлайн)")
+    print("  9. Парсер страницы актера (онлайн)")
+    print(" 10. Парсер галереи кадров (онлайн)")
+    print(" 11. Парсер новостей (онлайн)")
+    print(" 12. Парсер страницы сериала (онлайн)")
     
     print("\n⚙️  СПЕЦИАЛЬНЫЕ ПАРСЕРЫ:")
-    print(" 11. Главный парсер фильмов и актеров")
-    print(" 12. Парсер всех типов медиа контента")
-    
-    print("\n📺 СЕРИАЛЫ:")
-    print(" 13. Парсер страницы сериала (локальный)")
-    print(" 14. Парсер страницы сериала (онлайн)")
+    print(" 13. Главный парсер фильмов")
+    print(" 14. Главный парсер сериалов")
+    print(" 15. Главный парсер фильмов и сериалов")
+    print(" 16. Парсер всех типов медиа контента")
     
     print("\n  0. Выход")
     print("=" * 60)
@@ -329,7 +329,7 @@ def run_serial_parser_online():
     
     print("\n=== Парсер страницы сериала (онлайн) ===")
     
-    serial_url = "https://www.kinopoisk.ru/series/464963/"  # Лучше звоните Солу
+    serial_url = "https://www.kinopoisk.ru/series/796660/"  # Лучше звоните Солу
     
     try:
         parser = SerialPageParser()
@@ -454,16 +454,61 @@ def run_news_parser_online():
         traceback.print_exc()
 
 
-def run_main_parser():
-    """Главный парсер фильмов и актеров"""
+def run_main_parser_films():
+    """Главный парсер только фильмов"""
     from main_parser import MainParser
     
-    print("\n🚀 Запуск главного парсера Кинопоиска")
+    print("\n🚀 Запуск главного парсера фильмов Кинопоиска")
     print("=" * 50)
     
     try:
         parser = MainParser()
         from config import PARSING_CONFIG
+        parser.parse_all_films(start_page=PARSING_CONFIG['START_PAGE'], max_pages=PARSING_CONFIG['MAX_PAGES'])
+    except KeyboardInterrupt:
+        print("\n⏹️ Парсинг остановлен пользователем")
+    except Exception as e:
+        print(f"❌ Критическая ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        print("\n🔚 Парсинг завершен")
+
+
+def run_main_parser_series():
+    """Главный парсер только сериалов"""
+    from main_parser import MainParser
+    
+    print("\n🚀 Запуск главного парсера сериалов Кинопоиска")
+    print("=" * 50)
+    
+    try:
+        parser = MainParser()
+        from config import PARSING_CONFIG
+        parser.parse_all_series(start_page=PARSING_CONFIG['START_PAGE'], max_pages=PARSING_CONFIG['MAX_PAGES'])
+    except KeyboardInterrupt:
+        print("\n⏹️ Парсинг остановлен пользователем")
+    except Exception as e:
+        print(f"❌ Критическая ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        print("\n🔚 Парсинг завершен")
+
+
+def run_main_parser_all():
+    """Главный парсер фильмов и сериалов"""
+    from main_parser import MainParser
+    
+    print("\n🚀 Запуск главного парсера фильмов и сериалов Кинопоиска")
+    print("=" * 50)
+    
+    try:
+        parser = MainParser()
+        from config import PARSING_CONFIG
+        # Сначала парсим сериалы
+        parser.parse_all_series(start_page=PARSING_CONFIG['START_PAGE'], max_pages=PARSING_CONFIG['MAX_PAGES'])
+        # Затем парсим фильмы
         parser.parse_all_films(start_page=PARSING_CONFIG['START_PAGE'], max_pages=PARSING_CONFIG['MAX_PAGES'])
     except KeyboardInterrupt:
         print("\n⏹️ Парсинг остановлен пользователем")
@@ -549,23 +594,27 @@ def main():
             elif choice == '5':
                 run_news_parser_local()
             elif choice == '6':
-                run_parser_online()
-            elif choice == '7':
-                run_film_parser_online()
-            elif choice == '8':
-                run_actor_parser_online()
-            elif choice == '9':
-                run_stills_parser_online()
-            elif choice == '10':
-                run_news_parser_online()
-            elif choice == '11':
-                run_main_parser()
-            elif choice == '12':
-                run_all_media_parser()
-            elif choice == '13':
                 run_serial_parser_local()
-            elif choice == '14':
+            elif choice == '7':
+                run_parser_online()
+            elif choice == '8':
+                run_film_parser_online()
+            elif choice == '9':
+                run_actor_parser_online()
+            elif choice == '10':
+                run_stills_parser_online()
+            elif choice == '11':
+                run_news_parser_online()
+            elif choice == '12':
                 run_serial_parser_online()
+            elif choice == '13':
+                run_main_parser_films()
+            elif choice == '14':
+                run_main_parser_series()
+            elif choice == '15':
+                run_main_parser_all()
+            elif choice == '16':
+                run_all_media_parser()
             else:
                 print("\n❌ Неверный выбор! Попробуйте снова.")
                 continue

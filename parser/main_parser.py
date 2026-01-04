@@ -4,10 +4,11 @@ import requests
 from bs4 import BeautifulSoup
 from parser_utils.kinopoisk_parser import KinopoiskParser
 from parser_utils.film_page_parser import FilmPageParser
+from parser_utils.serial_page_parser import SerialPageParser
 from parser_utils.actor_page_parser import ActorPageParser
 from parser_utils.stills_page_parser import StillsPageParser
 from config import DATABASE_CONFIG, DELAYS, PARSING_CONFIG, LOGGING_CONFIG
-from image_downloader import ImageDownloader
+
 
 class MainParser:
     def __init__(self):
@@ -21,11 +22,11 @@ class MainParser:
         # Инициализируем парсеры
         self.kinopoisk_parser = KinopoiskParser()
         self.film_parser = FilmPageParser()
+        self.serial_parser = SerialPageParser()
         self.actor_parser = ActorPageParser()
         self.stills_parser = StillsPageParser()
         
-        # Инициализируем загрузчик изображений
-        self.image_downloader = ImageDownloader()
+
         
         # Подключаемся к БД
         self.db_connection = self.connect_to_db()
@@ -127,61 +128,93 @@ class MainParser:
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS film_genre (
+            CREATE TABLE IF NOT EXISTS series (
                 id SERIAL PRIMARY KEY,
-                film_id INTEGER REFERENCES film(id),
+                kinopoisk_id VARCHAR(20) UNIQUE NOT NULL,
+                title VARCHAR(500),
+                original_title VARCHAR(500),
+                description TEXT,
+                full_description TEXT,
+                poster VARCHAR(1000),
+                year INTEGER,
+                tagline TEXT,
+                ru_premiere VARCHAR(100),
+                world_premiere VARCHAR(100),
+                content_rating VARCHAR(20),
+                is_family_friendly BOOLEAN DEFAULT FALSE,
+                rating_kp DECIMAL(3,1),
+                kp_votes_count VARCHAR(50),
+                rating_imdb DECIMAL(3,1),
+                imdb_votes_count VARCHAR(50),
+                user_rating DECIMAL(3,1),
+                user_rating_count INTEGER DEFAULT 0,
+                platform VARCHAR(200),
+                number_of_episodes INTEGER
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS content_genre (
+                id SERIAL PRIMARY KEY,
+                content_id INTEGER NOT NULL,
+                content_type VARCHAR(20) NOT NULL CHECK (content_type IN ('film', 'series')),
                 genre_id INTEGER REFERENCES genre(id),
-                UNIQUE(film_id, genre_id)
+                UNIQUE(content_id, content_type, genre_id)
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS film_country (
+            CREATE TABLE IF NOT EXISTS content_country (
                 id SERIAL PRIMARY KEY,
-                film_id INTEGER REFERENCES film(id),
+                content_id INTEGER NOT NULL,
+                content_type VARCHAR(20) NOT NULL CHECK (content_type IN ('film', 'series')),
                 country_id INTEGER REFERENCES country(id),
-                UNIQUE(film_id, country_id)
+                UNIQUE(content_id, content_type, country_id)
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS film_stuff (
+            CREATE TABLE IF NOT EXISTS content_stuff (
                 id SERIAL PRIMARY KEY,
-                film_id INTEGER REFERENCES film(id),
+                content_id INTEGER NOT NULL,
+                content_type VARCHAR(20) NOT NULL CHECK (content_type IN ('film', 'series')),
                 stuff_id INTEGER REFERENCES stuff(id),
                 role VARCHAR(100),
-                UNIQUE(film_id, stuff_id, role)
+                UNIQUE(content_id, content_type, stuff_id, role)
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS similar_film (
+            CREATE TABLE IF NOT EXISTS similar_content (
                 id SERIAL PRIMARY KEY,
-                film_id INTEGER REFERENCES film(id),
-                similar_film_id VARCHAR(20),
-                similar_film_title VARCHAR(500),
-                similar_film_year VARCHAR(10),
-                similar_film_genres TEXT[],
-                similar_film_poster TEXT,
-                similar_film_rating VARCHAR(10),
-                UNIQUE(film_id, similar_film_id)
+                content_id INTEGER NOT NULL,
+                content_type VARCHAR(20) NOT NULL CHECK (content_type IN ('film', 'series')),
+                similar_content_id VARCHAR(20) NOT NULL,
+                similar_content_type VARCHAR(20) NOT NULL CHECK (similar_content_type IN ('film', 'series')),
+                similar_content_title VARCHAR(500),
+                similar_content_year VARCHAR(10),
+                similar_content_genres TEXT[],
+                similar_content_poster TEXT,
+                similar_content_rating VARCHAR(10),
+                UNIQUE(content_id, content_type, similar_content_id, similar_content_type)
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS film_still (
+            CREATE TABLE IF NOT EXISTS content_still (
                 id SERIAL PRIMARY KEY,
-                film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
+                content_id INTEGER NOT NULL,
+                content_type VARCHAR(20) NOT NULL CHECK (content_type IN ('film', 'series')),
                 picture_id VARCHAR(20) NOT NULL,
                 original_url TEXT NOT NULL,
                 source VARCHAR(16) NOT NULL,
-                UNIQUE(film_id, picture_id, source)
+                UNIQUE(content_id, content_type, picture_id, source)
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS film_watch_provider (
+            CREATE TABLE IF NOT EXISTS content_watch_provider (
                 id SERIAL PRIMARY KEY,
-                film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
+                content_id INTEGER NOT NULL,
+                content_type VARCHAR(20) NOT NULL CHECK (content_type IN ('film', 'series')),
                 name VARCHAR(200) NOT NULL,
                 url TEXT NOT NULL,
                 logo TEXT NULL,
-                UNIQUE(film_id, name)
+                UNIQUE(content_id, content_type, name)
             )
             """
         ]
@@ -237,10 +270,10 @@ class MainParser:
                         self.parse_film_people(film_id, film_db_id, film_details)
                         
                         # Парсим похожие фильмы
-                        self.parse_similar_films(film_details, film_db_id)
+                        self.parse_similar_content(film_details, film_db_id, 'film')
 
                         # Парсим кадры (stills + wall)
-                        self.parse_and_save_stills(film_id, film_db_id)
+                        self.parse_and_save_stills(film_id, film_db_id, 'film')
                         
                         # Тихий режим
                         print(f"✅ Фильм '{film_title}' полностью обработан")
@@ -258,6 +291,59 @@ class MainParser:
                 time.sleep(self.delays['BETWEEN_PAGES'])
         # Завершение без лишнего вывода
     
+    def parse_all_series(self, start_page=1, max_pages=5):
+        """Парсинг всех сериалов с нескольких страниц"""
+        for page in range(start_page, start_page + max_pages):
+            # URL страницы со списком сериалов
+            if page == 1:
+                page_url = "https://www.kinopoisk.ru/lists/movies/series-top250/?b=top"
+            else:
+                page_url = f"https://www.kinopoisk.ru/lists/movies/series-top250/?b=top&page={page}"
+            
+            try:
+                # Парсим список сериалов
+                self.kinopoisk_parser.load_html_from_url(page_url)
+                series_ids = self.kinopoisk_parser.parse_all_series()
+                print(f"📊 Найдено {len(series_ids)} сериалов на странице {page}")
+                
+                # Парсим каждый сериал
+                for i, series_data in enumerate(series_ids, 1):
+                    series_id = series_data.get('id')
+                    if not series_id:
+                        continue
+                        
+                    # Парсим детали сериала
+                    series_details = self.parse_series_details(series_id)
+                    if series_details:
+                        # Показываем название сериала перед парсингом актеров
+                        series_title = series_details.get('title', 'Unknown Series')
+                        print(f"📺 Парсинг сериала: {series_title}")
+
+                        # Сохраняем сериал в БД
+                        series_db_id = self.save_series_to_db(series_details)
+                        
+                        # Парсим всех участников сериала
+                        self.parse_series_people(series_id, series_db_id, series_details)
+                        
+                        # Парсим похожие сериалы/фильмы
+                        self.parse_similar_content(series_details, series_db_id, 'series')
+
+                        # Парсим кадры (stills + wall)
+                        self.parse_and_save_stills(series_id, series_db_id, 'series')
+                        
+                        print(f"✅ Сериал '{series_title}' полностью обработан")
+                    
+                    # Пауза между запросами
+                    time.sleep(self.delays['BETWEEN_FILMS'])
+                    
+            except Exception as e:
+                print(f"❌ Ошибка парсинга страницы {page}: {e}")
+                continue
+            
+            # Пауза между страницами (кроме последней)
+            if page < start_page + max_pages - 1:
+                time.sleep(self.delays['BETWEEN_PAGES'])
+    
     def parse_film_details(self, film_id):
         """Парсинг детальной страницы фильма"""
         try:
@@ -271,6 +357,21 @@ class MainParser:
             return film_data
         except Exception as e:
             print(f"❌ Ошибка парсинга фильма {film_id}: {e}")
+            return None
+    
+    def parse_series_details(self, series_id):
+        """Парсинг детальной страницы сериала"""
+        try:
+            series_url = f"https://kinopoisk.ru/series/{series_id}/"
+            self.serial_parser.load_html_from_url(series_url)
+            series_data = self.serial_parser.extract_film_details()
+            
+            # Добавляем ID сериала
+            series_data['kinopoisk_id'] = series_id
+            
+            return series_data
+        except Exception as e:
+            print(f"❌ Ошибка парсинга сериала {series_id}: {e}")
             return None
     
     def parse_film_people(self, film_id, film_db_id, film_data):
@@ -307,7 +408,51 @@ class MainParser:
                     person_db_id = self.save_person_to_db(person_details)
                     
                     # Создаем связь фильм-участник
-                    self.save_film_person_relation(film_db_id, person_db_id, role_name)
+                    self.save_content_person_relation(film_db_id, 'film', person_db_id, role_name)
+                    
+                    # Отмечаем как спарсенного
+                    self.parsed_people.add(person_id)
+                    
+                    print(f"✅ {role_name}: {person_data.get('name', 'Unknown')}")
+                
+                # Пауза между запросами
+                time.sleep(self.delays['BETWEEN_PEOPLE'])
+    
+    def parse_series_people(self, series_id, series_db_id, series_data):
+        """Парсинг всех участников сериала"""
+        series_title = series_data.get('title', 'Unknown Series')
+
+        people_roles = [
+            ('actors', 'actor'),
+            ('directors', 'director'),
+            ('writers', 'writer'),
+            ('producers', 'producer'),
+            ('operators', 'operator'),
+            ('composers', 'composer'),
+            ('designers', 'designer'),
+            ('editors', 'editor')
+        ]
+        
+        for role_key, role_name in people_roles:
+            people_list = series_data.get(role_key, [])
+            if not people_list:
+                continue
+                
+            print(f"  👥 Парсинг {role_name}s ({len(people_list)} человек) для сериала '{series_title}'")
+            
+            for person_data in people_list:
+                person_id = person_data.get('id')
+                if not person_id or person_id in self.parsed_people:
+                    continue
+                
+                # Парсим детали участника
+                person_details = self.parse_person_details(person_id)
+                if person_details:
+                    # Сохраняем участника в БД
+                    person_db_id = self.save_person_to_db(person_details)
+                    
+                    # Создаем связь сериал-участник
+                    self.save_content_person_relation(series_db_id, 'series', person_db_id, role_name)
                     
                     # Отмечаем как спарсенного
                     self.parsed_people.add(person_id)
@@ -332,33 +477,27 @@ class MainParser:
             print(f"❌ Ошибка парсинга участника {person_id}: {e}")
             return None
     
-    def parse_similar_films(self, film_data, film_db_id):
-        """Парсинг похожих фильмов"""
-        similar_films = film_data.get('similar_films', [])
-        if not similar_films:
+    def parse_similar_content(self, content_data, content_db_id, content_type):
+        """Парсинг похожего контента (фильмов или сериалов)"""
+        similar_items = content_data.get('similar_films', [])
+        if not similar_items:
             return
             
-        print(f"🔗 Парсинг похожих фильмов: {len(similar_films)}")
+        print(f"🔗 Парсинг похожего контента: {len(similar_items)}")
         
-        for similar_film in similar_films:
-            if similar_film.get('id') and similar_film.get('title'):
-                self.save_similar_film_extended(film_db_id, similar_film)
+        for similar_item in similar_items:
+            if similar_item.get('id') and similar_item.get('title'):
+                # Определяем тип похожего контента по URL или другим признакам
+                # По умолчанию считаем, что похожий контент того же типа
+                similar_type = content_type  # Можно улучшить, анализируя данные
+                self.save_similar_content_extended(content_db_id, content_type, similar_item, similar_type)
     
     def save_film_to_db(self, film_data):
         """Сохранение фильма в БД"""
         cursor = self.db_connection.cursor()
         
         try:
-            # # Скачиваем постер фильма
-            # poster_url = film_data.get('poster')
-            # if poster_url:
-            #     film_id = film_data.get('kinopoisk_id')
-            #     downloaded_poster = self.image_downloader.download_film_poster(poster_url, film_id)
-            #     if downloaded_poster:
-            #         film_data['poster'] = downloaded_poster
-            #         print(f"📸 Постер фильма {film_id} скачан: {downloaded_poster}")
-            #     else:
-            #         print(f"⚠️ Не удалось скачать постер для фильма {film_id}")
+ 
             
             # Вставляем фильм
             insert_film = """
@@ -420,13 +559,13 @@ class MainParser:
             film_db_id = cursor.fetchone()[0]
             
             # Сохраняем жанры
-            self.save_film_genres(film_db_id, film_data.get('genres', []))
+            self.save_content_genres(film_db_id, 'film', film_data.get('genres', []))
             
             # Сохраняем страны
-            self.save_film_countries(film_db_id, film_data.get('countries', []))
+            self.save_content_countries(film_db_id, 'film', film_data.get('countries', []))
 
             # Сохраняем провайдеров просмотра
-            self.save_film_watch_providers(film_db_id, film_data.get('watch_providers', []))
+            self.save_content_watch_providers(film_db_id, 'film', film_data.get('watch_providers', []))
             
             self.db_connection.commit()
             return film_db_id
@@ -438,8 +577,87 @@ class MainParser:
         finally:
             cursor.close()
 
-    def save_film_watch_providers(self, film_db_id, providers):
-        """Сохранение провайдеров просмотра фильма"""
+    def save_series_to_db(self, series_data):
+        """Сохранение сериала в БД"""
+        cursor = self.db_connection.cursor()
+        
+        try:
+            # Вставляем сериал
+            insert_series = """
+            INSERT INTO series (kinopoisk_id, title, original_title, description, full_description, 
+                             poster, year, tagline, ru_premiere, world_premiere, content_rating, is_family_friendly,
+                             rating_kp, kp_votes_count, rating_imdb, imdb_votes_count,
+                             user_rating, user_rating_count, platform, number_of_episodes)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (kinopoisk_id) DO UPDATE SET
+                title = EXCLUDED.title,
+                original_title = EXCLUDED.original_title,
+                description = EXCLUDED.description,
+                full_description = EXCLUDED.full_description,
+                poster = EXCLUDED.poster,
+                year = EXCLUDED.year,
+                tagline = EXCLUDED.tagline,
+                ru_premiere = EXCLUDED.ru_premiere,
+                world_premiere = EXCLUDED.world_premiere,
+                content_rating = EXCLUDED.content_rating,
+                is_family_friendly = EXCLUDED.is_family_friendly,
+                rating_kp = EXCLUDED.rating_kp,
+                kp_votes_count = EXCLUDED.kp_votes_count,
+                rating_imdb = EXCLUDED.rating_imdb,
+                imdb_votes_count = EXCLUDED.imdb_votes_count,
+                user_rating = EXCLUDED.user_rating,
+                user_rating_count = EXCLUDED.user_rating_count,
+                platform = EXCLUDED.platform,
+                number_of_episodes = EXCLUDED.number_of_episodes
+            RETURNING id
+            """
+            
+            cursor.execute(insert_series, (
+                series_data.get('kinopoisk_id'),
+                series_data.get('title'),
+                series_data.get('original_title'),
+                series_data.get('description'),
+                series_data.get('full_description'),
+                series_data.get('poster'),
+                series_data.get('year'),
+                series_data.get('tagline'),
+                series_data.get('ru_premiere'),
+                series_data.get('world_premiere'),
+                series_data.get('content_rating'),
+                series_data.get('isFamilyFriendly', False),
+                series_data.get('rating_kp'),
+                series_data.get('kp_votes_count'),
+                series_data.get('rating_imdb'),
+                series_data.get('imdb_votes_count'),
+                None,  # user_rating - будет обновляться автоматически
+                0,     # user_rating_count - будет обновляться автоматически
+                series_data.get('platform'),
+                series_data.get('numberOfEpisodes')
+            ))
+            
+            series_db_id = cursor.fetchone()[0]
+            
+            # Сохраняем жанры
+            self.save_content_genres(series_db_id, 'series', series_data.get('genres', []))
+            
+            # Сохраняем страны
+            self.save_content_countries(series_db_id, 'series', series_data.get('countries', []))
+
+            # Сохраняем провайдеров просмотра
+            self.save_content_watch_providers(series_db_id, 'series', series_data.get('watch_providers', []))
+            
+            self.db_connection.commit()
+            return series_db_id
+            
+        except Exception as e:
+            print(f"❌ Ошибка сохранения сериала: {e}")
+            self.db_connection.rollback()
+            return None
+        finally:
+            cursor.close()
+
+    def save_content_watch_providers(self, content_db_id, content_type, providers):
+        """Сохранение провайдеров просмотра контента (фильма или сериала)"""
         if not providers:
             return
         cursor = self.db_connection.cursor()
@@ -452,37 +670,36 @@ class MainParser:
                     continue
                 cursor.execute(
                     """
-                    INSERT INTO film_watch_provider (film_id, name, url, logo)
-                    VALUES (%s, %s, %s, %s)
-                    ON CONFLICT (film_id, name) DO UPDATE SET
+                    INSERT INTO content_watch_provider (content_id, content_type, name, url, logo)
+                    VALUES (%s, %s, %s, %s, %s)
+                    ON CONFLICT (content_id, content_type, name) DO UPDATE SET
                         url = EXCLUDED.url,
                         logo = EXCLUDED.logo
                     """,
-                    (film_db_id, name, url, logo)
+                    (content_db_id, content_type, name, url, logo)
                 )
         except Exception as e:
             print(f"❌ Ошибка сохранения провайдеров: {e}")
         finally:
             cursor.close()
 
-    def parse_and_save_stills(self, film_kinopoisk_id: str, film_db_id: int):
-        """Парсит кадры фильма, сначала получая доступные категории, затем парсит каждую категорию."""
+    def parse_and_save_stills(self, content_kinopoisk_id: str, content_db_id: int, content_type: str):
+        """Парсит кадры контента (фильма или сериала), сначала получая доступные категории, затем парсит каждую категорию."""
         try:
-            # Сначала парсим главную страницу кадров чтобы получить все доступные категории
-            main_stills_url = f"https://www.kinopoisk.ru/film/{film_kinopoisk_id}/stills/"
+            main_stills_url = f"https://www.kinopoisk.ru/film/{content_kinopoisk_id}/stills/"
             self.stills_parser.load_html_from_url(main_stills_url)
             all_categories = self.stills_parser.extract_image_categories()
             
             if not all_categories:
-                print(f"⚠️ Не найдено категорий кадров для фильма {film_kinopoisk_id}")
+                print(f"⚠️ Не найдено категорий кадров для {content_type} {content_kinopoisk_id}")
                 return
-            
+
             # Фильтруем только разрешенные категории
             allowed_types = {'stills', 'wall', 'shooting', 'screenshots'}
             filtered_categories = [cat for cat in all_categories if cat['type'] in allowed_types]
             
             if not filtered_categories:
-                print(f"⚠️ Нет разрешенных категорий для фильма {film_kinopoisk_id}")
+                print(f"⚠️ Нет разрешенных категорий для {content_type} {content_kinopoisk_id}")
                 return
             
             print(f"📸 Найдено категорий кадров: {len(filtered_categories)}/{len(all_categories)}")
@@ -510,25 +727,17 @@ class MainParser:
                     continue
             
             # Сохраняем все кадры в БД
-            self.save_film_stills(film_db_id, grouped)
+            self.save_content_stills(content_db_id, content_type, grouped)
             
         except Exception as e:
-            print(f"❌ Ошибка при парсинге кадров фильма {film_kinopoisk_id}: {e}")
+            print(f"❌ Ошибка при парсинге кадров {content_type} {content_kinopoisk_id}: {e}")
 
-    def save_film_stills(self, film_db_id: int, grouped_items):
-        """Сохраняет кадры фильма в таблицу film_still с указанием типа."""
+    def save_content_stills(self, content_db_id: int, content_type: str, grouped_items):
+        """Сохраняет кадры контента (фильма или сериала) в таблицу content_still с указанием типа."""
         cursor = self.db_connection.cursor()
         try:
             total_saved = 0
             total_errors = 0
-            
-            # Удаляем ограничение БД для поля source, если оно есть
-            try:
-                cursor.execute("ALTER TABLE film_still DROP CONSTRAINT IF EXISTS film_still_source_check")
-                self.db_connection.commit()
-            except Exception as e:
-                print(f"⚠️ Не удалось удалить ограничение БД: {e}")
-                self.db_connection.rollback()
             
             for image_type, images in grouped_items.items():
                 for image_data in images:
@@ -545,12 +754,12 @@ class MainParser:
                         # Начинаем новую транзакцию для каждого кадра
                         cursor.execute(
                             """
-                            INSERT INTO film_still (film_id, picture_id, original_url, source)
-                            VALUES (%s, %s, %s, %s)
-                            ON CONFLICT (film_id, picture_id, source) DO UPDATE SET
+                            INSERT INTO content_still (content_id, content_type, picture_id, original_url, source)
+                            VALUES (%s, %s, %s, %s, %s)
+                            ON CONFLICT (content_id, content_type, picture_id, source) DO UPDATE SET
                                 original_url = EXCLUDED.original_url
                             """,
-                            (film_db_id, picture_id, original_url, source)
+                            (content_db_id, content_type, picture_id, original_url, source)
                         )
                         self.db_connection.commit()
                         total_saved += 1
@@ -650,8 +859,8 @@ class MainParser:
         finally:
             cursor.close()
     
-    def save_film_genres(self, film_db_id, genres):
-        """Сохранение жанров фильма"""
+    def save_content_genres(self, content_db_id, content_type, genres):
+        """Сохранение жанров контента (фильма или сериала)"""
         if not genres:
             return
             
@@ -669,10 +878,10 @@ class MainParser:
                 cursor.execute("SELECT id FROM genre WHERE name = %s", (genre_name,))
                 genre_id = cursor.fetchone()[0]
                 
-                # Создаем связь фильм-жанр
+                # Создаем связь контент-жанр
                 cursor.execute(
-                    "INSERT INTO film_genre (film_id, genre_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
-                    (film_db_id, genre_id)
+                    "INSERT INTO content_genre (content_id, content_type, genre_id) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
+                    (content_db_id, content_type, genre_id)
                 )
                 
         except Exception as e:
@@ -680,8 +889,8 @@ class MainParser:
         finally:
             cursor.close()
     
-    def save_film_countries(self, film_db_id, countries):
-        """Сохранение стран фильма"""
+    def save_content_countries(self, content_db_id, content_type, countries):
+        """Сохранение стран контента (фильма или сериала)"""
         if not countries:
             return
             
@@ -699,10 +908,10 @@ class MainParser:
                 cursor.execute("SELECT id FROM country WHERE name = %s", (country_name,))
                 country_id = cursor.fetchone()[0]
                 
-                # Создаем связь фильм-страна
+                # Создаем связь контент-страна
                 cursor.execute(
-                    "INSERT INTO film_country (film_id, country_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
-                    (film_db_id, country_id)
+                    "INSERT INTO content_country (content_id, content_type, country_id) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
+                    (content_db_id, content_type, country_id)
                 )
                 
         except Exception as e:
@@ -710,50 +919,53 @@ class MainParser:
         finally:
             cursor.close()
     
-    def save_film_person_relation(self, film_db_id, person_db_id, role):
-        """Создание связи фильм-участник"""
+    def save_content_person_relation(self, content_db_id, content_type, person_db_id, role):
+        """Создание связи контент-участник"""
         cursor = self.db_connection.cursor()
         
         try:
             cursor.execute(
-                "INSERT INTO film_stuff (film_id, stuff_id, role) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
-                (film_db_id, person_db_id, role)
+                "INSERT INTO content_stuff (content_id, content_type, stuff_id, role) VALUES (%s, %s, %s, %s) ON CONFLICT DO NOTHING",
+                (content_db_id, content_type, person_db_id, role)
             )
         except Exception as e:
-            print(f"❌ Ошибка создания связи фильм-участник: {e}")
+            print(f"❌ Ошибка создания связи контент-участник: {e}")
         finally:
             cursor.close()
     
-    def save_similar_film_extended(self, film_db_id, sf):
-        """Сохранение похожего фильма с расширенными полями"""
+    def save_similar_content_extended(self, content_db_id, content_type, similar_content, similar_content_type):
+        """Сохранение похожего контента с расширенными полями"""
         cursor = self.db_connection.cursor()
         
         try:
             cursor.execute(
                 """
-                INSERT INTO similar_film (
-                    film_id, similar_film_id, similar_film_title, similar_film_year,
-                    similar_film_genres, similar_film_poster, similar_film_rating
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (film_id, similar_film_id) DO UPDATE SET
-                    similar_film_title = EXCLUDED.similar_film_title,
-                    similar_film_year = EXCLUDED.similar_film_year,
-                    similar_film_genres = EXCLUDED.similar_film_genres,
-                    similar_film_poster = EXCLUDED.similar_film_poster,
-                    similar_film_rating = EXCLUDED.similar_film_rating
+                INSERT INTO similar_content (
+                    content_id, content_type, similar_content_id, similar_content_type,
+                    similar_content_title, similar_content_year,
+                    similar_content_genres, similar_content_poster, similar_content_rating
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (content_id, content_type, similar_content_id, similar_content_type) DO UPDATE SET
+                    similar_content_title = EXCLUDED.similar_content_title,
+                    similar_content_year = EXCLUDED.similar_content_year,
+                    similar_content_genres = EXCLUDED.similar_content_genres,
+                    similar_content_poster = EXCLUDED.similar_content_poster,
+                    similar_content_rating = EXCLUDED.similar_content_rating
                 """,
                 (
-                    film_db_id,
-                    sf.get('id'),
-                    sf.get('title'),
-                    sf.get('year'),
-                    sf.get('genres'),
-                    sf.get('poster'),
-                    sf.get('rating'),
+                    content_db_id,
+                    content_type,
+                    similar_content.get('id'),
+                    similar_content_type,
+                    similar_content.get('title'),
+                    similar_content.get('year'),
+                    similar_content.get('genres'),
+                    similar_content.get('poster'),
+                    similar_content.get('rating'),
                 )
             )
         except Exception as e:
-            print(f"❌ Ошибка создания связи похожих фильмов: {e}")
+            print(f"❌ Ошибка создания связи похожих контентов: {e}")
         finally:
             cursor.close()
     

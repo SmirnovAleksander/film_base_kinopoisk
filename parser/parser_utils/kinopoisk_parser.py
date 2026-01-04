@@ -83,6 +83,52 @@ class KinopoiskParser(BaseParser):
         
         return films
     
+    def parse_all_series(self) -> List[Dict]:
+        """
+        Парсит все доступные данные о сериалах
+        
+        Returns:
+            Список всех найденных сериалов
+        """
+        if not self.soup:
+            raise ValueError("HTML не загружен. Сначала вызовите load_html_from_file() или load_html_from_url()")
+        
+        series = []
+        
+        # Извлекаем ID сериалов из ссылок (data-tid="23a2a59")
+        series_links = self.soup.find_all('a', {'data-tid': '23a2a59'})
+        
+        valid_links = 0
+        invalid_links = 0
+        
+        for i, link in enumerate(series_links):
+            href = link.get('href')
+            
+            if href and '/series/' in href:
+                valid_links += 1
+                # Извлекаем ID из URL /series/464963/ -> 464963
+                href_parts = href.split('/series/')
+                if len(href_parts) > 1:
+                    series_id = href_parts[1].rstrip('/')
+                    
+                    # Ищем название сериала в атрибуте alt изображения
+                    series_name = None
+                    img = link.find('img')
+                    if img and img.get('alt'):
+                        series_name = img.get('alt').strip()
+                    
+                    series_data = {'id': series_id}
+                    if series_name:
+                        series_data['name'] = series_name
+                    
+                    series.append(series_data)
+                else:
+                    pass
+            else:
+                invalid_links += 1
+        
+        return series
+    
     def save_to_json(self, films: List[Dict], output_file: str = 'output/films_data.json'):
         """Сохраняет данные о фильмах в JSON файл"""
         super().save_to_json(films, output_file)

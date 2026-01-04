@@ -320,11 +320,15 @@ class SerialPageParser(BaseParser):
                 # Извлекаем ссылку на фильм
                 film_link = item.find('a', {'data-test-id': 'next-link'})
                 if film_link and film_link.get('href'):
-                    # Извлекаем ID из URL /film/5919/ -> 5919
-                    href_parts = film_link.get('href').split('/film/')
-                    if len(href_parts) > 1:
-                        film_id = href_parts[1].rstrip('/')
-                    else:
+                    # Извлекаем ID из URL /film/5919/ или /series/404900/
+                    href = film_link.get('href')
+                    film_id = None
+                    for pattern in ['/film/', '/series/']:
+                        if pattern in href:
+                            film_id = href.split(pattern)[1].rstrip('/')
+                            break
+                    
+                    if not film_id:
                         continue
                     
                     data_obj = {'id': film_id}
