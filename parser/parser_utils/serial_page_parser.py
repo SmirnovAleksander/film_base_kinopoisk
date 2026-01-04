@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 from .base_parser import BaseParser
 
 
-class FilmPageParser(BaseParser):
+class SerialPageParser(BaseParser):
     """Парсер для страницы отдельного фильма"""
     
     def load_html_from_file(self, file_path: str = None) -> BeautifulSoup:
@@ -295,65 +295,19 @@ class FilmPageParser(BaseParser):
             if premiere_link:
                 film_data['world_premiere'] = premiere_link.get_text(strip=True)
         
+        # Извлекаем платформу (data-tid="603f73a4")
+        platform_elem = self.soup.find('a', {'data-tid': '603f73a4'})
+        if platform_elem:
+            platform_name = platform_elem.get_text(strip=True)
+            if platform_name:
+                film_data['platform'] = platform_name
+        
         # # Извлекаем возрастной рейтинг (data-test-id="ageRestriction")
         # age_elem = self.soup.find('div', {'data-test-id': 'ageRestriction'})
         # if age_elem:
         #     age_span = age_elem.find('span', {'data-tid': '5c1ffa33'})
         #     if age_span:
         #         film_data['content_rating'] = age_span.get_text(strip=True)
-        
-        # # Извлекаем продолжительность (data-test-id="duration")
-        # duration_elem = self.soup.find('div', {'data-test-id': 'duration'})
-        # if duration_elem:
-        #     duration_div = duration_elem.find('div', {'data-tid': 'e1e37c21'})
-        #     if duration_div:
-        #         film_data['duration'] = duration_div.get_text(strip=True)
-        
-        # Извлекаем бюджет фильма (data-test-id="budget" или data-per-id="cfbe5a01")
-        budget_elem = self.soup.find('div', {'data-test-id': 'budget'})
-        if budget_elem:
-            budget_value = budget_elem.find('div', {'data-tid': 'cfbe5a01'})
-            if budget_value:
-                budget_link = budget_value.find('a')
-                if budget_link and budget_link.get('href') and '/box/' in budget_link.get('href'):
-                    budget_text = budget_link.get_text(strip=True)
-                    # Очищаем текст от HTML entities (&nbsp; и т.д.)
-                    import html
-                    budget_clean = html.unescape(budget_text)
-                    film_data['budget'] = budget_clean
-        
-        # Извлекаем сборы в США (data-test-id="usaBox")
-        usa_box_elem = self.soup.find('div', {'data-test-id': 'usaBox'})
-        if usa_box_elem:
-            usa_box_value = usa_box_elem.find('div', {'data-tid': '41068c56'})
-            if usa_box_value:
-                usa_box_link = usa_box_value.find('a')
-                if usa_box_link and usa_box_link.get('href') and '/box/' in usa_box_link.get('href'):
-                    usa_box_text = usa_box_link.get_text(strip=True)
-                    # Очищаем текст от HTML entities (&nbsp; и т.д.)
-                    import html
-                    usa_box_clean = html.unescape(usa_box_text)
-                    film_data['usa_box_office'] = usa_box_clean
-        
-        # Извлекаем сборы в России (data-test-id="rusBox")
-        rus_box_elem = self.soup.find('div', {'data-test-id': 'rusBox'})
-        if rus_box_elem:
-            rus_box_value = rus_box_elem.find('div', {'data-tid': '41068c56'})
-            if rus_box_value:
-                rus_box_link = rus_box_value.find('a')
-                if rus_box_link and rus_box_link.get('href') and '/box/' in rus_box_link.get('href'):
-                    rus_box_text = rus_box_link.get_text(strip=True)
-                    # Очищаем текст от HTML entities (&nbsp; и т.д.)
-                    import html
-                    rus_box_clean = html.unescape(rus_box_text)
-                    film_data['rus_box_office'] = rus_box_clean
-        
-        # Извлекаем рейтинг MPAA (data-test-id="ratingMPAA")
-        mpaa_elem = self.soup.find('div', {'data-test-id': 'ratingMPAA'})
-        if mpaa_elem:
-            mpaa_span = mpaa_elem.find('span', {'data-tid': '5c1ffa33'})
-            if mpaa_span:
-                film_data['mpaa_rating'] = mpaa_span.get_text(strip=True)
 
 
         # Извлекаем похожие фильмы (data-tid="36b81cbf")
@@ -641,29 +595,20 @@ class FilmPageParser(BaseParser):
                         elif '/film/' in url_str:
                             result['type'] = 'film'
                     
-                    time_required = node.get('timeRequired') or node.get('duration')
-                    if time_required is not None:
-                        result['duration'] = str(time_required)
+                    # Берём название фильма из name
+                    name_value = node.get('name')
+                    if name_value:
+                        result['title'] = str(name_value)
                     
                     # Берём оригинальное название из alternateName
                     alternate_name = node.get('alternateName')
                     if alternate_name:
                         result['original_title'] = str(alternate_name)
                     
-                    # Берём название фильма из name
-                    name_value = node.get('name')
-                    if name_value:
-                        result['title'] = str(name_value)
-                    
                     # Полное описание из description
                     description_value = node.get('description')
                     if description_value:
                         result['full_description'] = str(description_value)
-                    
-                    # Возрастной рейтинг (contentRating)
-                    content_rating = node.get('contentRating')
-                    if content_rating:
-                        result['content_rating'] = str(content_rating)
                     
                     # Жанры из JSON-LD (строка или список)
                     genre_value = node.get('genre')
@@ -678,7 +623,13 @@ class FilmPageParser(BaseParser):
                     # Год выпуска (datePublished)
                     date_published = node.get('datePublished')
                     if date_published:
-                        result['year'] = str(date_published).strip()
+                        # Извлекаем только год, если дата в формате "2011-04-17"
+                        date_str = str(date_published).strip()
+                        year_match = re.search(r'(\d{4})', date_str)
+                        if year_match:
+                            result['year'] = year_match.group(1)
+                        else:
+                            result['year'] = date_str
                     
                     # Страны производства (countryOfOrigin)
                     countries_value = node.get('countryOfOrigin')
@@ -693,6 +644,19 @@ class FilmPageParser(BaseParser):
                     if iff is not None:
                         if isinstance(iff, bool):
                             result['isFamilyFriendly'] = iff
+                        elif isinstance(iff, str):
+                            # Если строка, преобразуем в bool
+                            result['isFamilyFriendly'] = iff.lower() in ('true', '1', 'yes')
+                    
+                    # Количество серий (numberOfEpisodes)
+                    number_of_episodes = node.get('numberOfEpisodes')
+                    if number_of_episodes is not None:
+                        result['numberOfEpisodes'] = int(number_of_episodes) if isinstance(number_of_episodes, (int, str)) and str(number_of_episodes).isdigit() else str(number_of_episodes)
+                    
+                    # Возрастной рейтинг (contentRating)
+                    content_rating = node.get('contentRating')
+                    if content_rating:
+                        result['content_rating'] = str(content_rating)
                     
                     return result
         except Exception:
@@ -759,14 +723,8 @@ class FilmPageParser(BaseParser):
                 print(f"    ... и еще {len(film_data['actors']) - 5}")
         
         # Дополнительная информация
-        if film_data.get('duration'):
-            print(f"⏱️ Продолжительность: {film_data['duration']} мин")
-        
         if film_data.get('age_rating'):
             print(f"🔞 Возрастной рейтинг: {film_data['age_rating']}")
-        
-        if film_data.get('budget'):
-            print(f"💰 Бюджет: {film_data['budget']}")
         
         if film_data.get('box_office'):
             print(f"💵 Кассовые сборы: {film_data['box_office']}")
@@ -789,7 +747,7 @@ class FilmPageParser(BaseParser):
 
 def main():
     """Основная функция для демонстрации работы парсера"""
-    parser = FilmPageParser()
+    parser = SerialPageParser()
     
     try:
         # Загружаем HTML из файла

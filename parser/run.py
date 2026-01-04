@@ -39,6 +39,10 @@ def print_menu():
     print(" 11. Главный парсер фильмов и актеров")
     print(" 12. Парсер всех типов медиа контента")
     
+    print("\n📺 СЕРИАЛЫ:")
+    print(" 13. Парсер страницы сериала (локальный)")
+    print(" 14. Парсер страницы сериала (онлайн)")
+    
     print("\n  0. Выход")
     print("=" * 60)
 
@@ -108,6 +112,44 @@ def run_film_parser_local():
             print(f"✓ Данные сохранены в {output_file}")
         else:
             print("⚠️ Информация о фильме не найдена.")
+    except Exception as e:
+        print(f"❌ Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+        
+
+def run_serial_parser_local():
+    """Парсер страницы сериала (локальный)"""
+    from parser_utils.serial_page_parser import SerialPageParser
+    
+    print("\n=== Парсер страницы сериала (локальный) ===")
+    
+    html_file = 'templates/serial_page_kinopoisk.html'
+    if not os.path.exists(html_file):
+        # Если нет специального файла для сериала, пробуем обычный файл фильма
+        html_file = 'templates/film_page_kinopoisk.html'
+        
+    if not os.path.exists(html_file):
+        print(f"❌ Ошибка: Файл {html_file} не найден!")
+        return
+    
+    try:
+        parser = SerialPageParser()
+        print(f"Загружаем HTML файл {html_file}...")
+        parser.load_html_from_file(html_file)
+        print("✓ HTML файл загружен")
+        
+        print("Извлекаем детальную информацию о сериале...")
+        serial_data = parser.extract_film_details()
+        print("✓ Информация извлечена")
+        
+        if serial_data:
+            parser.print_film_details(serial_data)
+            output_file = 'output/serial_details.json'
+            parser.save_to_json(serial_data, output_file)
+            print(f"✓ Данные сохранены в {output_file}")
+        else:
+            print("⚠️ Информация о сериале не найдена.")
     except Exception as e:
         print(f"❌ Ошибка: {e}")
         import traceback
@@ -275,6 +317,39 @@ def run_film_parser_online():
             print(f"✓ Данные сохранены в {output_file}")
         else:
             print("⚠️ Информация о фильме не найдена.")
+    except Exception as e:
+        print(f"❌ Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+def run_serial_parser_online():
+    """Парсер страницы сериала (онлайн)"""
+    from parser_utils.serial_page_parser import SerialPageParser
+    
+    print("\n=== Парсер страницы сериала (онлайн) ===")
+    
+    serial_url = "https://www.kinopoisk.ru/series/464963/"  # Лучше звоните Солу
+    
+    try:
+        parser = SerialPageParser()
+        print(f"Загружаем данные с {serial_url}...")
+        print("⚠️ Это может занять некоторое время из-за защиты от ботов...")
+        
+        parser.load_html_from_url(serial_url)
+        print("✓ HTML загружен с сайта")
+        
+        print("Извлекаем детальную информацию о сериале...")
+        serial_data = parser.extract_film_details()
+        print("✓ Информация извлечена")
+        
+        if serial_data:
+            parser.print_film_details(serial_data)
+            output_file = 'output/online_serial_details.json'
+            parser.save_to_json(serial_data, output_file)
+            print(f"✓ Данные сохранены в {output_file}")
+        else:
+            print("⚠️ Информация о сериале не найдена.")
     except Exception as e:
         print(f"❌ Ошибка: {e}")
         import traceback
@@ -487,6 +562,10 @@ def main():
                 run_main_parser()
             elif choice == '12':
                 run_all_media_parser()
+            elif choice == '13':
+                run_serial_parser_local()
+            elif choice == '14':
+                run_serial_parser_online()
             else:
                 print("\n❌ Неверный выбор! Попробуйте снова.")
                 continue

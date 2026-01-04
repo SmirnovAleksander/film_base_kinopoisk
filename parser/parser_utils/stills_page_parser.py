@@ -7,17 +7,14 @@
 
 import json
 import os
-import time
 import re
 from typing import List, Dict, Optional
 from bs4 import BeautifulSoup
-import requests
+from .base_parser import BaseParser
 
 
-class StillsPageParser:
+class StillsPageParser(BaseParser):
     """Парсер страницы кадров/постеров фильма"""
-    
-    DELAY_BEFORE_REQUEST = 2
     
     def _normalize_url(self, url: str) -> str:
         """
@@ -37,61 +34,9 @@ class StillsPageParser:
             return 'https://' + url
         return url
     
-    def __init__(self, html_file_path: str = None):
-        self.html_file_path = html_file_path
-        self.soup = None
-    
-    def load_html_from_file(self, file_path: str = None) -> BeautifulSoup:
-        if file_path:
-            self.html_file_path = file_path
-        if not self.html_file_path:
-            raise ValueError("Не указан путь к HTML файлу")
-        with open(self.html_file_path, 'r', encoding='utf-8') as f:
-            html = f.read()
-        self.soup = BeautifulSoup(html, 'lxml')
-        return self.soup
-    
     def load_html_from_url(self, url: str) -> BeautifulSoup:
-        try:
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-                'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-                'Referer': 'https://www.kinopoisk.ru/'
-            }
-            session = requests.Session()
-            session.headers.update(headers)
-            self._load_cookies(session)
-            time.sleep(self.DELAY_BEFORE_REQUEST)
-            resp = session.get(url, timeout=30)
-            resp.raise_for_status()
-            if 'SmartCaptcha' in resp.text or 'робот' in resp.text.lower():
-                return self._handle_captcha(session, url)
-            self.soup = BeautifulSoup(resp.content, 'lxml')
-            return self.soup
-        except Exception as e:
-            raise Exception(f"Ошибка при загрузке HTML с URL: {e}")
-    
-    def _load_cookies(self, session: requests.Session):
-        try:
-            cookies_file = 'parser_utils/cookies/session.json'
-            if os.path.exists(cookies_file):
-                with open(cookies_file, 'r', encoding='utf-8') as f:
-                    cookies_data = json.load(f)
-                if 'cookies' in cookies_data:
-                    for name, value in cookies_data['cookies'].items():
-                        session.cookies.set(name, value, domain='.kinopoisk.ru')
-                elif isinstance(cookies_data, list):
-                    for cookie in cookies_data:
-                        session.cookies.set(cookie['name'], cookie['value'], domain=cookie.get('domain', '.kinopoisk.ru'))
-        except Exception:
-            pass
-    
-    def _handle_captcha(self, session: requests.Session, url: str) -> BeautifulSoup:
-        session.headers.update({'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'})
-        r = session.get(url, timeout=30)
-        self.soup = BeautifulSoup(r.content, 'lxml')
-        return self.soup
+        """Загружает HTML с веб-страницы Кинопоиска"""
+        return super().load_html_from_url(url)
     
     def extract_image_urls(self) -> List[str]:
         if not self.soup:
@@ -252,9 +197,7 @@ class StillsPageParser:
 
     def save_to_json(self, urls: List[str], output_file: str = 'output/stills_urls.json'):
         """Сохраняет список URL изображений в JSON"""
-        os.makedirs(os.path.dirname(output_file), exist_ok=True)
-        with open(output_file, 'w', encoding='utf-8') as f:
-            json.dump(urls, f, ensure_ascii=False, indent=2)
+        super().save_to_json(urls, output_file)
 
 
 def main():
