@@ -136,7 +136,6 @@ class BaseParser:
                                 domain=cookie.get('domain', '.kinopoisk.ru')
                             )
                         
-                print("✓ Cookies загружены")
         except Exception as e:
             print(f"⚠️ Не удалось загрузить cookies: {e}")
     

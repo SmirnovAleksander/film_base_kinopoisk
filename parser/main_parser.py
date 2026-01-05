@@ -185,14 +185,14 @@ class MainParser:
                 id SERIAL PRIMARY KEY,
                 content_id INTEGER NOT NULL,
                 content_type VARCHAR(20) NOT NULL CHECK (content_type IN ('film', 'series')),
-                similar_content_id VARCHAR(20) NOT NULL,
-                similar_content_type VARCHAR(20) NOT NULL CHECK (similar_content_type IN ('film', 'series')),
-                similar_content_title VARCHAR(500),
-                similar_content_year VARCHAR(10),
-                similar_content_genres TEXT[],
-                similar_content_poster TEXT,
-                similar_content_rating VARCHAR(10),
-                UNIQUE(content_id, content_type, similar_content_id, similar_content_type)
+                similar_id VARCHAR(20) NOT NULL,
+                similar_type VARCHAR(20) NOT NULL CHECK (similar_type IN ('film', 'series')),
+                title VARCHAR(500),
+                year VARCHAR(10),
+                genres TEXT[],
+                poster TEXT,
+                rating VARCHAR(10),
+                UNIQUE(content_id, content_type, similar_id, similar_type)
             )
             """,
             """
@@ -790,18 +790,7 @@ class MainParser:
         """Сохранение участника в БД"""
         cursor = self.db_connection.cursor()
         
-        try:
-            # # Скачиваем фото актера
-            # photo_url = person_data.get('photo')
-            # if photo_url:
-            #     actor_id = person_data.get('kinopoisk_id')
-            #     downloaded_photo = self.image_downloader.download_actor_photo(photo_url, actor_id)
-            #     if downloaded_photo:
-            #         person_data['photo'] = downloaded_photo
-            #         print(f"📸 Фото актера {actor_id} скачано: {downloaded_photo}")
-            #     else:
-            #         print(f"⚠️ Не удалось скачать фото для актера {actor_id}")
-            
+        try: 
             # Вставляем участника
             insert_person = """
             INSERT INTO stuff (kinopoisk_id, name, original_name, career, ganres, height, 
@@ -941,16 +930,15 @@ class MainParser:
             cursor.execute(
                 """
                 INSERT INTO similar_content (
-                    content_id, content_type, similar_content_id, similar_content_type,
-                    similar_content_title, similar_content_year,
-                    similar_content_genres, similar_content_poster, similar_content_rating
+                    content_id, content_type, similar_id, similar_type,
+                    title, year, genres, poster, rating
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (content_id, content_type, similar_content_id, similar_content_type) DO UPDATE SET
-                    similar_content_title = EXCLUDED.similar_content_title,
-                    similar_content_year = EXCLUDED.similar_content_year,
-                    similar_content_genres = EXCLUDED.similar_content_genres,
-                    similar_content_poster = EXCLUDED.similar_content_poster,
-                    similar_content_rating = EXCLUDED.similar_content_rating
+                ON CONFLICT (content_id, content_type, similar_id, similar_type) DO UPDATE SET
+                    title = EXCLUDED.title,
+                    year = EXCLUDED.year,
+                    genres = EXCLUDED.genres,
+                    poster = EXCLUDED.poster,
+                    rating = EXCLUDED.rating
                 """,
                 (
                     content_db_id,
