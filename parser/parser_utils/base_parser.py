@@ -219,3 +219,12 @@ class BaseParser:
         except Exception as e:
             print(f"Ошибка при сохранении файла: {e}")
 
+    def _normalize_url(self, url: str) -> str:
+        """Нормализует URL, добавляя протокол если нужно"""
+        if not url:
+            return url
+        if url.startswith('//'):
+            return 'https:' + url
+        if not url.startswith('http'):
+            return 'https://' + url
+        return url

@@ -15,24 +15,6 @@ from .base_parser import BaseParser
 class StillsPageParser(BaseParser):
     """Парсер страницы кадров/постеров фильма"""
     
-    def _normalize_url(self, url: str) -> str:
-        """
-        Нормализует URL - добавляет https:// если нужно
-        
-        Args:
-            url: Исходный URL
-            
-        Returns:
-            Нормализованный URL
-        """
-        if not url:
-            return url
-        if url.startswith('//'):
-            return 'https:' + url
-        if not url.startswith('http'):
-            return 'https://' + url
-        return url
-    
     def load_html_from_url(self, url: str) -> BeautifulSoup:
         """Загружает HTML с веб-страницы Кинопоиска"""
         return super().load_html_from_url(url)
@@ -183,7 +165,7 @@ class StillsPageParser(BaseParser):
 
             # Ничего не добавляем для превью
             if original:
-                data['original'] = self._normalize_url(original)
+                data['original'] = super()._normalize_url(original)
             
             # Добавляем тип категории если указан
             if category_type:

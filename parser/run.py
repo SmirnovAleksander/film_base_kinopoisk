@@ -106,7 +106,6 @@ def run_film_parser_local():
         print("✓ Информация извлечена")
         
         if film_data:
-            parser.print_film_details(film_data)
             output_file = 'output/film_details.json'
             parser.save_to_json(film_data, output_file)
             print(f"✓ Данные сохранены в {output_file}")
@@ -144,7 +143,6 @@ def run_serial_parser_local():
         print("✓ Информация извлечена")
         
         if serial_data:
-            parser.print_film_details(serial_data)
             output_file = 'output/serial_details.json'
             parser.save_to_json(serial_data, output_file)
             print(f"✓ Данные сохранены в {output_file}")
@@ -296,7 +294,7 @@ def run_film_parser_online():
     
     print("\n=== Парсер страницы фильма (онлайн) ===")
     
-    film_url = "https://www.kinopoisk.ru/film/535341/"  # 1+1
+    film_url = "https://www.kinopoisk.ru/film/1143242/"  # Джентельмены
     
     try:
         parser = FilmPageParser()
@@ -311,7 +309,6 @@ def run_film_parser_online():
         print("✓ Информация извлечена")
         
         if film_data:
-            parser.print_film_details(film_data)
             output_file = 'output/online_film_details.json'
             parser.save_to_json(film_data, output_file)
             print(f"✓ Данные сохранены в {output_file}")
@@ -344,7 +341,6 @@ def run_serial_parser_online():
         print("✓ Информация извлечена")
         
         if serial_data:
-            parser.print_film_details(serial_data)
             output_file = 'output/online_serial_details.json'
             parser.save_to_json(serial_data, output_file)
             print(f"✓ Данные сохранены в {output_file}")

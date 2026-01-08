@@ -65,7 +65,7 @@ class FilmPageParser(BaseParser):
         # Извлекаем описание (data-tid="bfd38da2")
         description_elem = self.soup.find('p', {'data-tid': 'bfd38da2'})
         if description_elem:
-            film_data['description'] = description_elem.get_text(strip=True)
+            film_data['short_description'] = description_elem.get_text(strip=True)
         
         
         # Извлекаем рейтинг Кинопоиска (data-tid="939058a8")
@@ -155,130 +155,12 @@ class FilmPageParser(BaseParser):
                     poster_url = 'https://' + poster_url
                 film_data['poster'] = poster_url
         
-        # # Извлекаем год производства (data-test-id="year")
-        # year_elem = self.soup.find('div', {'data-test-id': 'year'})
-        # if year_elem:
-        #     year_link = year_elem.find('a')
-        #     if year_link:
-        #         film_data['year'] = year_link.get_text(strip=True)
-        
-        # # Извлекаем страны (data-test-id="countries")
-        # countries_elem = self.soup.find('div', {'data-test-id': 'countries'})
-        # if countries_elem:
-        #     country_links = countries_elem.find_all('a')
-        #     countries = [link.get_text(strip=True) for link in country_links]
-        #     if countries:
-        #         film_data['countries'] = countries
-        
-        # # Извлекаем жанры (data-test-id="genres")
-        # genres_elem = self.soup.find('div', {'data-test-id': 'genres'})
-        # if genres_elem:
-        #     genre_links = genres_elem.find_all('a')
-        #     genres = [link.get_text(strip=True) for link in genre_links if link.get_text(strip=True) != 'слова']
-        #     if genres:
-        #         film_data['genres'] = genres
-        
         # Извлекаем слоган (data-test-id="tagline")
         tagline_elem = self.soup.find('div', {'data-test-id': 'tagline'})
         if tagline_elem:
             tagline_div = tagline_elem.find('div', {'data-tid': 'e1e37c21'})
             if tagline_div:
                 film_data['tagline'] = tagline_div.get_text(strip=True)
-        
-        # Извлекаем режиссеров (data-test-id="directors")
-        directors_elem = self.soup.find('div', {'data-test-id': 'directors'})
-        if directors_elem:
-            director_links = directors_elem.find_all('a')
-            directors = []
-            for link in director_links:
-                if link.get('href') and '/name/' in link.get('href'):
-                    name = link.get_text(strip=True)
-                    href_parts = link.get('href').split('/name/')
-                    if len(href_parts) > 1:
-                        person_id = href_parts[1].rstrip('/')
-                    else:
-                        continue
-                    directors.append({'name': name, 'id': person_id})
-            if directors:
-                film_data['directors'] = directors
-        
-        # # Извлекаем сценаристов (data-test-id="writers")
-        # writers_elem = self.soup.find('div', {'data-test-id': 'writers'})
-        # if writers_elem:
-        #     writer_links = writers_elem.find_all('a')
-        #     writers = []
-        #     for link in writer_links:
-        #         if link.get('href') and '/name/' in link.get('href'):
-        #             name = link.get_text(strip=True)
-        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
-        #             writers.append({'name': name, 'id': person_id})
-        #     if writers:
-        #         film_data['writers'] = writers
-        
-        # # Извлекаем продюсеров (data-test-id="producers")
-        # producers_elem = self.soup.find('div', {'data-test-id': 'producers'})
-        # if producers_elem:
-        #     producer_links = producers_elem.find_all('a')
-        #     producers = []
-        #     for link in producer_links:
-        #         if link.get('href') and '/name/' in link.get('href'):
-        #             name = link.get_text(strip=True)
-        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
-        #             producers.append({'name': name, 'id': person_id})
-        #     if producers:
-        #         film_data['producers'] = producers
-        
-        # # Извлекаем операторов (data-test-id="operators")
-        # operators_elem = self.soup.find('div', {'data-test-id': 'operators'})
-        # if operators_elem:
-        #     operator_links = operators_elem.find_all('a')
-        #     operators = []
-        #     for link in operator_links:
-        #         if link.get('href') and '/name/' in link.get('href'):
-        #             name = link.get_text(strip=True)
-        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
-        #             operators.append({'name': name, 'id': person_id})
-        #     if operators:
-        #         film_data['operators'] = operators
-        
-        # # Извлекаем композиторов (data-test-id="composers")
-        # composers_elem = self.soup.find('div', {'data-test-id': 'composers'})
-        # if composers_elem:
-        #     composer_links = composers_elem.find_all('a')
-        #     composers = []
-        #     for link in composer_links:
-        #         if link.get('href') and '/name/' in link.get('href'):
-        #             name = link.get_text(strip=True)
-        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
-        #             composers.append({'name': name, 'id': person_id})
-        #     if composers:
-        #         film_data['composers'] = composers
-        
-        # # Извлекаем художников (data-test-id="designers")
-        # designers_elem = self.soup.find('div', {'data-test-id': 'designers'})
-        # if designers_elem:
-        #     designer_links = designers_elem.find_all('a')
-        #     designers = []
-        #     for link in designer_links:
-        #         if link.get('href') and '/name/' in link.get('href'):
-        #             name = link.get_text(strip=True)
-        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
-        #             designers.append({'name': name, 'id': person_id})
-        #     if designers:
-        #         film_data['designers'] = designers
-        
-        # # Извлекаем монтажеров (data-test-id="filmEditors")
-        # editors_elem = self.soup.find('div', {'data-test-id': 'filmEditors'})
-        # if editors_elem:
-        #     editor_links = editors_elem.find_all('a')
-        #     editors = []
-        #     for link in editor_links:
-        #         if link.get('href') and '/name/' in link.get('href'):
-        #             name = link.get_text(strip=True)
-        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
-        #             editors.append({'name': name, 'id': person_id})
-        #     if editors:
-        #         film_data['editors'] = editors
         
         # Извлекаем премьеру в России (data-test-id="ruPremiere")
         ru_premiere_elem = self.soup.find('div', {'data-test-id': 'ruPremiere'})
@@ -293,21 +175,7 @@ class FilmPageParser(BaseParser):
             premiere_link = world_premiere_elem.find('a')
             if premiere_link:
                 film_data['world_premiere'] = premiere_link.get_text(strip=True)
-        
-        # # Извлекаем возрастной рейтинг (data-test-id="ageRestriction")
-        # age_elem = self.soup.find('div', {'data-test-id': 'ageRestriction'})
-        # if age_elem:
-        #     age_span = age_elem.find('span', {'data-tid': '5c1ffa33'})
-        #     if age_span:
-        #         film_data['content_rating'] = age_span.get_text(strip=True)
-        
-        # # Извлекаем продолжительность (data-test-id="duration")
-        # duration_elem = self.soup.find('div', {'data-test-id': 'duration'})
-        # if duration_elem:
-        #     duration_div = duration_elem.find('div', {'data-tid': 'e1e37c21'})
-        #     if duration_div:
-        #         film_data['duration'] = duration_div.get_text(strip=True)
-        
+   
         # Извлекаем бюджет фильма (data-test-id="budget" или data-per-id="cfbe5a01")
         budget_elem = self.soup.find('div', {'data-test-id': 'budget'})
         if budget_elem:
@@ -470,28 +338,7 @@ class FilmPageParser(BaseParser):
             if similar_films:
                 film_data['similar_films'] = similar_films
         
-        # Извлекаем актеров в главных ролях (data-tid="38ecf27e")
-        actors_elem = self.soup.find('div', {'data-tid': '38ecf27e'})
-        if actors_elem:
-            actors = []
-            # Находим все ссылки на актеров
-            actor_links = actors_elem.find_all('a', {'data-test-id': 'next-link'})
-            for link in actor_links:
-                if link.get('href') and '/name/' in link.get('href'):
-                    name = link.get_text(strip=True)
-                    href_parts = link.get('href').split('/name/')
-                    if len(href_parts) > 1:
-                        person_id = href_parts[1].rstrip('/')
-                    else:
-                        continue
-                    actors.append({'name': name, 'id': person_id})
-            
-            if actors:
-                film_data['actors'] = actors
-
         # Извлекаем провайдеров для просмотра (сторонние источники)
-
-
         providers: List[Dict] = []
 
         # Вариант 1: контейнер провайдеров data-tid="c456f2ce"
@@ -510,7 +357,7 @@ class FilmPageParser(BaseParser):
                     if logo_src is None:
                         inner_img = a.find('img')
                         logo_src = inner_img.get('src') if inner_img and inner_img.get('src') else None
-                logo_url = self._normalize_url(logo_src) if logo_src else None
+                logo_url = super()._normalize_url(logo_src) if logo_src else None
                 if href and name:
                     providers.append({'name': name, 'url': href, 'logo': logo_url})
 
@@ -522,7 +369,7 @@ class FilmPageParser(BaseParser):
                 name = name_el.get_text(strip=True) if name_el else None
                 logo_img = a.find('img', {'data-tid': 'd813cf42'}) or a.find('img')
                 logo_src = logo_img.get('src') if logo_img and logo_img.get('src') else None
-                logo_url = self._normalize_url(logo_src) if logo_src else None
+                logo_url = super()._normalize_url(logo_src) if logo_src else None
                 if href and name:
                     providers.append({'name': name, 'url': href, 'logo': logo_url})
 
@@ -534,7 +381,7 @@ class FilmPageParser(BaseParser):
                 if name_el and img and img.get('src') and ('get-ott' in img.get('src') or 'ott' in img.get('src')):
                     name = name_el.get_text(strip=True)
                     href = a.get('href')
-                    logo_url = self._normalize_url(img.get('src'))
+                    logo_url = super()._normalize_url(img.get('src'))
                     providers.append({'name': name, 'url': href, 'logo': logo_url})
 
         # Вариант 4: Парсинг из JSON (Apollo State)
@@ -596,7 +443,7 @@ class FilmPageParser(BaseParser):
                                 if name:
                                     # Проверяем дубликаты
                                     if not any(p['name'] == name for p in providers):
-                                        logo_url = self._normalize_url(avatars_url)
+                                        logo_url = super()._normalize_url(avatars_url)
                                         if logo_url and not logo_url.endswith('/72x72'):
                                             logo_url = f"{logo_url}/72x72"
                                             
@@ -631,14 +478,10 @@ class FilmPageParser(BaseParser):
                     if not isinstance(node, dict):
                         continue
                     
-                    # Определяем тип на основе URL
-                    url_value = node.get('url')
-                    if url_value:
-                        url_str = str(url_value)
-                        if '/series/' in url_str:
-                            result['type'] = 'series'
-                        elif '/film/' in url_str:
-                            result['type'] = 'film'
+                    # Сохраняем тип сущности из @type (Movie, TVSeries и т.п.)
+                    raw_content_type = node.get('@type')
+                    if raw_content_type:
+                        result['content_type'] = str(raw_content_type)
                     
                     time_required = node.get('timeRequired') or node.get('duration')
                     if time_required is not None:
@@ -657,134 +500,60 @@ class FilmPageParser(BaseParser):
                     # Полное описание из description
                     description_value = node.get('description')
                     if description_value:
-                        result['full_description'] = str(description_value)
+                        result['description'] = str(description_value)
                     
                     # Возрастной рейтинг (contentRating)
                     content_rating = node.get('contentRating')
                     if content_rating:
                         result['content_rating'] = str(content_rating)
                     
-                    # Жанры из JSON-LD (строка или список)
+                    # Жанры (всегда список)
                     genre_value = node.get('genre')
                     if genre_value:
-                        if isinstance(genre_value, list):
-                            result['genres'] = [str(g).strip() for g in genre_value if g]
-                        else:
-                            # Разбиваем строку по запятым/точкам с запятой
-                            parts = [p.strip() for p in str(genre_value).replace(';', ',').split(',')]
-                            result['genres'] = [p for p in parts if p]
+                        result['genres'] = [str(g).strip() for g in genre_value if g]
                     
                     # Год выпуска (datePublished)
                     date_published = node.get('datePublished')
                     if date_published:
-                        result['year'] = str(date_published).strip()
+                        result['published_year'] = str(date_published).strip()
+
+                    # Участники (actors, directors, producers) только name и id из url
+                    participants = {
+                        'actors': 'actor',
+                        'directors': 'director',
+                        'producers': 'producer',
+                    }
+                    for field, json_key in participants.items():
+                        people = node.get(json_key)
+                        if people:
+                            result[field] = []
+                            for p in people:
+                                if isinstance(p, dict):
+                                    name = p.get('name', '').strip()
+                                    url = p.get('url', '')
+                                    person_id = url.split('/name/')[-1].replace('/', '') if '/name/' in url else ''
+                                    if name and person_id:
+                                        result[field].append({'name': name, 'id': person_id})
                     
-                    # Страны производства (countryOfOrigin)
+                    # Страны производства (countryOfOrigin) - всегда список
                     countries_value = node.get('countryOfOrigin')
                     if countries_value:
-                        if isinstance(countries_value, list):
-                            result['countries'] = [str(c).strip() for c in countries_value if c]
-                        else:
-                            result['countries'] = [str(countries_value).strip()]
+                        result['countries'] = [str(c).strip() for c in countries_value if c]
                     
-                    # Семейный контент (isFamilyFriendly)
+                    # Семейный контент (isFamilyFriendly) - всегда boolean
                     iff = node.get('isFamilyFriendly')
                     if iff is not None:
-                        if isinstance(iff, bool):
-                            result['isFamilyFriendly'] = iff
+                        result['is_family_friendly'] = iff
                     
                     return result
         except Exception:
             pass
         return result
 
-    def _normalize_url(self, url: str) -> str:
-        """Нормализует URL, добавляя протокол если нужно"""
-        if not url:
-            return url
-        if url.startswith('//'):
-            return 'https:' + url
-        if not url.startswith('http'):
-            return 'https://' + url
-        return url
-
     
     def save_to_json(self, film_data: Dict, output_file: str = 'output/film_details.json'):
         """Сохраняет данные о фильме в JSON файл"""
         super().save_to_json(film_data, output_file)
-    
-    def print_film_details(self, film_data: Dict):
-        """
-        Выводит детальную информацию о фильме
-        
-        Args:
-            film_data: Данные о фильме
-        """
-        print("\n=== Детальная информация о фильме ===")
-        print("-" * 50)
-        
-        # Основная информация
-        if film_data.get('title'):
-            print(f"🎬 Название: {film_data['title']}")
-        
-        if film_data.get('original_title'):
-            print(f"🌍 Оригинальное название: {film_data['original_title']}")
-        
-        if film_data.get('year'):
-            print(f"📅 Год: {film_data['year']}")
-        
-        if film_data.get('rating'):
-            print(f"⭐ Рейтинг Кинопоиска: {film_data['rating']}")
-        
-        if film_data.get('imdb_rating'):
-            print(f"🎯 Рейтинг IMDB: {film_data['imdb_rating']}")
-        
-        # Жанры и страны
-        if film_data.get('genres'):
-            print(f"🎭 Жанры: {', '.join(film_data['genres'])}")
-        
-        if film_data.get('countries'):
-            print(f"🌎 Страны: {', '.join(film_data['countries'])}")
-        
-        # Создатели
-        if film_data.get('director'):
-            print(f"🎬 Режиссер: {film_data['director']}")
-        
-        if film_data.get('actors'):
-            actors = film_data['actors'][:5]  # Показываем первых 5 актеров
-            actor_names = [actor['name'] for actor in actors if isinstance(actor, dict)]
-            print(f"👥 Актеры: {', '.join(actor_names)}")
-            if len(film_data['actors']) > 5:
-                print(f"    ... и еще {len(film_data['actors']) - 5}")
-        
-        # Дополнительная информация
-        if film_data.get('duration'):
-            print(f"⏱️ Продолжительность: {film_data['duration']} мин")
-        
-        if film_data.get('age_rating'):
-            print(f"🔞 Возрастной рейтинг: {film_data['age_rating']}")
-        
-        if film_data.get('budget'):
-            print(f"💰 Бюджет: {film_data['budget']}")
-        
-        if film_data.get('box_office'):
-            print(f"💵 Кассовые сборы: {film_data['box_office']}")
-        
-        if film_data.get('premiere'):
-            print(f"🎪 Премьера: {film_data['premiere']}")
-        
-        if film_data.get('studio'):
-            print(f"🏢 Студия: {film_data['studio']}")
-        
-        # Описание
-        if film_data.get('description'):
-            desc = film_data['description']
-            if len(desc) > 200:
-                desc = desc[:200] + "..."
-            print(f"\n📝 Описание: {desc}")
-        
-        print()
-
 
 def main():
     """Основная функция для демонстрации работы парсера"""
@@ -798,9 +567,6 @@ def main():
         # Извлекаем детальную информацию
         print("Извлекаем детальную информацию о фильме...")
         film_data = parser.extract_film_details()
-        
-        # Выводим результаты
-        parser.print_film_details(film_data)
         
         # Сохраняем в JSON
         parser.save_to_json(film_data, 'output/film_details.json')

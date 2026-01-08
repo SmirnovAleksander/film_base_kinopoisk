@@ -58,14 +58,14 @@ class MainParser:
                 kinopoisk_id VARCHAR(20) UNIQUE NOT NULL,
                 title VARCHAR(500),
                 original_title VARCHAR(500),
+                short_description TEXT,
                 description TEXT,
-                full_description TEXT,
                 poster VARCHAR(1000),
-                year INTEGER,
+                published_year INTEGER,
                 tagline TEXT,
                 ru_premiere VARCHAR(100),
                 world_premiere VARCHAR(100),
-                content_rating VARCHAR(20),
+                content_type VARCHAR(50),
                 is_family_friendly BOOLEAN DEFAULT FALSE,
                 duration VARCHAR(50),
                 rating_kp DECIMAL(3,1),
@@ -131,14 +131,14 @@ class MainParser:
                 kinopoisk_id VARCHAR(20) UNIQUE NOT NULL,
                 title VARCHAR(500),
                 original_title VARCHAR(500),
+                short_description TEXT,
                 description TEXT,
-                full_description TEXT,
                 poster VARCHAR(1000),
-                year INTEGER,
+                published_year INTEGER,
                 tagline TEXT,
                 ru_premiere VARCHAR(100),
                 world_premiere VARCHAR(100),
-                content_rating VARCHAR(20),
+                content_type VARCHAR(50),
                 is_family_friendly BOOLEAN DEFAULT FALSE,
                 rating_kp DECIMAL(3,1),
                 kp_votes_count VARCHAR(50),
@@ -379,12 +379,7 @@ class MainParser:
         people_roles = [
             ('actors', 'actor'),
             ('directors', 'director'),
-            ('writers', 'writer'),
             ('producers', 'producer'),
-            ('operators', 'operator'),
-            ('composers', 'composer'),
-            ('designers', 'designer'),
-            ('editors', 'editor')
         ]
         
         for role_key, role_name in people_roles:
@@ -396,21 +391,30 @@ class MainParser:
             
             for person_data in people_list:
                 person_id = person_data.get('id')
-                if not person_id or person_id in self.parsed_people:
+                if not person_id:
                     continue
-                
-                # Парсим детали участника
-                person_details = self.parse_person_details(person_id)
-                if person_details:
-                    # Сохраняем участника в БД
-                    person_db_id = self.save_person_to_db(person_details)
-                    
-                    # Создаем связь фильм-участник
+
+                person_db_id = None
+
+                # Если участник уже парсился ранее, не парсим заново, а пытаемся получить его id из БД
+                if person_id in self.parsed_people:
+                    person_db_id = self.get_person_db_id(person_id)
+                    # На случай, если по какой-то причине в БД его нет — пробуем всё же спарсить и сохранить
+                    if not person_db_id:
+                        person_details = self.parse_person_details(person_id)
+                        if person_details:
+                            person_db_id = self.save_person_to_db(person_details)
+                else:
+                    # Парсим детали участника впервые
+                    person_details = self.parse_person_details(person_id)
+                    if person_details:
+                        person_db_id = self.save_person_to_db(person_details)
+                        # Отмечаем как спарсенного, чтобы больше не ходить на страницу актёра
+                        self.parsed_people.add(person_id)
+
+                # Если удалось получить/создать участника в БД — всегда создаём связь фильм–участник
+                if person_db_id:
                     self.save_content_person_relation(film_db_id, 'film', person_db_id, role_name)
-                    
-                    # Отмечаем как спарсенного
-                    self.parsed_people.add(person_id)
-                    
                     print(f"✅ {role_name}: {person_data.get('name', 'Unknown')}")
                 
                 # Пауза между запросами
@@ -423,12 +427,7 @@ class MainParser:
         people_roles = [
             ('actors', 'actor'),
             ('directors', 'director'),
-            ('writers', 'writer'),
             ('producers', 'producer'),
-            ('operators', 'operator'),
-            ('composers', 'composer'),
-            ('designers', 'designer'),
-            ('editors', 'editor')
         ]
         
         for role_key, role_name in people_roles:
@@ -440,25 +439,48 @@ class MainParser:
             
             for person_data in people_list:
                 person_id = person_data.get('id')
-                if not person_id or person_id in self.parsed_people:
+                if not person_id:
                     continue
-                
-                # Парсим детали участника
-                person_details = self.parse_person_details(person_id)
-                if person_details:
-                    # Сохраняем участника в БД
-                    person_db_id = self.save_person_to_db(person_details)
-                    
-                    # Создаем связь сериал-участник
+
+                person_db_id = None
+
+                # Если участник уже парсился ранее, не парсим заново, а пытаемся получить его id из БД
+                if person_id in self.parsed_people:
+                    person_db_id = self.get_person_db_id(person_id)
+                    if not person_db_id:
+                        person_details = self.parse_person_details(person_id)
+                        if person_details:
+                            person_db_id = self.save_person_to_db(person_details)
+                else:
+                    # Парсим детали участника впервые
+                    person_details = self.parse_person_details(person_id)
+                    if person_details:
+                        person_db_id = self.save_person_to_db(person_details)
+                        self.parsed_people.add(person_id)
+
+                # Если удалось получить/создать участника в БД — всегда создаём связь сериал–участник
+                if person_db_id:
                     self.save_content_person_relation(series_db_id, 'series', person_db_id, role_name)
-                    
-                    # Отмечаем как спарсенного
-                    self.parsed_people.add(person_id)
-                    
                     print(f"✅ {role_name}: {person_data.get('name', 'Unknown')}")
                 
                 # Пауза между запросами
                 time.sleep(self.delays['BETWEEN_PEOPLE'])
+
+    def get_person_db_id(self, kinopoisk_id):
+        """Получить id участника в БД по его kinopoisk_id"""
+        cursor = self.db_connection.cursor()
+        try:
+            cursor.execute(
+                "SELECT id FROM stuff WHERE kinopoisk_id = %s",
+                (kinopoisk_id,)
+            )
+            row = cursor.fetchone()
+            return row[0] if row else None
+        except Exception as e:
+            print(f"❌ Ошибка получения участника из БД (kinopoisk_id={kinopoisk_id}): {e}")
+            return None
+        finally:
+            cursor.close()
     
     def parse_person_details(self, person_id):
         """Парсинг детальной страницы участника"""
@@ -499,22 +521,22 @@ class MainParser:
             
             # Вставляем фильм
             insert_film = """
-            INSERT INTO film (kinopoisk_id, title, original_title, description, full_description, 
-                             poster, year, tagline, ru_premiere, world_premiere, content_rating, is_family_friendly,
+            INSERT INTO film (kinopoisk_id, title, original_title, short_description, description, 
+                             poster, published_year, tagline, ru_premiere, world_premiere, content_type, is_family_friendly,
                              duration, rating_kp, kp_votes_count, rating_imdb, imdb_votes_count,
                              budget, usa_box_office, rus_box_office, user_rating, user_rating_count)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
                 title = EXCLUDED.title,
                 original_title = EXCLUDED.original_title,
+                short_description = EXCLUDED.short_description,
                 description = EXCLUDED.description,
-                full_description = EXCLUDED.full_description,
                 poster = EXCLUDED.poster,
-                year = EXCLUDED.year,
+                published_year = EXCLUDED.published_year,
                 tagline = EXCLUDED.tagline,
                 ru_premiere = EXCLUDED.ru_premiere,
                 world_premiere = EXCLUDED.world_premiere,
-                content_rating = EXCLUDED.content_rating,
+                content_type = EXCLUDED.content_type,
                 is_family_friendly = EXCLUDED.is_family_friendly,
                 duration = EXCLUDED.duration,
                 rating_kp = EXCLUDED.rating_kp,
@@ -533,15 +555,15 @@ class MainParser:
                 film_data.get('kinopoisk_id'),
                 film_data.get('title'),
                 film_data.get('original_title'),
+                film_data.get('short_description'),
                 film_data.get('description'),
-                film_data.get('full_description'),
                 film_data.get('poster'),
-                film_data.get('year'),
+                film_data.get('published_year'),
                 film_data.get('tagline'),
                 film_data.get('ru_premiere'),
                 film_data.get('world_premiere'),
-                film_data.get('content_rating'),
-                film_data.get('isFamilyFriendly', False),
+                film_data.get('content_type'),
+                film_data.get('is_family_friendly', False),
                 film_data.get('duration'),
                 film_data.get('rating_kp'),
                 film_data.get('kp_votes_count'),
@@ -582,22 +604,22 @@ class MainParser:
         try:
             # Вставляем сериал
             insert_series = """
-            INSERT INTO series (kinopoisk_id, title, original_title, description, full_description, 
-                             poster, year, tagline, ru_premiere, world_premiere, content_rating, is_family_friendly,
+            INSERT INTO series (kinopoisk_id, title, original_title, short_description, description, 
+                             poster, published_year, tagline, ru_premiere, world_premiere, content_type, is_family_friendly,
                              rating_kp, kp_votes_count, rating_imdb, imdb_votes_count,
                              user_rating, user_rating_count, platform, number_of_episodes)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
                 title = EXCLUDED.title,
                 original_title = EXCLUDED.original_title,
+                short_description = EXCLUDED.short_description,
                 description = EXCLUDED.description,
-                full_description = EXCLUDED.full_description,
                 poster = EXCLUDED.poster,
-                year = EXCLUDED.year,
+                published_year = EXCLUDED.published_year,
                 tagline = EXCLUDED.tagline,
                 ru_premiere = EXCLUDED.ru_premiere,
                 world_premiere = EXCLUDED.world_premiere,
-                content_rating = EXCLUDED.content_rating,
+                content_type = EXCLUDED.content_type,
                 is_family_friendly = EXCLUDED.is_family_friendly,
                 rating_kp = EXCLUDED.rating_kp,
                 kp_votes_count = EXCLUDED.kp_votes_count,
@@ -614,15 +636,15 @@ class MainParser:
                 series_data.get('kinopoisk_id'),
                 series_data.get('title'),
                 series_data.get('original_title'),
+                series_data.get('short_description'),
                 series_data.get('description'),
-                series_data.get('full_description'),
                 series_data.get('poster'),
-                series_data.get('year'),
+                series_data.get('published_year'),
                 series_data.get('tagline'),
                 series_data.get('ru_premiere'),
                 series_data.get('world_premiere'),
-                series_data.get('content_rating'),
-                series_data.get('isFamilyFriendly', False),
+                series_data.get('content_type'),
+                series_data.get('is_family_friendly', False),
                 series_data.get('rating_kp'),
                 series_data.get('kp_votes_count'),
                 series_data.get('rating_imdb'),
@@ -630,7 +652,7 @@ class MainParser:
                 None,  # user_rating - будет обновляться автоматически
                 0,     # user_rating_count - будет обновляться автоматически
                 series_data.get('platform'),
-                series_data.get('numberOfEpisodes')
+                series_data.get('number_of_episodes')
             ))
             
             series_db_id = cursor.fetchone()[0]
