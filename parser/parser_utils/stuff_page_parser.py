@@ -96,29 +96,10 @@ class ActorPageParser(BaseParser):
         birthday_elem = self.soup.find('div', {'data-test-id': 'birthday'})
         if birthday_elem:
             birthday_div = birthday_elem.find('div', {'data-tid': '71455188'})
-            if birthday_div:
-                # # Извлекаем отдельные компоненты
-                # day_month_link = birthday_div.find('a', href=lambda x: x and 'birthday' in x and 'day' in x and 'month' in x)
-                # if day_month_link:
-                #     actor_data['birthday_day_month'] = day_month_link.get_text(strip=True)
-                
-                # year_link = birthday_div.find('a', href=lambda x: x and 'birthday' in x and 'year' in x)
-                # if year_link:
-                #     actor_data['birthday_year'] = year_link.get_text(strip=True)
-                
+            if birthday_div:   
                 zodiac_link = birthday_div.find('a', href=lambda x: x and 'zodiac' in x)
                 if zodiac_link:
                     actor_data['zodiac'] = zodiac_link.get_text(strip=True)
-                
-                # # Извлекаем возраст
-                # age_span = birthday_div.find('span', class_='styles_valueDark__jsGKY')
-                # if age_span:
-                #     age_text = age_span.get_text(strip=True)
-                #     # Извлекаем только число из "47 лет"
-                #     import re
-                #     age_match = re.search(r'(\d+)', age_text)
-                #     if age_match:
-                #         actor_data['age'] = age_match.group(1)
         
         # Извлекаем место рождения (data-test-id="placeOfBirthday")
         birthplace_elem = self.soup.find('div', {'data-test-id': 'placeOfBirthday'})
@@ -179,15 +160,12 @@ class ActorPageParser(BaseParser):
                 
                 # Извлекаем годы работы
                 year_buttons = filmography_div.find_all('button', {'data-tid': '10653ce8'})
-                if len(year_buttons) >= 2:
+                if len(year_buttons) >= 1:
                     start_year = year_buttons[0].get_text(strip=True)
-                    end_year = year_buttons[1].get_text(strip=True)
                     
                     # Сохраняем отдельные поля для БД
                     try:
                         actor_data['career_start_year'] = int(start_year)
-                        actor_data['career_end_year'] = int(end_year)
-                        # Продолжительность больше не сохраняем
                     except ValueError:
                         pass
         
@@ -221,37 +199,35 @@ class ActorPageParser(BaseParser):
                 for node in nodes:
                     if not isinstance(node, dict):
                         continue
-                    node_type = node.get('@type') or node.get('type')
-                    if node_type == 'Person' or (isinstance(node_type, list) and 'Person' in node_type):
-                        # Имя
-                        if node.get('name'):
-                            result['name'] = str(node.get('name'))
-                        # Оригинальное имя / альтернативное
-                        if node.get('alternateName'):
-                            result['original_name'] = str(node.get('alternateName'))
-                        # Пол
-                        if node.get('gender'):
-                            gender_raw = node.get('gender')
-                            try:
-                                gender_str = str(gender_raw)
-                                # Берём последний сегмент после '/'
-                                if '/' in gender_str:
-                                    gender_str = gender_str.rstrip('/').split('/')[-1]
-                                result['gender'] = gender_str
-                            except Exception:
-                                result['gender'] = str(gender_raw)
-                        # Роли/должности (может быть строкой с перечислением через запятую или списком)
-                        job_title = node.get('jobTitle')
-                        if job_title:
-                            if isinstance(job_title, list):
-                                result['career'] = [str(x) for x in job_title if x]
-                            else:
-                                result['career'] = [str(job_title)]
-                      
-                        if node.get('birthDate'):
-                            result['birth_date'] = str(node.get('birthDate'))
-                            # Также попробуем заполнить год, если ещё не заполнен
-                        return result
+                    # Имя
+                    if node.get('name'):
+                        result['name'] = str(node.get('name'))
+                    # Оригинальное имя / альтернативное
+                    if node.get('alternateName'):
+                        result['original_name'] = str(node.get('alternateName'))
+                    # Пол
+                    if node.get('gender'):
+                        gender_raw = node.get('gender')
+                        try:
+                            gender_str = str(gender_raw)
+                            # Берём последний сегмент после '/'
+                            if '/' in gender_str:
+                                gender_str = gender_str.rstrip('/').split('/')[-1]
+                            result['gender'] = gender_str
+                        except Exception:
+                            result['gender'] = str(gender_raw)
+                    # Роли/должности (может быть строкой с перечислением через запятую или списком)
+                    job_title = node.get('jobTitle')
+                    if job_title:
+                        if isinstance(job_title, list):
+                            result['career'] = [str(x) for x in job_title if x]
+                        else:
+                            result['career'] = [str(job_title)]
+                  
+                    if node.get('birthDate'):
+                        result['birth_date'] = str(node.get('birthDate'))
+                        # Также попробуем заполнить год, если ещё не заполнен
+                    return result
         except Exception:
             pass
         return result
@@ -259,82 +235,6 @@ class ActorPageParser(BaseParser):
     def save_to_json(self, actor_data: Dict, output_file: str = 'output/actor_details.json'):
         """Сохраняет данные об актере в JSON файл"""
         super().save_to_json(actor_data, output_file)
-    
-    def print_actor_details(self, actor_data: Dict):
-        """
-        Выводит детальную информацию об актере
-        
-        Args:
-            actor_data: Данные об актере
-        """
-        print("\n=== Детальная информация об актере ===")
-        print("-" * 50)
-        
-        # Основная информация
-        if actor_data.get('name'):
-            print(f"🎭 Имя: {actor_data['name']}")
-        
-        if actor_data.get('full_name'):
-            print(f"📝 Полное имя: {actor_data['full_name']}")
-        
-        if actor_data.get('birth_date'):
-            print(f"🎂 Дата рождения: {actor_data['birth_date']}")
-        
-        if actor_data.get('birth_place'):
-            print(f"🌍 Место рождения: {actor_data['birth_place']}")
-        
-        if actor_data.get('nationality'):
-            print(f"🏳️ Национальность: {actor_data['nationality']}")
-        
-        if actor_data.get('height'):
-            print(f"📏 Рост: {actor_data['height']}")
-        
-        # Профессии
-        if actor_data.get('profession'):
-            professions = actor_data['profession']
-            if isinstance(professions, list):
-                print(f"💼 Профессии: {', '.join(professions)}")
-            else:
-                print(f"💼 Профессия: {professions}")
-        
-        # Фильмография
-        if actor_data.get('filmography'):
-            films = actor_data['filmography']
-            print(f"\n🎬 Фильмография ({len(films)} фильмов):")
-            for i, film in enumerate(films[:10], 1):  # Показываем первые 10
-                title = film.get('title', 'Неизвестно')
-                year = film.get('year', '')
-                role = film.get('role', '')
-                year_str = f" ({year})" if year else ""
-                role_str = f" - {role}" if role else ""
-                print(f"  {i}. {title}{year_str}{role_str}")
-            
-            if len(films) > 10:
-                print(f"    ... и еще {len(films) - 10} фильмов")
-        
-        # Награды
-        if actor_data.get('awards'):
-            awards = actor_data['awards']
-            if isinstance(awards, list):
-                print(f"\n🏆 Награды: {', '.join(awards[:5])}")
-                if len(awards) > 5:
-                    print(f"    ... и еще {len(awards) - 5} наград")
-            else:
-                print(f"🏆 Награды: {awards}")
-        
-        # Образование
-        if actor_data.get('education'):
-            print(f"🎓 Образование: {actor_data['education']}")
-        
-        # Биография
-        if actor_data.get('biography'):
-            bio = actor_data['biography']
-            if len(bio) > 300:
-                bio = bio[:300] + "..."
-            print(f"\n📖 Биография: {bio}")
-        
-        print()
-
 
 def main():
     """Основная функция для демонстрации работы парсера"""
@@ -348,9 +248,6 @@ def main():
         # Извлекаем детальную информацию
         print("Извлекаем детальную информацию об актере...")
         actor_data = parser.extract_actor_details()
-        
-        # Выводим результаты
-        parser.print_actor_details(actor_data)
         
         # Сохраняем в JSON
         parser.save_to_json(actor_data, 'output/actor_details.json')

@@ -3,7 +3,7 @@ import time
 from parser_utils.kinopoisk_parser import KinopoiskParser
 from parser_utils.film_page_parser import FilmPageParser
 from parser_utils.serial_page_parser import SerialPageParser
-from parser_utils.actor_page_parser import ActorPageParser
+from parser_utils.stuff_page_parser import ActorPageParser
 from parser_utils.stills_page_parser import StillsPageParser
 from config import DATABASE_CONFIG, DELAYS, PARSING_CONFIG, LOGGING_CONFIG
 
@@ -88,15 +88,13 @@ class MainParser:
                 career TEXT[],
                 ganres TEXT[],
                 height VARCHAR(50),
-                birthday_day_month VARCHAR(50),
                 zodiac VARCHAR(50),
-                age INTEGER,
+                birth_date VARCHAR(100),
                 birthplace TEXT[],
                 spouse TEXT[],
                 children TEXT[],
                 total_films INTEGER,
                 career_start_year INTEGER,
-                career_end_year INTEGER,
                 image VARCHAR(1000)
             )
             """,
@@ -814,25 +812,23 @@ class MainParser:
             # Вставляем участника
             insert_person = """
             INSERT INTO stuff (kinopoisk_id, name, original_name, career, ganres, height, 
-                               birthday_day_month, zodiac, age, birthplace, 
+                               zodiac, birth_date, birthplace, 
                                spouse, children, total_films, career_start_year, 
-                               career_end_year, image)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                               image)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
                 name = EXCLUDED.name,
                 original_name = EXCLUDED.original_name,
                 career = EXCLUDED.career,
                 ganres = EXCLUDED.ganres,
                 height = EXCLUDED.height,
-                birthday_day_month = EXCLUDED.birthday_day_month,
                 zodiac = EXCLUDED.zodiac,
-                age = EXCLUDED.age,
+                birth_date = EXCLUDED.birth_date,
                 birthplace = EXCLUDED.birthplace,
                 spouse = EXCLUDED.spouse,
                 children = EXCLUDED.children,
                 total_films = EXCLUDED.total_films,
                 career_start_year = EXCLUDED.career_start_year,
-                career_end_year = EXCLUDED.career_end_year,
                 image = EXCLUDED.image
             RETURNING id
             """
@@ -844,15 +840,13 @@ class MainParser:
                 person_data.get('career'),
                 person_data.get('genres'),
                 person_data.get('height'),
-                person_data.get('birthday_day_month'),
                 person_data.get('zodiac'),
-                person_data.get('age'),
+                person_data.get('birth_date'),
                 person_data.get('birthplace'),
                 person_data.get('spouse'),
                 person_data.get('children'),
                 person_data.get('total_films'),
                 person_data.get('career_start_year'),
-                person_data.get('career_end_year'),
                 person_data.get('image')
             ))
             

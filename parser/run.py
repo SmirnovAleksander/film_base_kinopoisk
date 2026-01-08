@@ -156,7 +156,7 @@ def run_serial_parser_local():
 
 def run_actor_parser_local():
     """Парсер страницы актера (локальный)"""
-    from parser_utils.actor_page_parser import ActorPageParser
+    from parser_utils.stuff_page_parser import ActorPageParser
     
     print("\n=== Парсер страницы актера (локальный) ===")
     
@@ -176,8 +176,7 @@ def run_actor_parser_local():
         print("✓ Информация извлечена")
         
         if actor_data:
-            parser.print_actor_details(actor_data)
-            output_file = 'output/actor_details.json'
+            output_file = 'output/stuff_details.json'
             parser.save_to_json(actor_data, output_file)
             print(f"✓ Данные сохранены в {output_file}")
         else:
@@ -354,7 +353,7 @@ def run_serial_parser_online():
 
 def run_actor_parser_online():
     """Парсер страницы актера (онлайн)"""
-    from parser_utils.actor_page_parser import ActorPageParser
+    from parser_utils.stuff_page_parser import ActorPageParser
     
     print("\n=== Парсер страницы актера (онлайн) ===")
     
@@ -373,8 +372,7 @@ def run_actor_parser_online():
         print("✓ Информация извлечена")
         
         if actor_data:
-            parser.print_actor_details(actor_data)
-            output_file = 'output/online_actor_details.json'
+            output_file = 'output/online_stuff_details.json'
             parser.save_to_json(actor_data, output_file)
             print(f"✓ Данные сохранены в {output_file}")
         else:
