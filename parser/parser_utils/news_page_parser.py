@@ -5,10 +5,9 @@
 Извлекает информацию о новостях кино
 """
 
-import json
 import os
-import re
-from typing import List, Dict, Optional
+import time
+from typing import List, Dict
 from bs4 import BeautifulSoup
 from .base_parser import BaseParser
 

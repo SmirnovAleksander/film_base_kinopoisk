@@ -5,10 +5,7 @@
 Использует BeautifulSoup4 и lxml для парсинга HTML
 """
 
-import json
-import os
-import re
-from typing import List, Dict, Optional
+from typing import List, Dict
 from bs4 import BeautifulSoup
 from .base_parser import BaseParser
 

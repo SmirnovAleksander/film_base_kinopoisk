@@ -1,7 +1,5 @@
 import psycopg2
 import time
-import requests
-from bs4 import BeautifulSoup
 from parser_utils.kinopoisk_parser import KinopoiskParser
 from parser_utils.film_page_parser import FilmPageParser
 from parser_utils.serial_page_parser import SerialPageParser
