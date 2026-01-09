@@ -25,7 +25,6 @@ def print_menu():
     print("  1. Парсер всех фильмов (локальный)")
     print("  2. Парсер страницы фильма (локальный)")
     print("  3. Парсер страницы актера (локальный)")
-    print("  4. Парсер галереи кадров (локальный)")
     print("  5. Парсер новостей (локальный)")
     print("  6. Парсер страницы сериала (локальный)")
     
@@ -185,29 +184,6 @@ def run_actor_parser_local():
         print(f"❌ Ошибка: {e}")
         import traceback
         traceback.print_exc()
-
-
-def run_stills_parser_local():
-    """Парсер галереи кадров (локальный)"""
-    from parser_utils.stills_page_parser import StillsPageParser
-    
-    print("\n=== Парсер галереи кадров (локальный) ===")
-    
-    html_file = 'templates/posters_page.html'
-    try:
-        parser = StillsPageParser()
-        parser.load_html_from_file(html_file)
-        items = parser.extract_stills_info()
-        os.makedirs('output', exist_ok=True)
-        out_all = 'output/stills_local.json'
-        with open(out_all, 'w', encoding='utf-8') as f:
-            json.dump(items, f, ensure_ascii=False, indent=2)
-        print(f"✅ Найдено карточек: {len(items)}. Файл: {out_all}")
-    except Exception as e:
-        print(f"❌ Ошибка: {e}")
-        import traceback
-        traceback.print_exc()
-
 
 def run_news_parser_local():
     """Парсер новостей (локальный)"""
@@ -384,33 +360,27 @@ def run_actor_parser_online():
 
 
 def run_stills_parser_online():
-    """Парсер галереи кадров (онлайн)"""
-    from parser_utils.stills_page_parser import StillsPageParser
+    """Парсер галереи кадров (онлайн) - использует новый GraphQL парсер"""
+    from parser_utils.film_series_images_parser import FilmImagesParser
+    import json
+    import os
     
-    print("\n=== Парсер галереи кадров (онлайн) ===")
+    print("\n=== Парсер галереи кадров (онлайн - GraphQL) ===")
     
-    urls = [
-        'https://www.kinopoisk.ru/film/535341/stills/',
-        'https://www.kinopoisk.ru/film/535341/wall/',
-    ]
-    
+    # Для онлайн тестирования используем пример ID фильма
+    test_movie_id = "258687"  # Пример ID фильма
     try:
-        parser = StillsPageParser()
-        grouped = {"stills": [], "wall": []}
-        for url in urls:
-            try:
-                parser.load_html_from_url(url)
-                items = parser.extract_stills_info()
-                key = 'stills' if '/stills' in url else ('wall' if '/wall' in url else 'stills')
-                grouped[key].extend(items)
-            except Exception as e:
-                print(f"⚠️ Пропущен URL {url}: {e}")
+        parser = FilmImagesParser()
+        print(f"Получение изображений для фильма {test_movie_id} через GraphQL API...")
+        
+        # Получаем все типы изображений
+        all_images = parser.fetch_all_image_types(test_movie_id)
         
         os.makedirs('output', exist_ok=True)
         out_all = 'output/stills_online.json'
         with open(out_all, 'w', encoding='utf-8') as f:
-            json.dump(grouped, f, ensure_ascii=False, indent=2)
-        print(f"✅ Найдено карточек: stills={len(grouped['stills'])}, wall={len(grouped['wall'])}. Файл: {out_all}")
+            json.dump(all_images, f, ensure_ascii=False, indent=2)
+        print(f"✅ Найдено изображений: {len(all_images)}. Файл: {out_all}")
     except Exception as e:
         print(f"❌ Ошибка: {e}")
         import traceback
@@ -583,8 +553,6 @@ def main():
                 run_film_parser_local()
             elif choice == '3':
                 run_actor_parser_local()
-            elif choice == '4':
-                run_stills_parser_local()
             elif choice == '5':
                 run_news_parser_local()
             elif choice == '6':

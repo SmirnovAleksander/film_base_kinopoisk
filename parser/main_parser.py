@@ -4,7 +4,7 @@ from parser_utils.kinopoisk_parser import KinopoiskParser
 from parser_utils.film_page_parser import FilmPageParser
 from parser_utils.serial_page_parser import SerialPageParser
 from parser_utils.stuff_page_parser import ActorPageParser
-from parser_utils.stills_page_parser import StillsPageParser
+from parser_utils.film_series_images_parser import FilmImagesParser
 from config import DATABASE_CONFIG, DELAYS, PARSING_CONFIG, LOGGING_CONFIG
 
 
@@ -22,7 +22,7 @@ class MainParser:
         self.film_parser = FilmPageParser()
         self.serial_parser = SerialPageParser()
         self.actor_parser = ActorPageParser()
-        self.stills_parser = StillsPageParser()
+        self.images_parser = FilmImagesParser()
         
 
         
@@ -702,53 +702,34 @@ class MainParser:
             cursor.close()
 
     def parse_and_save_stills(self, content_kinopoisk_id: str, content_db_id: int, content_type: str):
-        """Парсит кадры контента (фильма или сериала), сначала получая доступные категории, затем парсит каждую категорию."""
+        """Парсит кадры контента (фильма или сериала) через GraphQL API"""
         try:
-            main_stills_url = f"https://www.kinopoisk.ru/film/{content_kinopoisk_id}/stills/"
-            self.stills_parser.load_html_from_url(main_stills_url)
-            all_categories = self.stills_parser.extract_image_categories()
-            
-            if not all_categories:
-                print(f"⚠️ Не найдено категорий кадров для {content_type} {content_kinopoisk_id}")
-                return
-
-            # Фильтруем только разрешенные категории
-            allowed_types = {'stills', 'wall', 'shooting', 'screenshots'}
-            filtered_categories = [cat for cat in all_categories if cat['type'] in allowed_types]
-            
-            if not filtered_categories:
-                print(f"⚠️ Нет разрешенных категорий для {content_type} {content_kinopoisk_id}")
-                return
-            
-            print(f"📸 Найдено категорий кадров: {len(filtered_categories)}/{len(all_categories)}")
-            for category in filtered_categories:
-                print(f"  - {category['name']} ({category['type']}): {category['count']} элементов")
-            
-            # Группируем кадры по типам
+            # Используем новый FilmImagesParser для получения изображений через GraphQL
+            # Для фильмов и сериалов используем разные типы изображений
+            image_types = ["STILL", "SHOOTING", "POSTER"]
             grouped = {}
-            for category in filtered_categories:
-                category_type = category['type']
-                category_url = f"https://www.kinopoisk.ru{category['url']}"
-                
-                try:
-                    # Загружаем страницу конкретной категории
-                    self.stills_parser.load_html_from_url(category_url)
-                    # Извлекаем кадры с указанием типа
-                    items = self.stills_parser.extract_stills_info(category_type)
-                    grouped[category_type] = items
-                    print(f"✅ Спарсено {len(items)} кадров типа '{category_type}'")
-                    
-                    # Пауза между категориями
-                    time.sleep(self.delays['BETWEEN_FILMS'])
-                except Exception as e:
-                    print(f"⚠️ Не удалось спарсить категорию {category['name']} ({category_url}): {e}")
-                    continue
             
-            # Сохраняем все кадры в БД
+            print(f"📸 Парсинг изображений для {content_type} {content_kinopoisk_id}")
+            
+            for image_type in image_types:
+                try:
+                    # Получаем изображения через GraphQL API
+                    images = self.images_parser.fetch_movie_images_paginated(content_kinopoisk_id, image_type)
+                    grouped[image_type.lower()] = images if images else []
+                    print(f"  ✅ Спарсено {len(images) if images else 0} изображений типа '{image_type}'")
+                except Exception as e:
+                    print(f"  ⚠️ Не удалось спарсить изображения типа {image_type}: {e}")
+                    grouped[image_type.lower()] = []
+                    continue
+                
+                # Пауза между типами изображений
+                time.sleep(self.delays['BETWEEN_FILMS'])
+            
+            # Сохраняем все изображения в БД
             self.save_content_stills(content_db_id, content_type, grouped)
             
         except Exception as e:
-            print(f"❌ Ошибка при парсинге кадров {content_type} {content_kinopoisk_id}: {e}")
+            print(f"❌ Ошибка при парсинге изображений {content_type} {content_kinopoisk_id}: {e}")
 
     def save_content_stills(self, content_db_id: int, content_type: str, grouped_items):
         """Сохраняет кадры контента (фильма или сериала) в таблицу content_still с указанием типа."""
