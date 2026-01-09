@@ -5,6 +5,7 @@ from parser_utils.film_page_parser import FilmPageParser
 from parser_utils.serial_page_parser import SerialPageParser
 from parser_utils.stuff_page_parser import ActorPageParser
 from parser_utils.film_series_images_parser import FilmImagesParser
+from parser_utils.stuff_images_parser import StuffImagesParser
 from config import DATABASE_CONFIG, DELAYS, PARSING_CONFIG, LOGGING_CONFIG
 
 
@@ -23,6 +24,7 @@ class MainParser:
         self.serial_parser = SerialPageParser()
         self.actor_parser = ActorPageParser()
         self.images_parser = FilmImagesParser()
+        self.stuff_images_parser = StuffImagesParser()
         
 
         
@@ -192,14 +194,14 @@ class MainParser:
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS content_still (
+            CREATE TABLE IF NOT EXISTS content_images (
                 id SERIAL PRIMARY KEY,
                 content_id INTEGER NOT NULL,
                 content_type VARCHAR(20) NOT NULL CHECK (content_type IN ('film', 'series')),
                 picture_id VARCHAR(20) NOT NULL,
-                original_url TEXT NOT NULL,
-                source VARCHAR(16) NOT NULL,
-                UNIQUE(content_id, content_type, picture_id, source)
+                image_url TEXT NOT NULL,
+                image_type VARCHAR(16) NOT NULL,
+                UNIQUE(content_id, content_type, picture_id, image_type)
             )
             """,
             """
@@ -211,6 +213,16 @@ class MainParser:
                 url TEXT NOT NULL,
                 logo TEXT NULL,
                 UNIQUE(content_id, content_type, name)
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS stuff_images (
+                id SERIAL PRIMARY KEY,
+                stuff_id INTEGER NOT NULL REFERENCES stuff(id) ON DELETE CASCADE,
+                picture_id VARCHAR(20) NOT NULL,
+                image_url TEXT NOT NULL,
+                image_type VARCHAR(16) NOT NULL,
+                UNIQUE(stuff_id, picture_id, image_type)
             )
             """
         ]
@@ -407,6 +419,9 @@ class MainParser:
                     person_details = self.parse_person_details(person_id)
                     if person_details:
                         person_db_id = self.save_person_to_db(person_details)
+                        # Парсим изображения участника
+                        self.parse_and_save_stuff_images(person_id, person_db_id)
+
                         # Отмечаем как спарсенного, чтобы больше не ходить на страницу актёра
                         self.parsed_people.add(person_id)
 
@@ -454,6 +469,10 @@ class MainParser:
                     person_details = self.parse_person_details(person_id)
                     if person_details:
                         person_db_id = self.save_person_to_db(person_details)
+                        
+                        # Парсим изображения участника
+                        self.parse_and_save_stuff_images(person_id, person_db_id)
+                        
                         self.parsed_people.add(person_id)
 
                 # Если удалось получить/создать участника в БД — всегда создаём связь сериал–участник
@@ -726,13 +745,13 @@ class MainParser:
                 time.sleep(self.delays['BETWEEN_FILMS'])
             
             # Сохраняем все изображения в БД
-            self.save_content_stills(content_db_id, content_type, grouped)
+            self.save_content_images(content_db_id, content_type, grouped)
             
         except Exception as e:
             print(f"❌ Ошибка при парсинге изображений {content_type} {content_kinopoisk_id}: {e}")
 
-    def save_content_stills(self, content_db_id: int, content_type: str, grouped_items):
-        """Сохраняет кадры контента (фильма или сериала) в таблицу content_still с указанием типа."""
+    def save_content_images(self, content_db_id: int, content_type: str, grouped_items):
+        """Сохраняет кадры контента (фильма или сериала) в таблицу content_images с указанием типа."""
         cursor = self.db_connection.cursor()
         try:
             total_saved = 0
@@ -741,24 +760,24 @@ class MainParser:
             for image_type, images in grouped_items.items():
                 for image_data in images:
                     picture_id = image_data.get('id')
-                    original_url = image_data.get('original')
+                    image_url = image_data.get('original')
                     
-                    if not picture_id or not original_url:
+                    if not picture_id or not image_url:
                         continue
                     
-                    # Используем тип изображения напрямую в поле source
-                    source = image_type
+                    # Используем тип изображения напрямую в поле image_type
+                    image_type = image_type
                     
                     try:
                         # Начинаем новую транзакцию для каждого кадра
                         cursor.execute(
                             """
-                            INSERT INTO content_still (content_id, content_type, picture_id, original_url, source)
+                            INSERT INTO content_images (content_id, content_type, picture_id, image_url, image_type)
                             VALUES (%s, %s, %s, %s, %s)
-                            ON CONFLICT (content_id, content_type, picture_id, source) DO UPDATE SET
-                                original_url = EXCLUDED.original_url
+                            ON CONFLICT (content_id, content_type, picture_id, image_type) DO UPDATE SET
+                                image_url = EXCLUDED.image_url
                             """,
-                            (content_db_id, content_type, picture_id, original_url, source)
+                            (content_db_id, content_type, picture_id, image_url, image_type)
                         )
                         self.db_connection.commit()
                         total_saved += 1
@@ -766,7 +785,7 @@ class MainParser:
                     except Exception as e:
                         # Откатываем неудачную транзакцию и продолжаем
                         self.db_connection.rollback()
-                        print(f"⚠️ Ошибка сохранения кадра {picture_id} (тип: {source}): {e}")
+                        print(f"⚠️ Ошибка сохранения кадра {picture_id} (тип: {image_type}): {e}")
                         total_errors += 1
                         # Продолжаем с следующим кадром
                         continue
@@ -785,6 +804,75 @@ class MainParser:
         finally:
             cursor.close()
     
+    def parse_and_save_stuff_images(self, person_kinopoisk_id: str, person_db_id: int):
+        """Парсит и сохраняет изображения персоны"""
+        try:
+            print(f"📸 Парсинг изображений для персоны {person_kinopoisk_id}")
+            
+            # Получаем изображения через GraphQL API
+            # fetch_all_image_types возвращает список словарей [{'id': ..., 'original': ..., 'type': ...}, ...]
+            images = self.stuff_images_parser.fetch_all_image_types(person_kinopoisk_id)
+            
+            if not images:
+                print(f"  ⚠️ Изображения не найдены")
+                return
+
+            print(f"  ✅ Спарсено {len(images)} изображений")
+            
+            # Сохраняем изображения в БД
+            self.save_stuff_images(person_db_id, images)
+            
+        except Exception as e:
+            print(f"❌ Ошибка при парсинге изображений персоны {person_kinopoisk_id}: {e}")
+
+    def save_stuff_images(self, person_db_id: int, images):
+        """Сохраняет изображения персоны в таблицу stuff_images"""
+        cursor = self.db_connection.cursor()
+        try:
+            total_saved = 0
+            total_errors = 0
+            
+            for image_data in images:
+                picture_id = image_data.get('id')
+                image_url = image_data.get('original')
+                image_type = image_data.get('type')  # photo
+                
+                if not picture_id or not image_url:
+                    continue
+                
+                try:
+                    cursor.execute(
+                        """
+                        INSERT INTO stuff_images (stuff_id, picture_id, image_url, image_type)
+                        VALUES (%s, %s, %s, %s)
+                        ON CONFLICT (stuff_id, picture_id, image_type) DO UPDATE SET
+                            image_url = EXCLUDED.image_url
+                        """,
+                        (person_db_id, picture_id, image_url, image_type)
+                    )
+                    self.db_connection.commit()
+                    total_saved += 1
+                    
+                except Exception as e:
+                    self.db_connection.rollback()
+                    print(f"⚠️ Ошибка сохранения изображения персоны {picture_id}: {e}")
+                    total_errors += 1
+                    continue
+            
+            if total_errors > 0:
+                print(f"💾 Сохранено {total_saved} изображений персоны в БД, {total_errors} ошибок")
+            else:
+                print(f"💾 Сохранено {total_saved} изображений персоны в БД")
+                
+        except Exception as e:
+            print(f"❌ Общая ошибка сохранения изображений персоны: {e}")
+            try:
+                self.db_connection.rollback()
+            except:
+                pass
+        finally:
+            cursor.close()
+
     def save_person_to_db(self, person_data):
         """Сохранение участника в БД"""
         cursor = self.db_connection.cursor()

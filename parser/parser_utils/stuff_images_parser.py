@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Скрипт для получения изображений фильма через GraphQL API Кинопоиска
+Скрипт для получения изображений персоны через GraphQL API Кинопоиска
 """
 
 import requests
-import json
 from parser_utils.base_parser import BaseParser
 
 
-class FilmImagesParser(BaseParser):
-    """Класс для получения изображений фильма через GraphQL API"""
+class StuffImagesParser(BaseParser):
+    """Класс для получения изображений персоны через GraphQL API"""
 
     def __init__(self):
         super().__init__()
@@ -54,25 +53,25 @@ class FilmImagesParser(BaseParser):
         })
         return session
         
-    def fetch_movie_images_paginated(self, movie_id: int, image_type: str = "STILL", limit: int = 42):
+    def fetch_stuff_images_paginated(self, stuff_id: int, image_type: str = "PHOTO", limit: int = 42):
         """
-        Получает все изображения фильма через GraphQL API с пагинацией
+        Получает все изображения персоны через GraphQL API с пагинацией
         
         Args:
-            movie_id: ID фильма
-            image_type: Тип изображений (STILL, POSTER, SHOOTING, WALL, SCREENSHOT)
+            stuff_id: ID персоны
+            image_type: Тип изображений (PHOTO)
             limit: Количество изображений для получения на одной странице
         """
         # GraphQL запрос
         query = """
-                query MovieImagesItems($id: Long!, $type: MovieImageType!, $offset: Int, $limit: Int) {
-                movie(id: $id) {
+                query PersonImagesItems($id: Long!, $type: PersonImageType!, $offset: Int, $limit: Int) {
+                person(id: $id) {
                     id
-                    ...MovieImages
+                    ...PersonImages
                     __typename
                 }
                 }
-                fragment MovieImages on Movie {
+                fragment PersonImages on Person {
                 images(types: [$type], offset: $offset, limit: $limit) {
                     items {
                         id
@@ -99,23 +98,23 @@ class FilmImagesParser(BaseParser):
         offset = 0
         total_images = 0
         
-        # Подготовка сессии - используем тот же подход, что и в base_parser
+        # Подготовка сессии
         session = self._prepare_session()
         
         # Добавляем параметры к URL
-        url_with_params = f"{self.graphql_url}?operationName=MovieImagesItems"
+        url_with_params = f"{self.graphql_url}?operationName=PersonImagesItems"
         
         try:
             while True:
                 variables = {
-                    "id": movie_id,
+                    "id": stuff_id,
                     "type": image_type,
                     "offset": offset,
                     "limit": limit
                 }
 
                 payload = {
-                    "operationName": "MovieImagesItems",
+                    "operationName": "PersonImagesItems",
                     "query": query,
                     "variables": variables
                 }
@@ -131,8 +130,8 @@ class FilmImagesParser(BaseParser):
                 result = response.json()
                 
                 # Если есть изображения, выводим их количество
-                if 'data' in result and 'movie' in result['data']:
-                    images_data = result['data']['movie'].get('images', {})
+                if 'data' in result and 'person' in result['data']:
+                    images_data = result['data']['person'].get('images', {})
                     total = images_data.get('total', 0)
                     items = images_data.get('items', [])
                     
@@ -148,7 +147,6 @@ class FilmImagesParser(BaseParser):
                     # Преобразуем изображения в структурированный формат
                     for item in items:
                         img_info = item.get('image', {})
-                        orig_size = img_info.get('origSize', {})
                         
                         # Нормализуем URL изображения
                         original_url = img_info.get('avatarsUrl')
@@ -157,11 +155,11 @@ class FilmImagesParser(BaseParser):
                         else:
                             normalized_url = None
                         
-                        # Создаем структурированный словарь в формате, аналогичном stills_page_parser.py
+                        # Создаем структурированный словарь
                         structured_item = {
                             'id': item.get('id'),
-                            'original': normalized_url,  # Используем нормализованный URL как оригинальное изображение
-                            'type': image_type.lower()  # Приводим к нижнему регистру для соответствия
+                            'original': normalized_url,
+                            'type': image_type.lower()
                         }
                         
                         all_images_structured.append(structured_item)
@@ -187,22 +185,22 @@ class FilmImagesParser(BaseParser):
             print(f"Неожиданная ошибка: {e}")
             return None
     
-    def fetch_all_image_types(self, movie_id: int, limit: int = 42):
+    def fetch_all_image_types(self, stuff_id: int, limit: int = 42):
         """
-        Получает все изображения фильма для всех типов: STILL, SHOOTING, POSTER
+        Получает все изображения персоны для всех типов: PHOTO
         
         Args:
-            movie_id: ID фильма
+            stuff_id: ID персоны
             limit: Количество изображений для получения на одной странице
         """
-        image_types = ["STILL", "SHOOTING", "POSTER"]
+        image_types = ["PHOTO"]
         all_results = {}
         
         # Структурированные данные для всех типов
         all_structured_data = []
         
         for image_type in image_types:       
-            images = self.fetch_movie_images_paginated(movie_id, image_type, limit)
+            images = self.fetch_stuff_images_paginated(stuff_id, image_type, limit)
             all_results[image_type] = images
             
             if images is not None:
@@ -217,20 +215,19 @@ class FilmImagesParser(BaseParser):
             else:
                 print(f"\nОшибка при получении изображений типа {image_type}")
         
-        # Возвращаем структурированные данные в формате, аналогичном stills_page_parser.py
         return all_structured_data
 
 
 def main():
     """Основная функция"""
-    fetcher = FilmImagesParser()
+    fetcher = StuffImagesParser()
     
     # Пример использования
-    movie_id = 258687  # ID фильма (как в примере из задачи)
-    limit = 42  # Лимит
+    stuff_id = 12345  # Пример ID
+    limit = 42
     
     # Получаем все изображения в структурированном формате
-    all_images = fetcher.fetch_all_image_types(movie_id, limit)
+    all_images = fetcher.fetch_all_image_types(stuff_id, limit)
       
     # Считаем по типам
     type_counts = {}
