@@ -6,6 +6,7 @@ from parser_utils.serial_page_parser import SerialPageParser
 from parser_utils.stuff_page_parser import ActorPageParser
 from parser_utils.film_series_images_parser import FilmImagesParser
 from parser_utils.stuff_images_parser import StuffImagesParser
+from parser_utils.stuff_filmography_parser import StuffFilmographyParser
 from config import DATABASE_CONFIG, DELAYS, PARSING_CONFIG, LOGGING_CONFIG
 
 
@@ -25,6 +26,7 @@ class MainParser:
         self.actor_parser = ActorPageParser()
         self.images_parser = FilmImagesParser()
         self.stuff_images_parser = StuffImagesParser()
+        self.stuff_filmography_parser = StuffFilmographyParser()
         
 
         
@@ -224,6 +226,25 @@ class MainParser:
                 image_type VARCHAR(16) NOT NULL,
                 UNIQUE(stuff_id, picture_id, image_type)
             )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS stuff_filmography (
+                id SERIAL PRIMARY KEY,
+                person_id INTEGER NOT NULL REFERENCES stuff(id) ON DELETE CASCADE,
+                movie_id VARCHAR(20) NOT NULL,
+                title VARCHAR(500),
+                original_title VARCHAR(500),
+                published_year INTEGER,
+                genres TEXT,
+                countries TEXT,
+                poster_url VARCHAR(1000),
+                rating_kinopoisk DECIMAL(3,1),
+                rating_kinopoisk_count INTEGER,
+                role_slugs TEXT,
+                release_year_start INTEGER,
+                release_year_end INTEGER,
+                UNIQUE(person_id, movie_id, role_slugs)
+            )
             """
         ]
         
@@ -421,6 +442,8 @@ class MainParser:
                         person_db_id = self.save_person_to_db(person_details)
                         # Парсим изображения участника
                         self.parse_and_save_stuff_images(person_id, person_db_id)
+                        # Парсим фильмографию участника
+                        self.parse_and_save_stuff_filmography(person_id, person_db_id)
 
                         # Отмечаем как спарсенного, чтобы больше не ходить на страницу актёра
                         self.parsed_people.add(person_id)
@@ -472,6 +495,8 @@ class MainParser:
                         
                         # Парсим изображения участника
                         self.parse_and_save_stuff_images(person_id, person_db_id)
+                        # Парсим фильмографию участника
+                        self.parse_and_save_stuff_filmography(person_id, person_db_id)
                         
                         self.parsed_people.add(person_id)
 
@@ -873,17 +898,101 @@ class MainParser:
         finally:
             cursor.close()
 
+    def parse_and_save_stuff_filmography(self, person_kinopoisk_id: int, person_db_id: int):
+        """Парсит и сохраняет фильмографию персоны"""
+        try:
+            # print(f"🎥 Парсинг фильмографии для персоны {person_kinopoisk_id}")
+
+            filmography_items = self.stuff_filmography_parser.fetch_stuff_filmography(person_kinopoisk_id, role_slugs=["ACTOR"])
+
+            if not filmography_items:
+                print(f"  ⚠️ Фильмография не найдена")
+                return
+
+            print(f"  ✅ Спарсено {len(filmography_items)} элементов фильмографии")
+
+            self.save_stuff_filmography_to_db(person_db_id, filmography_items)
+
+        except Exception as e:
+            print(f"❌ Ошибка при парсинге фильмографии персоны {person_kinopoisk_id}: {e}")
+
+    def save_stuff_filmography_to_db(self, person_db_id: int, filmography_items: list):
+        """Сохраняет элементы фильмографии персоны в таблицу stuff_filmography"""
+        cursor = self.db_connection.cursor()
+        try:
+            total_saved = 0
+            total_errors = 0
+
+            for item_data in filmography_items:
+                try:
+                    cursor.execute(
+                        """
+                        INSERT INTO stuff_filmography (
+                            person_id, movie_id, title, original_title, published_year,
+                            genres, countries, poster_url, rating_kinopoisk, rating_kinopoisk_count,
+                            role_slugs, release_year_start, release_year_end
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (person_id, movie_id, role_slugs) DO UPDATE SET
+                            title = EXCLUDED.title,
+                            original_title = EXCLUDED.original_title,
+                            published_year = EXCLUDED.published_year,
+                            genres = EXCLUDED.genres,
+                            countries = EXCLUDED.countries,
+                            poster_url = EXCLUDED.poster_url,
+                            rating_kinopoisk = EXCLUDED.rating_kinopoisk,
+                            rating_kinopoisk_count = EXCLUDED.rating_kinopoisk_count,
+                            release_year_start = EXCLUDED.release_year_start,
+                            release_year_end = EXCLUDED.release_year_end
+                        """,
+                        (
+                            person_db_id,
+                            item_data.get('movie_id'),
+                            item_data.get('title'),
+                            item_data.get('original_title'),
+                            item_data.get('published_year'),
+                            item_data.get('genres'),
+                            item_data.get('countries'),
+                            item_data.get('poster_url'),
+                            item_data.get('rating_kinopoisk'),
+                            item_data.get('rating_kinopoisk_count'),
+                            item_data.get('role_slugs'),
+                            item_data.get('release_year_start'),
+                            item_data.get('release_year_end')
+                        )
+                    )
+                    self.db_connection.commit()
+                    total_saved += 1
+                except Exception as e:
+                    self.db_connection.rollback()
+                    print(f"⚠️ Ошибка сохранения элемента фильмографии для фильма {item_data.get('movie_id')}: {e}")
+                    total_errors += 1
+                    continue
+
+            if total_errors > 0:
+                print(f"💾 Сохранено {total_saved} элементов фильмографии в БД, {total_errors} ошибок")
+            else:
+                print(f"💾 Сохранено {total_saved} элементов фильмографии в БД")
+
+        except Exception as e:
+            print(f"❌ Общая ошибка сохранения фильмографии: {e}")
+            try:
+                self.db_connection.rollback()
+            except:
+                pass
+        finally:
+            cursor.close()
+    
     def save_person_to_db(self, person_data):
         """Сохранение участника в БД"""
         cursor = self.db_connection.cursor()
         
-        try: 
+        try:
             # Вставляем участника
             insert_person = """
-            INSERT INTO stuff (kinopoisk_id, name, original_name, career, ganres, height, 
-                               zodiac, birth_date, birthplace, 
-                               spouse, children, total_films, career_start_year, 
-                               image)
+            INSERT INTO stuff (kinopoisk_id, name, original_name, career, ganres, height,
+                                zodiac, birth_date, birthplace,
+                                spouse, children, total_films, career_start_year,
+                                image)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
                 name = EXCLUDED.name,

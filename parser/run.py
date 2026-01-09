@@ -35,6 +35,7 @@ def print_menu():
     print(" 10. Парсер галереи кадров (онлайн)")
     print(" 11. Парсер новостей (онлайн)")
     print(" 12. Парсер страницы сериала (онлайн)")
+    print(" 17. Фильмография актера (онлайн)")
     
     print("\n⚙️  СПЕЦИАЛЬНЫЕ ПАРСЕРЫ:")
     print(" 13. Главный парсер фильмов")
@@ -387,6 +388,39 @@ def run_stills_parser_online():
         traceback.print_exc()
 
 
+def run_stuff_filmography_parser_online():
+    """Парсер фильмографии актера (онлайн) - использует GraphQL API"""
+    from parser_utils.stuff_filmography_parser import StuffFilmographyParser
+    import os
+    
+    print("\n=== Парсер фильмографии актера (онлайн - GraphQL) ===")
+    
+    # Можно запросить ID у пользователя или использовать пример
+    person_id = input("\n🆔 Введите ID персоны (по умолчанию 797 - Антонио Бандерас): ").strip()
+    if not person_id:
+        person_id = "797"
+        
+    try:
+        parser = StuffFilmographyParser()
+        print(f"Получение фильмографии для персоны ID {person_id} через GraphQL API...")
+        
+        filmography = parser.fetch_stuff_filmography(int(person_id))
+        
+        if filmography:
+            os.makedirs('output', exist_ok=True)
+            output_file = f'output/filmography_{person_id}.json'
+            parser.save_to_json(filmography, output_file)
+            print(f"✅ Найдено элементов в фильмографии: {len(filmography)}. Файл: {output_file}")
+        else:
+            print("⚠️ Фильмография не найдена или возникла ошибка.")
+    except ValueError:
+        print("❌ Ошибка: ID должен быть числом.")
+    except Exception as e:
+        print(f"❌ Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+
+
 def run_news_parser_online():
     """Парсер новостей (онлайн)"""
     from parser_utils.news_page_parser import NewsPageParser
@@ -577,6 +611,8 @@ def main():
                 run_main_parser_all()
             elif choice == '16':
                 run_all_media_parser()
+            elif choice == '17':
+                run_stuff_filmography_parser_online()
             else:
                 print("\n❌ Неверный выбор! Попробуйте снова.")
                 continue
