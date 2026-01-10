@@ -17,6 +17,7 @@ router = APIRouter(
 )
 
 
+# POST /api/v1/admin/films - Создать новую запись о фильме в базе данных
 @router.post("", response_model=FilmRead, summary="Создать фильм")
 async def create_film(
     film_data: FilmCreate,
@@ -40,6 +41,7 @@ async def create_film(
     return FilmRead.model_validate(new_film)
 
 
+# GET /api/v1/admin/films - Список всех фильмов в базе с расширенной пагинацией
 @router.get("", response_model=list[FilmRead], summary="Список фильмов")
 async def list_films_admin(
     page: int = Query(1, ge=1, description="Номер страницы"),
@@ -67,6 +69,7 @@ async def list_films_admin(
     return [FilmRead.model_validate(film) for film in films]
 
 
+# GET /api/v1/admin/films/1 - Получить технические детали фильма по его ID
 @router.get("/{film_id}", response_model=FilmRead, summary="Детали фильма")
 async def get_film_admin(
     film_id: int,
@@ -83,6 +86,7 @@ async def get_film_admin(
     return FilmRead.model_validate(film)
 
 
+# PUT /api/v1/admin/films/1 - Полностью или частично обновить данные о фильме
 @router.put("/{film_id}", response_model=FilmRead, summary="Обновить фильм")
 async def update_film_admin(
     film_id: int,
@@ -108,6 +112,7 @@ async def update_film_admin(
     return FilmRead.model_validate(film)
 
 
+# DELETE /api/v1/admin/films/1 - Навсегда удалить запись о фильме из базы данных
 @router.delete("/{film_id}", response_model=OperationResponse, summary="Удалить фильм")
 async def delete_film_admin(
     film_id: int,

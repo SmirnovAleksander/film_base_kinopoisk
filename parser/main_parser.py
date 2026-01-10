@@ -1169,18 +1169,18 @@ class MainParser:
                     cursor.execute("""
                         UPDATE media SET
                             title = %s,
-                            image = %s,
+                            image_url = %s,
                             category = %s,
-                            date = %s,
+                            publish_date = %s,
                             card_type = %s,
                             type = %s,
                             parsed_at = CURRENT_TIMESTAMP
                         WHERE url = %s
                     """, (
                         media_item.get('title'),
-                        media_item.get('image'),
+                        media_item.get('image_url'),
                         media_item.get('category'),
-                        media_item.get('date'),
+                        media_item.get('publish_date'),
                         media_item.get('card_type'),
                         media_item.get('type', 'news'),
                         media_item.get('url')
@@ -1188,14 +1188,14 @@ class MainParser:
                 else:
                     # Вставляем новый медиа контент
                     cursor.execute("""
-                        INSERT INTO media (url, title, image, category, date, card_type, type)
+                        INSERT INTO media (url, title, image_url, category, publish_date, card_type, type)
                         VALUES (%s, %s, %s, %s, %s, %s, %s)
                     """, (
                         media_item.get('url'),
                         media_item.get('title'),
-                        media_item.get('image'),
+                        media_item.get('image_url'),
                         media_item.get('category'),
-                        media_item.get('date'),
+                        media_item.get('publish_date'),
                         media_item.get('card_type'),
                         media_item.get('type', 'news')
                     ))

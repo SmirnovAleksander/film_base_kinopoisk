@@ -21,6 +21,7 @@ router = APIRouter(
 )
 
 
+# GET /api/v1/media/ - Получить список всех новостей, статей и обзоров
 @router.get("/", response_model=MediaResponse, summary="Список медиа контента")
 async def list_media(
     page: int = Query(1, ge=1, description="Номер страницы"),
@@ -80,6 +81,7 @@ async def list_media(
     )
 
 
+# GET /api/v1/media/categories - Список уникальных категорий (например: Новости, Интервью)
 @router.get("/categories", response_model=MediaCategoriesResponse, summary="Список категорий медиа")
 async def get_media_categories(session: AsyncSession = Depends(db_helper.session_getter)):
     """Получить список всех категорий медиа контента"""
@@ -94,6 +96,7 @@ async def get_media_categories(session: AsyncSession = Depends(db_helper.session
     return MediaCategoriesResponse(categories=categories)
 
 
+# GET /api/v1/media/types - Список типов медиа контента (news, article и т.д.)
 @router.get("/types", response_model=MediaTypesResponse, summary="Список типов медиа")
 async def get_media_types(session: AsyncSession = Depends(db_helper.session_getter)):
     """Получить список всех типов медиа контента"""
@@ -108,6 +111,7 @@ async def get_media_types(session: AsyncSession = Depends(db_helper.session_gett
     return MediaTypesResponse(types=types)
 
 
+# GET /api/v1/media/stats - Статистическая информация по общему количеству и распределению медиа
 @router.get("/stats", response_model=MediaStatsResponse, summary="Статистика медиа")
 async def get_media_stats(session: AsyncSession = Depends(db_helper.session_getter)):
     """Получить статистику по медиа контенту"""
@@ -153,6 +157,7 @@ async def get_media_stats(session: AsyncSession = Depends(db_helper.session_gett
     )
 
 
+# GET /api/v1/media/1 - Получить детальное описание конкретной новости или статьи по ID
 @router.get("/{media_id}", response_model=MediaRead, summary="Получить медиа по ID")
 async def get_media_by_id(
     media_id: int,

@@ -5,6 +5,7 @@ from core.config import settings
 from .auth import router as auth_router
 from .users import router as users_router
 from .films import router as films_router
+from .series import router as series_router
 from .bookmarks import router as bookmarks_router
 from .comments import router as comments_router
 from .ratings import router as ratings_router
@@ -25,6 +26,7 @@ router.include_router(users_router)
 
 # Основной функционал
 router.include_router(films_router)
+router.include_router(series_router)
 router.include_router(bookmarks_router)
 router.include_router(comments_router)
 router.include_router(ratings_router)

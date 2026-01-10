@@ -19,6 +19,7 @@ router = APIRouter(
 )
 
 
+# POST /api/v1/admin/users - Создать нового аккаунта с правами суперпользователя или без
 @router.post("", response_model=UserRead, summary="Создать пользователя")
 async def create_user_admin(
     user_data: UserCreate,
@@ -49,6 +50,7 @@ async def create_user_admin(
         raise HTTPException(status_code=400, detail=f"Error creating user: {str(e)}")
 
 
+# GET /api/v1/admin/users - Список всех зарегистрированных пользователей
 @router.get("", response_model=list[UserRead], summary="Список пользователей")
 async def list_users_admin(
     page: int = Query(1, ge=1, description="Номер страницы"),
@@ -70,6 +72,7 @@ async def list_users_admin(
     return [UserRead.model_validate(user) for user in users]
 
 
+# GET /api/v1/admin/users/1 - Просмотр профиля пользователя по его внутреннему ID
 @router.get("/{user_id}", response_model=UserRead, summary="Детали пользователя")
 async def get_user_admin(
     user_id: int,
@@ -86,6 +89,7 @@ async def get_user_admin(
     return UserRead.model_validate(user)
 
 
+# PUT /api/v1/admin/users/1 - Изменить статус (активен, супермен, подтвержден) или данные пользователя
 @router.put("/{user_id}", response_model=UserRead, summary="Обновить пользователя")
 async def update_user_admin(
     user_id: int,
@@ -125,6 +129,7 @@ async def update_user_admin(
         raise HTTPException(status_code=400, detail=f"Error updating user: {str(e)}")
 
 
+# DELETE /api/v1/admin/users/1 - Полностью удалить аккаунт пользователя из системы
 @router.delete("/{user_id}", response_model=OperationResponse, summary="Удалить пользователя")
 async def delete_user_admin(
     user_id: int,

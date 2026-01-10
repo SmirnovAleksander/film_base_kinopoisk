@@ -14,9 +14,9 @@ class Media(Base, IntIdPkMixin):
     
     url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True, unique=True)
     title: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True, index=True)
-    image: Mapped[Optional[str]] = mapped_column(String(1000))
+    image_url: Mapped[Optional[str]] = mapped_column(String(1000))
     category: Mapped[Optional[str]] = mapped_column(String(100), index=True)
-    date: Mapped[Optional[str]] = mapped_column(String(100))
+    publish_date: Mapped[Optional[str]] = mapped_column(String(100))
     card_type: Mapped[Optional[str]] = mapped_column(String(20))
     type: Mapped[Optional[str]] = mapped_column(String(20), default="news", index=True)
     parsed_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

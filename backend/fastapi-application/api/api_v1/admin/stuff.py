@@ -8,7 +8,7 @@ from core.schemas import (
     StuffCreate,
     StuffUpdate,
     OperationResponse,
-    StuffListResponse,
+    StuffSearchResponse,
 )
 from api.api_v1.fastapi_users import current_active_superuser
 
@@ -18,6 +18,7 @@ router = APIRouter(
 )
 
 
+# POST /api/v1/admin/stuff - Вручную добавить нового участника (актера/режиссера)
 @router.post("", response_model=StuffRead, summary="Создать актера")
 async def create_stuff(
     stuff_data: StuffCreate,
@@ -41,7 +42,8 @@ async def create_stuff(
     return StuffRead.model_validate(new_stuff)
 
 
-@router.get("", response_model=StuffListResponse, summary="Список актеров")
+# GET /api/v1/admin/stuff - Список всех деятелей кино в базе с технической пагинацией
+@router.get("", response_model=StuffSearchResponse, summary="Список актеров")
 async def list_stuff_admin(
     page: int = Query(1, ge=1, description="Номер страницы"),
     page_size: int = Query(50, ge=1, le=100, description="Размер страницы"),
@@ -67,7 +69,7 @@ async def list_stuff_admin(
 
     items = [StuffRead.model_validate(stuff) for stuff in stuff_list]
 
-    return StuffListResponse(
+    return StuffSearchResponse(
         items=items,
         page=page,
         page_size=page_size,
@@ -75,6 +77,7 @@ async def list_stuff_admin(
     )
 
 
+# GET /api/v1/admin/stuff/1 - Просмотр полной анкеты участника по его ID
 @router.get("/{stuff_id}", response_model=StuffRead, summary="Детали актера")
 async def get_stuff_admin(
     stuff_id: int,
@@ -91,6 +94,7 @@ async def get_stuff_admin(
     return StuffRead.model_validate(stuff)
 
 
+# PUT /api/v1/admin/stuff/1 - Внести изменения в анкету деятеля кино
 @router.put("/{stuff_id}", response_model=StuffRead, summary="Обновить актера")
 async def update_stuff_admin(
     stuff_id: int,
@@ -116,6 +120,7 @@ async def update_stuff_admin(
     return StuffRead.model_validate(stuff)
 
 
+# DELETE /api/v1/admin/stuff/1 - Удалить анкету участника из базы данных
 @router.delete("/{stuff_id}", response_model=OperationResponse, summary="Удалить актера")
 async def delete_stuff_admin(
     stuff_id: int,

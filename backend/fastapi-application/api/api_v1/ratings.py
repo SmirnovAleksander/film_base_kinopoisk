@@ -1,20 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
-from sqlalchemy.orm import selectinload
 
 from core.models import ( 
     db_helper, 
-    UserFilmRating, 
+    UserContentRating, 
     Film, 
+    Series,
     User
 )
-from core.schemas.film import FilmRead
+from core.schemas.film import FilmRead, SeriesRead
 from core.schemas.user_interactions import (
-    UserFilmRatingCreate,
-    UserFilmRatingUpdate,
-    UserFilmRatingRead,
-    FilmAverageRatingRead,
+    UserContentRatingCreate,
+    UserContentRatingUpdate,
+    UserContentRatingRead,
+    ContentAverageRatingRead,
     UserRatingsResponse,
 )
 from core.schemas.base import (
@@ -29,48 +29,67 @@ router = APIRouter(
 )
 
 
-async def update_film_user_rating(session: AsyncSession, film_id: int):
-    """Обновляет средний пользовательский рейтинг фильма"""
+async def update_content_user_rating(session: AsyncSession, content_id: int, content_type: str):
+    """Обновляет средний пользовательский рейтинг контента"""
     # Вычисляем средний рейтинг и количество оценок
     avg_stmt = select(
-        func.avg(UserFilmRating.rating),
-        func.count(UserFilmRating.id)
-    ).where(UserFilmRating.film_id == film_id)
+        func.avg(UserContentRating.rating),
+        func.count(UserContentRating.id)
+    ).where(
+        and_(
+            UserContentRating.content_id == content_id,
+            UserContentRating.content_type == content_type
+        )
+    )
     
     result = await session.execute(avg_stmt)
     avg_rating, rating_count = result.first()
     
-    # Обновляем таблицу film
-    film_stmt = select(Film).where(Film.id == film_id)
-    film_result = await session.execute(film_stmt)
-    film = film_result.scalar_one_or_none()
+    # Обновляем таблицу film или series
+    if content_type == "film":
+        stmt = select(Film).where(Film.id == content_id)
+    else:
+        stmt = select(Series).where(Series.id == content_id)
+        
+    res = await session.execute(stmt)
+    content = res.scalar_one_or_none()
     
-    if film:
-        film.user_rating = avg_rating
-        film.user_rating_count = rating_count or 0
+    if content:
+        content.user_rating = avg_rating
+        content.user_rating_count = rating_count or 0
         await session.commit()
 
 
-@router.get("/films/{film_id}/rating", response_model=RatingOperationResponse, summary="Получить рейтинг пользователя для фильма")
-async def get_user_film_rating(
-    film_id: int,
+# GET /api/v1/ratings/film/1 - Получить оценку, которую текущий пользователь поставил контенту
+@router.get("/{content_type}/{content_id}", response_model=RatingOperationResponse, summary="Получить рейтинг пользователя")
+async def get_user_content_rating(
+    content_type: str,
+    content_id: int,
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    """Получить рейтинг текущего пользователя для указанного фильма"""
-    # Проверяем, что фильм существует
-    film_stmt = select(Film).where(Film.id == film_id)
-    film_result = await session.execute(film_stmt)
-    film = film_result.scalar_one_or_none()
+    """Получить рейтинг текущего пользователя для фильма или сериала"""
+    if content_type not in ("film", "series"):
+        raise HTTPException(status_code=400, detail="Invalid content type")
+
+    # Проверяем существование контента
+    if content_type == "film":
+        stmt = select(Film).where(Film.id == content_id)
+    else:
+        stmt = select(Series).where(Series.id == content_id)
+        
+    result = await session.execute(stmt)
+    content = result.scalar_one_or_none()
     
-    if not film:
-        raise HTTPException(status_code=404, detail="Film not found")
+    if not content:
+        raise HTTPException(status_code=404, detail=f"{content_type.capitalize()} not found")
     
     # Получаем рейтинг пользователя
-    rating_stmt = select(UserFilmRating).where(
+    rating_stmt = select(UserContentRating).where(
         and_(
-            UserFilmRating.user_id == user.id,
-            UserFilmRating.film_id == film_id
+            UserContentRating.user_id == user.id,
+            UserContentRating.content_id == content_id,
+            UserContentRating.content_type == content_type
         )
     )
     rating_result = await session.execute(rating_stmt)
@@ -86,27 +105,37 @@ async def get_user_film_rating(
         return RatingOperationResponse(rating=None, created_at=None, updated_at=None)
 
 
-@router.post("/films/{film_id}/rating", response_model=RatingOperationResponse, summary="Установить рейтинг для фильма")
-async def set_user_film_rating(
-    film_id: int,
-    rating_data: UserFilmRatingCreate,
+# POST /api/v1/ratings/series/1 - Поставить новую оценку или изменить существующую (от 1 до 10)
+@router.post("/{content_type}/{content_id}", response_model=RatingOperationResponse, summary="Установить рейтинг")
+async def set_user_content_rating(
+    content_type: str,
+    content_id: int,
+    rating_data: UserContentRatingCreate,
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    """Установить или обновить рейтинг пользователя для фильма"""
-    # Проверяем, что фильм существует
-    film_stmt = select(Film).where(Film.id == film_id)
-    film_result = await session.execute(film_stmt)
-    film = film_result.scalar_one_or_none()
+    """Установить или обновить рейтинг пользователя для контента"""
+    if content_type not in ("film", "series"):
+        raise HTTPException(status_code=400, detail="Invalid content type")
+
+    # Проверяем существование контента
+    if content_type == "film":
+        stmt = select(Film).where(Film.id == content_id)
+    else:
+        stmt = select(Series).where(Series.id == content_id)
+        
+    result = await session.execute(stmt)
+    content = result.scalar_one_or_none()
     
-    if not film:
-        raise HTTPException(status_code=404, detail="Film not found")
+    if not content:
+        raise HTTPException(status_code=404, detail=f"{content_type.capitalize()} not found")
     
     # Проверяем, есть ли уже рейтинг
-    existing_stmt = select(UserFilmRating).where(
+    existing_stmt = select(UserContentRating).where(
         and_(
-            UserFilmRating.user_id == user.id,
-            UserFilmRating.film_id == film_id
+            UserContentRating.user_id == user.id,
+            UserContentRating.content_id == content_id,
+            UserContentRating.content_type == content_type
         )
     )
     existing_result = await session.execute(existing_stmt)
@@ -118,8 +147,8 @@ async def set_user_film_rating(
         await session.commit()
         await session.refresh(existing_rating)
         
-        # Обновляем средний рейтинг фильма
-        await update_film_user_rating(session, film_id)
+        # Обновляем средний рейтинг контента
+        await update_content_user_rating(session, content_id, content_type)
         
         return RatingOperationResponse(
             rating=existing_rating.rating,
@@ -128,17 +157,18 @@ async def set_user_film_rating(
         )
     else:
         # Создаем новый рейтинг
-        new_rating = UserFilmRating(
+        new_rating = UserContentRating(
             user_id=user.id,
-            film_id=film_id,
+            content_id=content_id,
+            content_type=content_type,
             rating=rating_data.rating
         )
         session.add(new_rating)
         await session.commit()
         await session.refresh(new_rating)
         
-        # Обновляем средний рейтинг фильма
-        await update_film_user_rating(session, film_id)
+        # Обновляем средний рейтинг контента
+        await update_content_user_rating(session, content_id, content_type)
         
         return RatingOperationResponse(
             rating=new_rating.rating,
@@ -147,64 +177,23 @@ async def set_user_film_rating(
         )
 
 
-@router.put("/films/{film_id}/rating", response_model=RatingOperationResponse, summary="Изменить рейтинг для фильма")
-async def update_user_film_rating(
-    film_id: int,
-    rating_data: UserFilmRatingUpdate,
+# DELETE /api/v1/ratings/film/1 - Удалить свою оценку у конкретного фильма или сериала
+@router.delete("/{content_type}/{content_id}", response_model=MessageResponse, summary="Удалить рейтинг")
+async def delete_user_content_rating(
+    content_type: str,
+    content_id: int,
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    """Изменить рейтинг пользователя для фильма"""
-    # Проверяем, что фильм существует
-    film_stmt = select(Film).where(Film.id == film_id)
-    film_result = await session.execute(film_stmt)
-    film = film_result.scalar_one_or_none()
-    
-    if not film:
-        raise HTTPException(status_code=404, detail="Film not found")
-    
-    # Проверяем, что рейтинг существует
-    rating_stmt = select(UserFilmRating).where(
-        and_(
-            UserFilmRating.user_id == user.id,
-            UserFilmRating.film_id == film_id
-        )
-    )
-    rating_result = await session.execute(rating_stmt)
-    rating = rating_result.scalar_one_or_none()
-    
-    if not rating:
-        raise HTTPException(
-            status_code=404,
-            detail="User rating not found. Use POST to create a new rating."
-        )
-    
-    # Обновляем рейтинг
-    rating.rating = rating_data.rating
-    await session.commit()
-    await session.refresh(rating)
-    
-    # Обновляем средний рейтинг фильма
-    await update_film_user_rating(session, film_id)
-    
-    return RatingOperationResponse(
-        rating=rating.rating,
-        created_at=rating.created_at,
-        updated_at=rating.updated_at,
-    )
+    """Удалить рейтинг пользователя для контента"""
+    if content_type not in ("film", "series"):
+        raise HTTPException(status_code=400, detail="Invalid content type")
 
-
-@router.delete("/films/{film_id}/rating", response_model=MessageResponse, summary="Удалить рейтинг для фильма")
-async def delete_user_film_rating(
-    film_id: int,
-    user: User = Depends(current_active_user),
-    session: AsyncSession = Depends(db_helper.session_getter),
-):
-    """Удалить рейтинг пользователя для фильма"""
-    rating_stmt = select(UserFilmRating).where(
+    rating_stmt = select(UserContentRating).where(
         and_(
-            UserFilmRating.user_id == user.id,
-            UserFilmRating.film_id == film_id
+            UserContentRating.user_id == user.id,
+            UserContentRating.content_id == content_id,
+            UserContentRating.content_type == content_type
         )
     )
     rating_result = await session.execute(rating_stmt)
@@ -216,46 +205,60 @@ async def delete_user_film_rating(
     await session.delete(rating)
     await session.commit()
     
-    # Обновляем средний рейтинг фильма
-    await update_film_user_rating(session, film_id)
+    # Обновляем средний рейтинг контента
+    await update_content_user_rating(session, content_id, content_type)
     
     return MessageResponse(message="Rating deleted successfully")
 
 
-@router.get("/films/{film_id}/rating/average", response_model=FilmAverageRatingRead, summary="Средний рейтинг фильма")
-async def get_film_average_rating(
-    film_id: int,
+# GET /api/v1/ratings/series/1/average - Получить общую статистику оценок всех пользователей для этого контента
+@router.get("/{content_type}/{content_id}/average", response_model=ContentAverageRatingRead, summary="Средний рейтинг")
+async def get_content_average_rating(
+    content_type: str,
+    content_id: int,
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    """Получить средний рейтинг фильма от всех пользователей"""
-    # Проверяем, что фильм существует
-    film_stmt = select(Film).where(Film.id == film_id)
-    film_result = await session.execute(film_stmt)
-    film = film_result.scalar_one_or_none()
+    """Получить средний рейтинг контента от всех пользователей"""
+    if content_type not in ("film", "series"):
+        raise HTTPException(status_code=400, detail="Invalid content type")
+
+    # Проверяем существование контента
+    if content_type == "film":
+        stmt = select(Film).where(Film.id == content_id)
+    else:
+        stmt = select(Series).where(Series.id == content_id)
+        
+    result = await session.execute(stmt)
+    content = result.scalar_one_or_none()
     
-    if not film:
-        raise HTTPException(status_code=404, detail="Film not found")
+    if not content:
+        raise HTTPException(status_code=404, detail=f"{content_type.capitalize()} not found")
     
     # Получаем статистику рейтингов
     stats_stmt = select(
-        func.avg(UserFilmRating.rating),
-        func.count(UserFilmRating.id),
-        func.min(UserFilmRating.rating),
-        func.max(UserFilmRating.rating)
-    ).where(UserFilmRating.film_id == film_id)
+        func.avg(UserContentRating.rating),
+        func.count(UserContentRating.id),
+        func.min(UserContentRating.rating),
+        func.max(UserContentRating.rating)
+    ).where(
+        and_(
+            UserContentRating.content_id == content_id,
+            UserContentRating.content_type == content_type
+        )
+    )
     
     result = await session.execute(stats_stmt)
     avg_rating, total_ratings, min_rating, max_rating = result.first()
     
     if total_ratings and total_ratings > 0:
-        return FilmAverageRatingRead(
+        return ContentAverageRatingRead(
             average_rating=round(float(avg_rating), 2) if avg_rating else None,
             total_ratings=total_ratings,
             min_rating=float(min_rating) if min_rating else None,
             max_rating=float(max_rating) if max_rating else None,
         )
     else:
-        return FilmAverageRatingRead(
+        return ContentAverageRatingRead(
             average_rating=None,
             total_ratings=0,
             min_rating=None,
@@ -263,6 +266,7 @@ async def get_film_average_rating(
         )
 
 
+# GET /api/v1/ratings/users/1/ratings - Список всех оценок, выставленных конкретным пользователем
 @router.get("/users/{user_id}/ratings", response_model=UserRatingsResponse, summary="Рейтинги пользователя")
 async def get_user_ratings(
     user_id: int,
@@ -282,16 +286,16 @@ async def get_user_ratings(
     offset = (page - 1) * page_size
     
     # Получаем общее количество рейтингов пользователя
-    total_count_stmt = select(func.count(UserFilmRating.id)).where(UserFilmRating.user_id == user_id)
+    total_count_stmt = select(func.count(UserContentRating.id)).where(UserContentRating.user_id == user_id)
     total_count_result = await session.execute(total_count_stmt)
     total_count = total_count_result.scalar()
     
-    # Получаем рейтинги с информацией о фильмах
+    # Получаем рейтинги с информацией о контенте
     ratings_stmt = (
-        select(UserFilmRating)
-        .options(selectinload(UserFilmRating.film))
-        .where(UserFilmRating.user_id == user_id)
-        .order_by(UserFilmRating.updated_at.desc())
+        select(UserContentRating)
+        .options(selectinload(UserContentRating.film), selectinload(UserContentRating.series))
+        .where(UserContentRating.user_id == user_id)
+        .order_by(UserContentRating.updated_at.desc())
         .offset(offset)
         .limit(page_size)
     )
@@ -300,17 +304,19 @@ async def get_user_ratings(
     
     items = []
     for rating in ratings:
-        # Правильно создаем объект FilmRead с помощью Pydantic
-        film_data = FilmRead.model_validate(rating.film) if rating.film else None
+        film_data = FilmRead.model_validate(rating.film) if rating.content_type == "film" and rating.film else None
+        series_data = SeriesRead.model_validate(rating.series) if rating.content_type == "series" and rating.series else None
 
-        items.append(UserFilmRatingRead(
+        items.append(UserContentRatingRead(
             id=rating.id,
             user_id=rating.user_id,
-            film_id=rating.film_id,
+            content_id=rating.content_id,
+            content_type=rating.content_type,
             rating=rating.rating,
             created_at=rating.created_at,
             updated_at=rating.updated_at,
-            film=film_data
+            film=film_data,
+            series=series_data
         ))
     
     return UserRatingsResponse(

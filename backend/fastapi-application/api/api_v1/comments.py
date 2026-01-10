@@ -7,6 +7,7 @@ from core.models import (
     db_helper, 
     Comment, 
     Film, 
+    Series,
     User 
 )
 from core.schemas.user_interactions import (
@@ -23,17 +24,23 @@ router = APIRouter(
 )
 
 
-@router.get("/{film_id}", response_model=List[CommentRead], summary="Список комментариев к фильму")
+# GET /api/v1/comments/film/1 - Получить все публичные комментарии к фильму или сериалу
+@router.get("/{content_type}/{content_id}", response_model=List[CommentRead], summary="Список комментариев")
 async def list_comments(
-    film_id: int,
+    content_type: str,
+    content_id: int,
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    """Получить список комментариев к фильму"""
+    """Получить список комментариев к фильму или сериалу"""
+    if content_type not in ("film", "series"):
+        raise HTTPException(status_code=400, detail="Invalid content type")
+
     stmt = (
         select(Comment)
         .where(
             and_(
-                Comment.film_id == film_id,
+                Comment.content_id == content_id,
+                Comment.content_type == content_type,
                 Comment.is_deleted == False
             )
         )
@@ -45,26 +52,36 @@ async def list_comments(
     return [CommentRead.model_validate(comment) for comment in comments]
 
 
-@router.post("/{film_id}", response_model=CommentOperationResponse, summary="Добавить комментарий")
+# POST /api/v1/comments/series/1 - Опубликовать новый комментарий от имени текущего пользователя
+@router.post("/{content_type}/{content_id}", response_model=CommentOperationResponse, summary="Добавить комментарий")
 async def add_comment(
-    film_id: int,
+    content_type: str,
+    content_id: int,
     comment_data: CommentCreate,
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
-    """Добавить комментарий к фильму"""
-    # Проверяем, что фильм существует
-    film_stmt = select(Film).where(Film.id == film_id)
-    film_result = await session.execute(film_stmt)
-    film = film_result.scalar_one_or_none()
+    """Добавить комментарий к фильму или сериалу"""
+    if content_type not in ("film", "series"):
+        raise HTTPException(status_code=400, detail="Invalid content type")
+
+    # Проверяем существование контента
+    if content_type == "film":
+        stmt = select(Film).where(Film.id == content_id)
+    else:
+        stmt = select(Series).where(Series.id == content_id)
+        
+    result = await session.execute(stmt)
+    content = result.scalar_one_or_none()
     
-    if not film:
-        raise HTTPException(status_code=404, detail="Film not found")
+    if not content:
+        raise HTTPException(status_code=404, detail=f"{content_type.capitalize()} not found")
     
     # Создаем комментарий
     comment = Comment(
         user_id=user.id,
-        film_id=film_id,
+        content_id=content_id,
+        content_type=content_type,
         content=comment_data.content
     )
     session.add(comment)
@@ -74,6 +91,7 @@ async def add_comment(
     return CommentOperationResponse(status="created", id=comment.id)
 
 
+# PUT /api/v1/comments/1 - Изменить текст своего комментария по его ID
 @router.put("/{comment_id}", response_model=CommentOperationResponse, summary="Редактировать комментарий")
 async def edit_comment(
     comment_id: int,
@@ -104,6 +122,7 @@ async def edit_comment(
     return CommentOperationResponse(status="updated")
 
 
+# DELETE /api/v1/comments/1 - Пометить свой комментарий как удаленный (мягкое удаление)
 @router.delete("/{comment_id}", response_model=CommentOperationResponse, summary="Удалить комментарий")
 async def delete_comment(
     comment_id: int,

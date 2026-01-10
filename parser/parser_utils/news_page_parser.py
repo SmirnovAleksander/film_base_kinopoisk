@@ -178,7 +178,7 @@ class NewsPageParser(BaseParser):
             # Изображение
             img_elem = article.find('img', {'data-tid': 'd813cf42'})
             if img_elem:
-                news_data['image'] = img_elem.get('src', '')
+                news_data['image_url'] = img_elem.get('src', '')
             
             # Категория (data-tid="b66cdd18" внутри data-tid="543e842b")
             category_wrapper = article.find('div', {'data-tid': '543e842b'})
@@ -208,7 +208,7 @@ class NewsPageParser(BaseParser):
             # Дата
             date_elem = article.find('span', class_='NUIoouHmDcRbqxQpQ8v8')
             if date_elem:
-                news_data['date'] = date_elem.get_text(strip=True)
+                news_data['publish_date'] = date_elem.get_text(strip=True)
             
             news_data['card_type'] = 'regular'
             
@@ -235,7 +235,7 @@ class NewsPageParser(BaseParser):
             # Изображение
             img_elem = article.find('img', {'data-tid': 'd813cf42'})
             if img_elem:
-                news_data['image'] = img_elem.get('src', '')
+                news_data['image_url'] = img_elem.get('src', '')
             
             # Категория (data-tid="b66cdd18" внутри data-tid="543e842b")
             category_wrapper = article.find('div', {'data-tid': '543e842b'})
@@ -252,7 +252,7 @@ class NewsPageParser(BaseParser):
             # Дата
             date_elem = article.find('span', class_='post-feature-card__published-date')
             if date_elem:
-                news_data['date'] = date_elem.get_text(strip=True)
+                news_data['publish_date'] = date_elem.get_text(strip=True)
             
             news_data['card_type'] = 'feature'
             

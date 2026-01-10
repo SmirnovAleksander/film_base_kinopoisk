@@ -17,6 +17,7 @@ router = APIRouter(
 )
 
 
+# POST /api/v1/admin/media - Вручную добавить новость или статью в систему
 @router.post("", response_model=MediaRead, summary="Создать медиа")
 async def create_media(
     media_data: MediaCreate,
@@ -41,6 +42,7 @@ async def create_media(
     return MediaRead.model_validate(new_media)
 
 
+# GET /api/v1/admin/media - Список всех медиа-записей с технической пагинацией
 @router.get("", response_model=list[MediaRead], summary="Список медиа")
 async def list_media_admin(
     page: int = Query(1, ge=1, description="Номер страницы"),
@@ -63,6 +65,7 @@ async def list_media_admin(
     return [MediaRead.model_validate(media) for media in media_list]
 
 
+# GET /api/v1/admin/media/1 - Получить техническую информацию о новости по ID
 @router.get("/{media_id}", response_model=MediaRead, summary="Детали медиа")
 async def get_media_admin(
     media_id: int,
@@ -79,6 +82,7 @@ async def get_media_admin(
     return MediaRead.model_validate(media)
 
 
+# PUT /api/v1/admin/media/1 - Изменить содержание новостной статьи или её метаданные
 @router.put("/{media_id}", response_model=MediaRead, summary="Обновить медиа")
 async def update_media_admin(
     media_id: int,
@@ -113,6 +117,7 @@ async def update_media_admin(
     return MediaRead.model_validate(media)
 
 
+# DELETE /api/v1/admin/media/1 - Удалить медиа-запись из базы данных
 @router.delete("/{media_id}", response_model=OperationResponse, summary="Удалить медиа")
 async def delete_media_admin(
     media_id: int,

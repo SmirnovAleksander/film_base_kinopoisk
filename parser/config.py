@@ -8,7 +8,7 @@
 DATABASE_CONFIG = {
     'host': 'localhost',
     'port': 5432,
-    'database': 'film_base',
+    'database': 'film_base_kinopoisk',
     'user': 'postgres',
     'password': 'admin123'
 }

@@ -6,9 +6,9 @@ from pydantic import BaseModel, Field, ConfigDict
 class MediaBase(BaseModel):
     url: Optional[str] = Field(None, max_length=500, description="URL медиа контента")
     title: Optional[str] = Field(None, max_length=1000, description="Заголовок")
-    image: Optional[str] = Field(None, max_length=1000, description="URL изображения")
+    image_url: Optional[str] = Field(None, max_length=1000, description="URL изображения")
     category: Optional[str] = Field(None, max_length=100, description="Категория")
-    date: Optional[str] = Field(None, max_length=100, description="Дата публикации")
+    publish_date: Optional[str] = Field(None, max_length=100, description="Дата публикации")
     card_type: Optional[str] = Field(None, max_length=20, description="Тип карточки")
     type: Optional[str] = Field(None, max_length=20, description="Тип контента")
 
@@ -20,9 +20,9 @@ class MediaCreate(MediaBase):
 class MediaUpdate(BaseModel):
     url: Optional[str] = Field(None, max_length=500, description="URL медиа контента")
     title: Optional[str] = Field(None, max_length=1000, description="Заголовок")
-    image: Optional[str] = Field(None, max_length=1000, description="URL изображения")
+    image_url: Optional[str] = Field(None, max_length=1000, description="URL изображения")
     category: Optional[str] = Field(None, max_length=100, description="Категория")
-    date: Optional[str] = Field(None, max_length=100, description="Дата публикации")
+    publish_date: Optional[str] = Field(None, max_length=100, description="Дата публикации")
     card_type: Optional[str] = Field(None, max_length=20, description="Тип карточки")
     type: Optional[str] = Field(None, max_length=20, description="Тип контента")
 
