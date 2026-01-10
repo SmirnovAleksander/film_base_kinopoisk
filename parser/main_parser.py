@@ -60,46 +60,46 @@ class MainParser:
             CREATE TABLE IF NOT EXISTS film (
                 id SERIAL PRIMARY KEY,
                 kinopoisk_id VARCHAR(20) UNIQUE NOT NULL,
-                title VARCHAR(500),
-                original_title VARCHAR(500),
-                short_description TEXT,
-                description TEXT,
-                poster VARCHAR(1000),
-                published_year INTEGER,
+                title_ru VARCHAR(500),
+                title_en VARCHAR(500),
+                description_short TEXT,
+                description_full TEXT,
+                poster_url VARCHAR(1000),
+                release_year INTEGER,
                 tagline TEXT,
-                ru_premiere VARCHAR(100),
-                world_premiere VARCHAR(100),
+                premiere_ru VARCHAR(100),
+                premiere_world VARCHAR(100),
                 content_type VARCHAR(50),
-                is_family_friendly BOOLEAN DEFAULT FALSE,
+                is_family BOOLEAN DEFAULT FALSE,
                 duration VARCHAR(50),
                 rating_kp DECIMAL(3,1),
-                kp_votes_count VARCHAR(50),
+                votes_kp INTEGER,
                 rating_imdb DECIMAL(3,1),
-                imdb_votes_count VARCHAR(50),
+                votes_imdb INTEGER,
+                rating_user DECIMAL(3,1),
+                votes_user INTEGER DEFAULT 0,
                 budget VARCHAR(100),
-                usa_box_office VARCHAR(100),
-                rus_box_office VARCHAR(100),
-                user_rating DECIMAL(3,1),
-                user_rating_count INTEGER DEFAULT 0
+                box_office_usa VARCHAR(100),
+                box_office_rus VARCHAR(100)
             )
             """,
             """
             CREATE TABLE IF NOT EXISTS stuff (
                 id SERIAL PRIMARY KEY,
                 kinopoisk_id VARCHAR(20) UNIQUE NOT NULL,
-                name VARCHAR(200),
-                original_name VARCHAR(200),
+                name_ru VARCHAR(200),
+                name_en VARCHAR(200),
                 career TEXT[],
-                ganres TEXT[],
+                genres TEXT[],
                 height VARCHAR(50),
                 zodiac VARCHAR(50),
                 birth_date VARCHAR(100),
-                birthplace TEXT[],
+                birth_place TEXT[],
                 spouse TEXT[],
                 children TEXT[],
-                total_films INTEGER,
-                career_start_year INTEGER,
-                image VARCHAR(1000)
+                films_total INTEGER,
+                career_start INTEGER,
+                photo_url VARCHAR(1000)
             )
             """,
             """
@@ -107,9 +107,9 @@ class MainParser:
                 id SERIAL PRIMARY KEY,
                 url VARCHAR(500) UNIQUE,
                 title VARCHAR(1000),
-                image VARCHAR(1000),
+                image_url VARCHAR(1000),
                 category VARCHAR(100),
-                date VARCHAR(100),
+                publish_date VARCHAR(100),
                 card_type VARCHAR(20),
                 type VARCHAR(20) DEFAULT 'news',
                 parsed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -131,25 +131,25 @@ class MainParser:
             CREATE TABLE IF NOT EXISTS series (
                 id SERIAL PRIMARY KEY,
                 kinopoisk_id VARCHAR(20) UNIQUE NOT NULL,
-                title VARCHAR(500),
-                original_title VARCHAR(500),
-                short_description TEXT,
-                description TEXT,
-                poster VARCHAR(1000),
-                published_year INTEGER,
+                title_ru VARCHAR(500),
+                title_en VARCHAR(500),
+                description_short TEXT,
+                description_full TEXT,
+                poster_url VARCHAR(1000),
+                release_year INTEGER,
                 tagline TEXT,
-                ru_premiere VARCHAR(100),
-                world_premiere VARCHAR(100),
+                premiere_ru VARCHAR(100),
+                premiere_world VARCHAR(100),
                 content_type VARCHAR(50),
-                is_family_friendly BOOLEAN DEFAULT FALSE,
+                is_family BOOLEAN DEFAULT FALSE,
                 rating_kp DECIMAL(3,1),
-                kp_votes_count VARCHAR(50),
+                votes_kp INTEGER,
                 rating_imdb DECIMAL(3,1),
-                imdb_votes_count VARCHAR(50),
-                user_rating DECIMAL(3,1),
-                user_rating_count INTEGER DEFAULT 0,
+                votes_imdb INTEGER,
+                rating_user DECIMAL(3,1),
+                votes_user INTEGER DEFAULT 0,
                 platform VARCHAR(200),
-                number_of_episodes INTEGER
+                episodes_count INTEGER
             )
             """,
             """
@@ -187,11 +187,11 @@ class MainParser:
                 content_type VARCHAR(20) NOT NULL CHECK (content_type IN ('film', 'series')),
                 similar_id VARCHAR(20) NOT NULL,
                 similar_type VARCHAR(20) NOT NULL CHECK (similar_type IN ('film', 'series')),
-                title VARCHAR(500),
-                year VARCHAR(10),
+                title_ru VARCHAR(500),
+                release_year INTEGER,
                 genres TEXT[],
-                poster TEXT,
-                rating VARCHAR(10),
+                poster_url TEXT,
+                rating_kp DECIMAL(3,1),
                 UNIQUE(content_id, content_type, similar_id, similar_type)
             )
             """,
@@ -202,7 +202,7 @@ class MainParser:
                 content_type VARCHAR(20) NOT NULL CHECK (content_type IN ('film', 'series')),
                 picture_id VARCHAR(20) NOT NULL,
                 image_url TEXT NOT NULL,
-                image_type VARCHAR(16) NOT NULL,
+                image_type VARCHAR(50) NOT NULL,
                 UNIQUE(content_id, content_type, picture_id, image_type)
             )
             """,
@@ -211,10 +211,10 @@ class MainParser:
                 id SERIAL PRIMARY KEY,
                 content_id INTEGER NOT NULL,
                 content_type VARCHAR(20) NOT NULL CHECK (content_type IN ('film', 'series')),
-                name VARCHAR(200) NOT NULL,
-                url TEXT NOT NULL,
-                logo TEXT NULL,
-                UNIQUE(content_id, content_type, name)
+                provider_name VARCHAR(200) NOT NULL,
+                provider_url TEXT NOT NULL,
+                provider_logo TEXT NULL,
+                UNIQUE(content_id, content_type, provider_name)
             )
             """,
             """
@@ -223,27 +223,27 @@ class MainParser:
                 stuff_id INTEGER NOT NULL REFERENCES stuff(id) ON DELETE CASCADE,
                 picture_id VARCHAR(20) NOT NULL,
                 image_url TEXT NOT NULL,
-                image_type VARCHAR(16) NOT NULL,
+                image_type VARCHAR(50) NOT NULL,
                 UNIQUE(stuff_id, picture_id, image_type)
             )
             """,
             """
             CREATE TABLE IF NOT EXISTS stuff_filmography (
                 id SERIAL PRIMARY KEY,
-                person_id INTEGER NOT NULL REFERENCES stuff(id) ON DELETE CASCADE,
-                movie_id VARCHAR(20) NOT NULL,
-                title VARCHAR(500),
-                original_title VARCHAR(500),
-                published_year INTEGER,
+                stuff_id INTEGER NOT NULL REFERENCES stuff(id) ON DELETE CASCADE,
+                content_id VARCHAR(20) NOT NULL,
+                title_ru VARCHAR(500),
+                title_en VARCHAR(500),
+                release_year INTEGER,
                 genres TEXT,
                 countries TEXT,
                 poster_url VARCHAR(1000),
-                rating_kinopoisk DECIMAL(3,1),
-                rating_kinopoisk_count INTEGER,
-                role_slugs TEXT,
+                rating_kp DECIMAL(3,1),
+                votes_kp INTEGER,
+                role VARCHAR(100),
                 release_year_start INTEGER,
                 release_year_end INTEGER,
-                UNIQUE(person_id, movie_id, role_slugs)
+                UNIQUE(stuff_id, content_id, role)
             )
             """
         ]
@@ -563,33 +563,33 @@ class MainParser:
             
             # Вставляем фильм
             insert_film = """
-            INSERT INTO film (kinopoisk_id, title, original_title, short_description, description, 
-                             poster, published_year, tagline, ru_premiere, world_premiere, content_type, is_family_friendly,
-                             duration, rating_kp, kp_votes_count, rating_imdb, imdb_votes_count,
-                             budget, usa_box_office, rus_box_office, user_rating, user_rating_count)
+            INSERT INTO film (kinopoisk_id, title_ru, title_en, description_short, description_full, 
+                             poster_url, release_year, tagline, premiere_ru, premiere_world, content_type, is_family,
+                             duration, rating_kp, votes_kp, rating_imdb, votes_imdb,
+                             budget, box_office_usa, box_office_rus, rating_user, votes_user)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
-                title = EXCLUDED.title,
-                original_title = EXCLUDED.original_title,
-                short_description = EXCLUDED.short_description,
-                description = EXCLUDED.description,
-                poster = EXCLUDED.poster,
-                published_year = EXCLUDED.published_year,
+                title_ru = EXCLUDED.title_ru,
+                title_en = EXCLUDED.title_en,
+                description_short = EXCLUDED.description_short,
+                description_full = EXCLUDED.description_full,
+                poster_url = EXCLUDED.poster_url,
+                release_year = EXCLUDED.release_year,
                 tagline = EXCLUDED.tagline,
-                ru_premiere = EXCLUDED.ru_premiere,
-                world_premiere = EXCLUDED.world_premiere,
+                premiere_ru = EXCLUDED.premiere_ru,
+                premiere_world = EXCLUDED.premiere_world,
                 content_type = EXCLUDED.content_type,
-                is_family_friendly = EXCLUDED.is_family_friendly,
+                is_family = EXCLUDED.is_family,
                 duration = EXCLUDED.duration,
                 rating_kp = EXCLUDED.rating_kp,
-                kp_votes_count = EXCLUDED.kp_votes_count,
+                votes_kp = EXCLUDED.votes_kp,
                 rating_imdb = EXCLUDED.rating_imdb,
-                imdb_votes_count = EXCLUDED.imdb_votes_count,
+                votes_imdb = EXCLUDED.votes_imdb,
                 budget = EXCLUDED.budget,
-                usa_box_office = EXCLUDED.usa_box_office,
-                rus_box_office = EXCLUDED.rus_box_office,
-                user_rating = EXCLUDED.user_rating,
-                user_rating_count = EXCLUDED.user_rating_count
+                box_office_usa = EXCLUDED.box_office_usa,
+                box_office_rus = EXCLUDED.box_office_rus,
+                rating_user = EXCLUDED.rating_user,
+                votes_user = EXCLUDED.votes_user
             RETURNING id
             """
             
@@ -614,8 +614,8 @@ class MainParser:
                 film_data.get('budget'),
                 film_data.get('usa_box_office'),
                 film_data.get('rus_box_office'),
-                None,  # user_rating - будет обновляться автоматически
-                0      # user_rating_count - будет обновляться автоматически
+                None,  # rating_user
+                0      # votes_user
             ))
             
             film_db_id = cursor.fetchone()[0]
@@ -646,31 +646,31 @@ class MainParser:
         try:
             # Вставляем сериал
             insert_series = """
-            INSERT INTO series (kinopoisk_id, title, original_title, short_description, description, 
-                             poster, published_year, tagline, ru_premiere, world_premiere, content_type, is_family_friendly,
-                             rating_kp, kp_votes_count, rating_imdb, imdb_votes_count,
-                             user_rating, user_rating_count, platform, number_of_episodes)
+            INSERT INTO series (kinopoisk_id, title_ru, title_en, description_short, description_full, 
+                             poster_url, release_year, tagline, premiere_ru, premiere_world, content_type, is_family,
+                             rating_kp, votes_kp, rating_imdb, votes_imdb,
+                             rating_user, votes_user, platform, episodes_count)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
-                title = EXCLUDED.title,
-                original_title = EXCLUDED.original_title,
-                short_description = EXCLUDED.short_description,
-                description = EXCLUDED.description,
-                poster = EXCLUDED.poster,
-                published_year = EXCLUDED.published_year,
+                title_ru = EXCLUDED.title_ru,
+                title_en = EXCLUDED.title_en,
+                description_short = EXCLUDED.description_short,
+                description_full = EXCLUDED.description_full,
+                poster_url = EXCLUDED.poster_url,
+                release_year = EXCLUDED.release_year,
                 tagline = EXCLUDED.tagline,
-                ru_premiere = EXCLUDED.ru_premiere,
-                world_premiere = EXCLUDED.world_premiere,
+                premiere_ru = EXCLUDED.premiere_ru,
+                premiere_world = EXCLUDED.premiere_world,
                 content_type = EXCLUDED.content_type,
-                is_family_friendly = EXCLUDED.is_family_friendly,
+                is_family = EXCLUDED.is_family,
                 rating_kp = EXCLUDED.rating_kp,
-                kp_votes_count = EXCLUDED.kp_votes_count,
+                votes_kp = EXCLUDED.votes_kp,
                 rating_imdb = EXCLUDED.rating_imdb,
-                imdb_votes_count = EXCLUDED.imdb_votes_count,
-                user_rating = EXCLUDED.user_rating,
-                user_rating_count = EXCLUDED.user_rating_count,
+                votes_imdb = EXCLUDED.votes_imdb,
+                rating_user = EXCLUDED.rating_user,
+                votes_user = EXCLUDED.votes_user,
                 platform = EXCLUDED.platform,
-                number_of_episodes = EXCLUDED.number_of_episodes
+                episodes_count = EXCLUDED.episodes_count
             RETURNING id
             """
             
@@ -691,8 +691,8 @@ class MainParser:
                 series_data.get('kp_votes_count'),
                 series_data.get('rating_imdb'),
                 series_data.get('imdb_votes_count'),
-                None,  # user_rating - будет обновляться автоматически
-                0,     # user_rating_count - будет обновляться автоматически
+                None,  # rating_user
+                0,     # votes_user
                 series_data.get('platform'),
                 series_data.get('number_of_episodes')
             ))
@@ -732,11 +732,11 @@ class MainParser:
                     continue
                 cursor.execute(
                     """
-                    INSERT INTO content_watch_provider (content_id, content_type, name, url, logo)
+                    INSERT INTO content_watch_provider (content_id, content_type, provider_name, provider_url, provider_logo)
                     VALUES (%s, %s, %s, %s, %s)
-                    ON CONFLICT (content_id, content_type, name) DO UPDATE SET
-                        url = EXCLUDED.url,
-                        logo = EXCLUDED.logo
+                    ON CONFLICT (content_id, content_type, provider_name) DO UPDATE SET
+                        provider_url = EXCLUDED.provider_url,
+                        provider_logo = EXCLUDED.provider_logo
                     """,
                     (content_db_id, content_type, name, url, logo)
                 )
@@ -928,19 +928,19 @@ class MainParser:
                     cursor.execute(
                         """
                         INSERT INTO stuff_filmography (
-                            person_id, movie_id, title, original_title, published_year,
-                            genres, countries, poster_url, rating_kinopoisk, rating_kinopoisk_count,
-                            role_slugs, release_year_start, release_year_end
+                            stuff_id, content_id, title_ru, title_en, release_year,
+                            genres, countries, poster_url, rating_kp, votes_kp,
+                            role, release_year_start, release_year_end
                         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                        ON CONFLICT (person_id, movie_id, role_slugs) DO UPDATE SET
-                            title = EXCLUDED.title,
-                            original_title = EXCLUDED.original_title,
-                            published_year = EXCLUDED.published_year,
+                        ON CONFLICT (stuff_id, content_id, role) DO UPDATE SET
+                            title_ru = EXCLUDED.title_ru,
+                            title_en = EXCLUDED.title_en,
+                            release_year = EXCLUDED.release_year,
                             genres = EXCLUDED.genres,
                             countries = EXCLUDED.countries,
                             poster_url = EXCLUDED.poster_url,
-                            rating_kinopoisk = EXCLUDED.rating_kinopoisk,
-                            rating_kinopoisk_count = EXCLUDED.rating_kinopoisk_count,
+                            rating_kp = EXCLUDED.rating_kp,
+                            votes_kp = EXCLUDED.votes_kp,
                             release_year_start = EXCLUDED.release_year_start,
                             release_year_end = EXCLUDED.release_year_end
                         """,
@@ -989,25 +989,25 @@ class MainParser:
         try:
             # Вставляем участника
             insert_person = """
-            INSERT INTO stuff (kinopoisk_id, name, original_name, career, ganres, height,
-                                zodiac, birth_date, birthplace,
-                                spouse, children, total_films, career_start_year,
-                                image)
+            INSERT INTO stuff (kinopoisk_id, name_ru, name_en, career, genres, height,
+                                zodiac, birth_date, birth_place,
+                                spouse, children, films_total, career_start,
+                                photo_url)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
-                name = EXCLUDED.name,
-                original_name = EXCLUDED.original_name,
+                name_ru = EXCLUDED.name_ru,
+                name_en = EXCLUDED.name_en,
                 career = EXCLUDED.career,
-                ganres = EXCLUDED.ganres,
+                genres = EXCLUDED.genres,
                 height = EXCLUDED.height,
                 zodiac = EXCLUDED.zodiac,
                 birth_date = EXCLUDED.birth_date,
-                birthplace = EXCLUDED.birthplace,
+                birth_place = EXCLUDED.birth_place,
                 spouse = EXCLUDED.spouse,
                 children = EXCLUDED.children,
-                total_films = EXCLUDED.total_films,
-                career_start_year = EXCLUDED.career_start_year,
-                image = EXCLUDED.image
+                films_total = EXCLUDED.films_total,
+                career_start = EXCLUDED.career_start,
+                photo_url = EXCLUDED.photo_url
             RETURNING id
             """
             
@@ -1123,14 +1123,14 @@ class MainParser:
                 """
                 INSERT INTO similar_content (
                     content_id, content_type, similar_id, similar_type,
-                    title, year, genres, poster, rating
+                    title_ru, release_year, genres, poster_url, rating_kp
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (content_id, content_type, similar_id, similar_type) DO UPDATE SET
-                    title = EXCLUDED.title,
-                    year = EXCLUDED.year,
+                    title_ru = EXCLUDED.title_ru,
+                    release_year = EXCLUDED.release_year,
                     genres = EXCLUDED.genres,
-                    poster = EXCLUDED.poster,
-                    rating = EXCLUDED.rating
+                    poster_url = EXCLUDED.poster_url,
+                    rating_kp = EXCLUDED.rating_kp
                 """,
                 (
                     content_db_id,
