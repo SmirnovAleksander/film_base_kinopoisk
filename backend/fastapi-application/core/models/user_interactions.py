@@ -103,3 +103,30 @@ class UserContentRating(Base, IntIdPkMixin):
     )
 
 
+class ContentUserRating(Base, IntIdPkMixin):
+    """Модель агрегированных пользовательских рейтингов контента"""
+    __tablename__ = "content_user_rating"
+    
+    content_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    content_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    rating_user: Mapped[float] = mapped_column(Float, default=0)
+    votes_user: Mapped[int] = mapped_column(Integer, default=0)
+    
+    __table_args__ = (
+        UniqueConstraint("content_id", "content_type", name="uq_content_user_rating"),
+    )
+    
+    film: Mapped["Film"] = relationship(
+        "Film",
+        primaryjoin="and_(Film.id==foreign(ContentUserRating.content_id), ContentUserRating.content_type=='film')",
+        back_populates="user_rating",
+        overlaps="series,user_rating"
+    )
+    series: Mapped["Series"] = relationship(
+        "Series",
+        primaryjoin="and_(Series.id==foreign(ContentUserRating.content_id), ContentUserRating.content_type=='series')",
+        back_populates="user_rating",
+        overlaps="film,user_rating"
+    )
+
+

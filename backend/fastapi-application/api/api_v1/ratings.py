@@ -5,6 +5,7 @@ from sqlalchemy import select, func, and_
 from core.models import ( 
     db_helper, 
     UserContentRating, 
+    ContentUserRating,
     Film, 
     Series,
     User
@@ -45,19 +46,26 @@ async def update_content_user_rating(session: AsyncSession, content_id: int, con
     result = await session.execute(avg_stmt)
     avg_rating, rating_count = result.first()
     
-    # Обновляем таблицу film или series
-    if content_type == "film":
-        stmt = select(Film).where(Film.id == content_id)
-    else:
-        stmt = select(Series).where(Series.id == content_id)
-        
+    # Обновляем или создаем запись в content_user_rating
+    stmt = select(ContentUserRating).where(
+        and_(
+            ContentUserRating.content_id == content_id,
+            ContentUserRating.content_type == content_type
+        )
+    )
     res = await session.execute(stmt)
-    content = res.scalar_one_or_none()
+    content_rating = res.scalar_one_or_none()
     
-    if content:
-        content.user_rating = avg_rating
-        content.user_rating_count = rating_count or 0
-        await session.commit()
+    if not content_rating:
+        content_rating = ContentUserRating(
+            content_id=content_id,
+            content_type=content_type
+        )
+        session.add(content_rating)
+    
+    content_rating.rating_user = float(avg_rating) if avg_rating else 0
+    content_rating.votes_user = rating_count or 0
+    await session.commit()
 
 
 # GET /api/v1/ratings/film/1 - Получить оценку, которую текущий пользователь поставил контенту

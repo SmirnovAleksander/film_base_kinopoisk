@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .country import Country
     from .stuff import Stuff
     from .content_details import ContentImage, ContentWatchProvider, SimilarContent
-    from .user_interactions import Bookmark, Comment, UserContentRating
+    from .user_interactions import Bookmark, Comment, UserContentRating, ContentUserRating
 
 
 class Series(Base, IntIdPkMixin):
@@ -36,8 +36,6 @@ class Series(Base, IntIdPkMixin):
     votes_kp: Mapped[Optional[int]] = mapped_column(Integer)
     rating_imdb: Mapped[Optional[float]] = mapped_column(DECIMAL(3, 1), index=True)
     votes_imdb: Mapped[Optional[int]] = mapped_column(Integer)
-    rating_user: Mapped[Optional[float]] = mapped_column(DECIMAL(3, 1))
-    votes_user: Mapped[int] = mapped_column(Integer, default=0)
     
     platform: Mapped[Optional[str]] = mapped_column(String(200))
     episodes_count: Mapped[Optional[int]] = mapped_column(Integer)
@@ -109,3 +107,19 @@ class Series(Base, IntIdPkMixin):
         cascade="all, delete-orphan",
         overlaps="similar_content"
     )
+    user_rating: Mapped["ContentUserRating"] = relationship(
+        "ContentUserRating",
+        primaryjoin="and_(Series.id==foreign(ContentUserRating.content_id), ContentUserRating.content_type=='series')",
+        back_populates="series",
+        uselist=False,
+        cascade="all, delete-orphan",
+        overlaps="user_rating"
+    )
+
+    @property
+    def rating_user(self) -> Optional[float]:
+        return self.user_rating.rating_user if self.user_rating else None
+
+    @property
+    def votes_user(self) -> int:
+        return self.user_rating.votes_user if self.user_rating else 0

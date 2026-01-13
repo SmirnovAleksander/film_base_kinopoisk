@@ -16,6 +16,7 @@ __all__ = (
     "Bookmark",
     "Comment",
     "UserContentRating",
+    "ContentUserRating",
     "Media",
 )
 
@@ -33,6 +34,6 @@ from .content_details import (
     ContentWatchProvider, 
     SimilarContent
 )
-from .user_interactions import Bookmark, Comment, UserContentRating
+from .user_interactions import Bookmark, Comment, UserContentRating, ContentUserRating
 from .media import Media
 from .associations import content_genre, content_country, content_stuff

@@ -76,8 +76,6 @@ class MainParser:
                 votes_kp INTEGER,
                 rating_imdb DECIMAL(3,1),
                 votes_imdb INTEGER,
-                rating_user DECIMAL(3,1),
-                votes_user INTEGER DEFAULT 0,
                 budget VARCHAR(100),
                 box_office_usa VARCHAR(100),
                 box_office_rus VARCHAR(100)
@@ -146,8 +144,6 @@ class MainParser:
                 votes_kp INTEGER,
                 rating_imdb DECIMAL(3,1),
                 votes_imdb INTEGER,
-                rating_user DECIMAL(3,1),
-                votes_user INTEGER DEFAULT 0,
                 platform VARCHAR(200),
                 episodes_count INTEGER
             )
@@ -244,6 +240,16 @@ class MainParser:
                 release_year_start INTEGER,
                 release_year_end INTEGER,
                 UNIQUE(stuff_id, content_id, role)
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS content_user_rating (
+                id SERIAL PRIMARY KEY,
+                content_id INTEGER NOT NULL,
+                content_type VARCHAR(20) NOT NULL CHECK (content_type IN ('film', 'series')),
+                rating_user DECIMAL(3,1) DEFAULT 0,
+                votes_user INTEGER DEFAULT 0,
+                UNIQUE(content_id, content_type)
             )
             """
         ]
@@ -566,8 +572,8 @@ class MainParser:
             INSERT INTO film (kinopoisk_id, title_ru, title_en, description_short, description_full, 
                              poster_url, release_year, tagline, premiere_ru, premiere_world, content_type, is_family,
                              duration, rating_kp, votes_kp, rating_imdb, votes_imdb,
-                             budget, box_office_usa, box_office_rus, rating_user, votes_user)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                             budget, box_office_usa, box_office_rus)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
                 title_ru = EXCLUDED.title_ru,
                 title_en = EXCLUDED.title_en,
@@ -587,9 +593,7 @@ class MainParser:
                 votes_imdb = EXCLUDED.votes_imdb,
                 budget = EXCLUDED.budget,
                 box_office_usa = EXCLUDED.box_office_usa,
-                box_office_rus = EXCLUDED.box_office_rus,
-                rating_user = EXCLUDED.rating_user,
-                votes_user = EXCLUDED.votes_user
+                box_office_rus = EXCLUDED.box_office_rus
             RETURNING id
             """
             
@@ -613,9 +617,7 @@ class MainParser:
                 film_data.get('imdb_votes_count'),
                 film_data.get('budget'),
                 film_data.get('usa_box_office'),
-                film_data.get('rus_box_office'),
-                None,  # rating_user
-                0      # votes_user
+                film_data.get('rus_box_office')
             ))
             
             film_db_id = cursor.fetchone()[0]
@@ -648,9 +650,8 @@ class MainParser:
             insert_series = """
             INSERT INTO series (kinopoisk_id, title_ru, title_en, description_short, description_full, 
                              poster_url, release_year, tagline, premiere_ru, premiere_world, content_type, is_family,
-                             rating_kp, votes_kp, rating_imdb, votes_imdb,
-                             rating_user, votes_user, platform, episodes_count)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                             rating_kp, votes_kp, rating_imdb, votes_imdb, platform, episodes_count)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (kinopoisk_id) DO UPDATE SET
                 title_ru = EXCLUDED.title_ru,
                 title_en = EXCLUDED.title_en,
@@ -667,8 +668,6 @@ class MainParser:
                 votes_kp = EXCLUDED.votes_kp,
                 rating_imdb = EXCLUDED.rating_imdb,
                 votes_imdb = EXCLUDED.votes_imdb,
-                rating_user = EXCLUDED.rating_user,
-                votes_user = EXCLUDED.votes_user,
                 platform = EXCLUDED.platform,
                 episodes_count = EXCLUDED.episodes_count
             RETURNING id
@@ -691,8 +690,6 @@ class MainParser:
                 series_data.get('kp_votes_count'),
                 series_data.get('rating_imdb'),
                 series_data.get('imdb_votes_count'),
-                None,  # rating_user
-                0,     # votes_user
                 series_data.get('platform'),
                 series_data.get('number_of_episodes')
             ))
