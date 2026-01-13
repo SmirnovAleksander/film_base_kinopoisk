@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.models import db_helper, ContentImage
 from core.schemas import (
     ContentImageRead,
+    ContentImageCreate,
     OperationResponse,
 )
 from api.api_v1.fastapi_users import current_active_superuser
@@ -15,6 +16,20 @@ router = APIRouter(
 )
 
 ALLOWED_TYPES = {"stills", "wall", "shooting", "screenshots"}
+
+
+# POST /api/v1/admin/content-images - Добавить новое изображение к контенту
+@router.post("", response_model=ContentImageRead, summary="Создать изображение контента")
+async def create_content_image_admin(
+    image_data: ContentImageCreate,
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    """Создать новое изображение для контента (только для суперпользователя)"""
+    new_image = ContentImage(**image_data.model_dump())
+    session.add(new_image)
+    await session.commit()
+    await session.refresh(new_image)
+    return ContentImageRead.model_validate(new_image)
 
 
 # GET /api/v1/admin/content-images?content_id=1&content_type=film - Список всех изображений (кадры, обои) по фильтрам

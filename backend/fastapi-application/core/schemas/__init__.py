@@ -1,5 +1,5 @@
 __all__ = (
-    # Film & Series schemas
+    # Film schemas
     "FilmRead",
     "FilmReadWithDetails", 
     "FilmSearchResponse",
@@ -8,22 +8,32 @@ __all__ = (
     "FilmRecommendationsResponse",
     "FilmCreate",
     "FilmUpdate",
+    
+    # Series schemas
     "SeriesRead",
     "SeriesReadWithDetails",
     "SeriesBase",
     "SeriesUpdate",
+    
+    # Genre schemas
     "GenreRead",
     "GenreCreate",
     "GenreUpdate",
+    
+    # Country schemas
     "CountryRead",
     "CountryCreate",
     "CountryUpdate",
+    
+    # Stuff schemas
     "StuffRead",
     "StuffSearchResponse",
     "StuffCreate",
     "StuffUpdate",
     "StuffImageRead",
     "StuffFilmographyRead",
+    
+    # Content Extras (Details & Junctions)
     "ContentImageRead",
     "ContentImageCreate",
     "ContentWatchProviderRead",
@@ -84,22 +94,37 @@ from .film import (
     FilmRecommendationsResponse,
     FilmCreate,
     FilmUpdate,
+)
+
+from .series import (
     SeriesRead,
     SeriesReadWithDetails,
     SeriesBase,
     SeriesUpdate,
+)
+
+from .genres import (
     GenreRead,
     GenreCreate,
     GenreUpdate,
+)
+
+from .countries import (
     CountryRead,
     CountryCreate,
     CountryUpdate,
+)
+
+from .stuff import (
     StuffRead,
     StuffSearchResponse,
     StuffCreate,
     StuffUpdate,
     StuffImageRead,
     StuffFilmographyRead,
+)
+
+from .content_details import (
     ContentImageRead,
     ContentImageCreate,
     ContentWatchProviderRead,

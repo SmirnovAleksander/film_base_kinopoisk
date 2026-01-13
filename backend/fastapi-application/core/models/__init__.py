@@ -23,17 +23,15 @@ from .db_helper import db_helper
 from .base import Base
 from .user import User
 from .access_token import AccessToken
-from .film import (
-    Film, 
-    Series, 
-    Genre, 
-    Country, 
-    Stuff, 
+from .film import Film
+from .series import Series
+from .genre import Genre
+from .country import Country
+from .stuff import Stuff, StuffImage, StuffFilmography
+from .content_details import (
     ContentImage, 
     ContentWatchProvider, 
-    SimilarContent,
-    StuffImage,
-    StuffFilmography
+    SimilarContent
 )
 from .user_interactions import Bookmark, Comment, UserContentRating
 from .media import Media

@@ -10,7 +10,8 @@ from core.types.user_id import UserIdType
 
 if TYPE_CHECKING:
     from .user import User
-    from .film import Film, Series
+    from .film import Film
+    from .series import Series
 
 
 class Bookmark(Base, IntIdPkMixin):
@@ -28,13 +29,13 @@ class Bookmark(Base, IntIdPkMixin):
         "Film",
         primaryjoin="and_(Film.id==foreign(Bookmark.content_id), Bookmark.content_type=='film')",
         back_populates="bookmarks",
-        overlaps="bookmarks"
+        overlaps="series,bookmarks"
     )
     series: Mapped["Series"] = relationship(
         "Series",
         primaryjoin="and_(Series.id==foreign(Bookmark.content_id), Bookmark.content_type=='series')",
         back_populates="bookmarks",
-        overlaps="bookmarks"
+        overlaps="film,bookmarks"
     )
     
     __table_args__ = (
@@ -61,13 +62,13 @@ class Comment(Base, IntIdPkMixin):
         "Film",
         primaryjoin="and_(Film.id==foreign(Comment.content_id), Comment.content_type=='film')",
         back_populates="comments",
-        overlaps="comments"
+        overlaps="series,comments"
     )
     series: Mapped["Series"] = relationship(
         "Series",
         primaryjoin="and_(Series.id==foreign(Comment.content_id), Comment.content_type=='series')",
         back_populates="comments",
-        overlaps="comments"
+        overlaps="film,comments"
     )
 
 
@@ -88,13 +89,13 @@ class UserContentRating(Base, IntIdPkMixin):
         "Film",
         primaryjoin="and_(Film.id==foreign(UserContentRating.content_id), UserContentRating.content_type=='film')",
         back_populates="ratings",
-        overlaps="ratings"
+        overlaps="series,ratings"
     )
     series: Mapped["Series"] = relationship(
         "Series",
         primaryjoin="and_(Series.id==foreign(UserContentRating.content_id), UserContentRating.content_type=='series')",
         back_populates="ratings",
-        overlaps="ratings"
+        overlaps="film,ratings"
     )
     
     __table_args__ = (

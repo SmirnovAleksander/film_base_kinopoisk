@@ -14,9 +14,9 @@ if TYPE_CHECKING:
     from .user_interactions import Bookmark, Comment, UserContentRating
 
 
-class Film(Base, IntIdPkMixin):
-    """Модель фильма"""
-    __tablename__ = "film"
+class Series(Base, IntIdPkMixin):
+    """Модель сериала"""
+    __tablename__ = "series"
     
     kinopoisk_id: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, index=True)
     title_ru: Mapped[Optional[str]] = mapped_column(String(500), index=True)
@@ -28,9 +28,8 @@ class Film(Base, IntIdPkMixin):
     tagline: Mapped[Optional[str]] = mapped_column(Text)
     premiere_ru: Mapped[Optional[str]] = mapped_column(String(100))
     premiere_world: Mapped[Optional[str]] = mapped_column(String(100))
-    content_type: Mapped[str] = mapped_column(String(50), default="film")
+    content_type: Mapped[str] = mapped_column(String(50), default="series")
     is_family: Mapped[bool] = mapped_column(Boolean, default=False)
-    duration: Mapped[Optional[str]] = mapped_column(String(50))
     
     # Рейтинги
     rating_kp: Mapped[Optional[float]] = mapped_column(DECIMAL(3, 1), index=True)
@@ -40,75 +39,73 @@ class Film(Base, IntIdPkMixin):
     rating_user: Mapped[Optional[float]] = mapped_column(DECIMAL(3, 1))
     votes_user: Mapped[int] = mapped_column(Integer, default=0)
     
-    # Бюджет и сборы
-    budget: Mapped[Optional[str]] = mapped_column(String(100))
-    box_office_usa: Mapped[Optional[str]] = mapped_column(String(100))
-    box_office_rus: Mapped[Optional[str]] = mapped_column(String(100))
+    platform: Mapped[Optional[str]] = mapped_column(String(200))
+    episodes_count: Mapped[Optional[int]] = mapped_column(Integer)
     
     # Связи
     genres: Mapped[List["Genre"]] = relationship(
         "Genre", 
-        secondary=content_genre, 
-        primaryjoin="and_(Film.id==foreign(content_genre.c.content_id), content_genre.c.content_type=='film')",
+        secondary=content_genre,
+        primaryjoin="and_(Series.id==foreign(content_genre.c.content_id), content_genre.c.content_type=='series')",
         secondaryjoin="Genre.id==foreign(content_genre.c.genre_id)",
-        back_populates="films",
+        back_populates="series",
         overlaps="genres"
     )
     countries: Mapped[List["Country"]] = relationship(
         "Country", 
         secondary=content_country,
-        primaryjoin="and_(Film.id==foreign(content_country.c.content_id), content_country.c.content_type=='film')",
+        primaryjoin="and_(Series.id==foreign(content_country.c.content_id), content_country.c.content_type=='series')",
         secondaryjoin="Country.id==foreign(content_country.c.country_id)",
-        back_populates="films",
+        back_populates="series",
         overlaps="countries"
     )
     stuff: Mapped[List["Stuff"]] = relationship(
         "Stuff", 
         secondary=content_stuff,
-        primaryjoin="and_(Film.id==foreign(content_stuff.c.content_id), content_stuff.c.content_type=='film')",
+        primaryjoin="and_(Series.id==foreign(content_stuff.c.content_id), content_stuff.c.content_type=='series')",
         secondaryjoin="Stuff.id==foreign(content_stuff.c.stuff_id)",
-        back_populates="films",
+        back_populates="series",
         overlaps="stuff"
     )
     bookmarks: Mapped[List["Bookmark"]] = relationship(
         "Bookmark", 
-        primaryjoin="and_(Film.id==foreign(Bookmark.content_id), Bookmark.content_type=='film')",
-        back_populates="film", 
+        primaryjoin="and_(Series.id==foreign(Bookmark.content_id), Bookmark.content_type=='series')",
+        back_populates="series", 
         cascade="all, delete-orphan",
         overlaps="bookmarks"
     )
     comments: Mapped[List["Comment"]] = relationship(
         "Comment", 
-        primaryjoin="and_(Film.id==foreign(Comment.content_id), Comment.content_type=='film')",
-        back_populates="film", 
+        primaryjoin="and_(Series.id==foreign(Comment.content_id), Comment.content_type=='series')",
+        back_populates="series", 
         cascade="all, delete-orphan",
         overlaps="comments"
     )
     ratings: Mapped[List["UserContentRating"]] = relationship(
         "UserContentRating", 
-        primaryjoin="and_(Film.id==foreign(UserContentRating.content_id), UserContentRating.content_type=='film')",
-        back_populates="film", 
+        primaryjoin="and_(Series.id==foreign(UserContentRating.content_id), UserContentRating.content_type=='series')",
+        back_populates="series", 
         cascade="all, delete-orphan",
         overlaps="ratings"
     )
     images: Mapped[List["ContentImage"]] = relationship(
         "ContentImage", 
-        primaryjoin="and_(Film.id==foreign(ContentImage.content_id), ContentImage.content_type=='film')",
-        back_populates="film", 
+        primaryjoin="and_(Series.id==foreign(ContentImage.content_id), ContentImage.content_type=='series')",
+        back_populates="series", 
         cascade="all, delete-orphan",
         overlaps="images"
     )
     watch_providers: Mapped[List["ContentWatchProvider"]] = relationship(
         "ContentWatchProvider", 
-        primaryjoin="and_(Film.id==foreign(ContentWatchProvider.content_id), ContentWatchProvider.content_type=='film')",
-        back_populates="film", 
+        primaryjoin="and_(Series.id==foreign(ContentWatchProvider.content_id), ContentWatchProvider.content_type=='series')",
+        back_populates="series", 
         cascade="all, delete-orphan",
         overlaps="watch_providers"
     )
     similar_content: Mapped[List["SimilarContent"]] = relationship(
         "SimilarContent", 
-        primaryjoin="and_(Film.id==foreign(SimilarContent.content_id), SimilarContent.content_type=='film')",
-        back_populates="film", 
+        primaryjoin="and_(Series.id==foreign(SimilarContent.content_id), SimilarContent.content_type=='series')",
+        back_populates="series", 
         cascade="all, delete-orphan",
         overlaps="similar_content"
     )

@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import Optional, List, Union
 from pydantic import BaseModel, Field, ConfigDict
 
-from .film import FilmRead, SeriesRead
+from .film import FilmRead
+from .series import SeriesRead
 
 
 class BookmarkBase(BaseModel):

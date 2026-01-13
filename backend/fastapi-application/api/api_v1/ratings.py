@@ -9,7 +9,7 @@ from core.models import (
     Series,
     User
 )
-from core.schemas.film import FilmRead, SeriesRead
+from core.schemas import FilmRead, SeriesRead
 from core.schemas.user_interactions import (
     UserContentRatingCreate,
     UserContentRatingUpdate,
