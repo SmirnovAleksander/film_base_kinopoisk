@@ -1,14 +1,13 @@
 import { apiClient } from './client.api';
 import {
-  Bookmark,
   BookmarkResponse,
   BookmarkStatusResponse,
   BookmarkOperationResponse,
-  UserFilmRating,
+  UserContentRating,
   UserRatingsResponse,
-  FilmAverageRating,
-  RatingCreate,
-  RatingUpdate,
+  ContentAverageRating,
+  UserContentRatingCreate,
+  UserContentRatingUpdate,
   RatingOperationResponse,
   Comment,
   CommentCreate,
@@ -20,7 +19,7 @@ import { buildQueryString } from './client.api';
 
 export class UserInteractionsAPI {
   // ========== ЗАКЛАДКИ ==========
-  
+
   // Получить список закладок пользователя
   static async getBookmarks(
     page: number = 1,
@@ -34,52 +33,52 @@ export class UserInteractionsAPI {
     return response.data;
   }
 
-  // Добавить фильм в закладки
-  static async addBookmark(filmId: number): Promise<BookmarkOperationResponse> {
-    const response = await apiClient.post(API_ENDPOINTS.BOOKMARKS.ADD(filmId));
+  // Добавить в закладки
+  static async addBookmark(type: string, id: number): Promise<BookmarkOperationResponse> {
+    const response = await apiClient.post(API_ENDPOINTS.BOOKMARKS.ADD(type, id));
     return response.data;
   }
 
-  // Удалить фильм из закладок
-  static async removeBookmark(filmId: number): Promise<BookmarkOperationResponse> {
-    const response = await apiClient.delete(API_ENDPOINTS.BOOKMARKS.REMOVE(filmId));
+  // Удалить из закладок
+  static async removeBookmark(type: string, id: number): Promise<BookmarkOperationResponse> {
+    const response = await apiClient.delete(API_ENDPOINTS.BOOKMARKS.REMOVE(type, id));
     return response.data;
   }
 
   // Проверить статус закладки
-  static async getBookmarkStatus(filmId: number): Promise<BookmarkStatusResponse> {
-    const response = await apiClient.get(API_ENDPOINTS.BOOKMARKS.STATUS(filmId));
+  static async getBookmarkStatus(type: string, id: number): Promise<BookmarkStatusResponse> {
+    const response = await apiClient.get(API_ENDPOINTS.BOOKMARKS.STATUS(type, id));
     return response.data;
   }
 
   // ========== РЕЙТИНГИ ==========
 
-  // Получить рейтинг пользователя для фильма
-  static async getUserFilmRating(filmId: number): Promise<RatingOperationResponse> {
-    const response = await apiClient.get(API_ENDPOINTS.RATINGS.GET(filmId));
+  // Получить рейтинг пользователя для контента
+  static async getUserRating(type: string, id: number): Promise<RatingOperationResponse> {
+    const response = await apiClient.get(API_ENDPOINTS.RATINGS.GET(type, id));
     return response.data;
   }
 
-  // Установить рейтинг для фильма
-  static async setFilmRating(filmId: number, ratingData: RatingCreate): Promise<RatingOperationResponse> {
-    const response = await apiClient.post(API_ENDPOINTS.RATINGS.SET(filmId), ratingData);
+  // Установить рейтинг для контента
+  static async setRating(type: string, id: number, ratingData: UserContentRatingCreate): Promise<RatingOperationResponse> {
+    const response = await apiClient.post(API_ENDPOINTS.RATINGS.SET(type, id), ratingData);
     return response.data;
   }
 
-  // Обновить рейтинг для фильма
-  static async updateFilmRating(filmId: number, ratingData: RatingUpdate): Promise<RatingOperationResponse> {
-    const response = await apiClient.put(API_ENDPOINTS.RATINGS.SET(filmId), ratingData);
+  // Обновить рейтинг для контента
+  static async updateRating(type: string, id: number, ratingData: UserContentRatingUpdate): Promise<RatingOperationResponse> {
+    const response = await apiClient.put(API_ENDPOINTS.RATINGS.SET(type, id), ratingData);
     return response.data;
   }
 
-  // Удалить рейтинг для фильма
-  static async deleteFilmRating(filmId: number): Promise<void> {
-    await apiClient.delete(API_ENDPOINTS.RATINGS.DELETE(filmId));
+  // Удалить рейтинг для контента
+  static async deleteRating(type: string, id: number): Promise<void> {
+    await apiClient.delete(API_ENDPOINTS.RATINGS.DELETE(type, id));
   }
 
-  // Получить средний рейтинг фильма
-  static async getFilmAverageRating(filmId: number): Promise<FilmAverageRating> {
-    const response = await apiClient.get(API_ENDPOINTS.RATINGS.AVERAGE(filmId));
+  // Получить средний рейтинг контента
+  static async getAverageRating(type: string, id: number): Promise<ContentAverageRating> {
+    const response = await apiClient.get(API_ENDPOINTS.RATINGS.AVERAGE(type, id));
     return response.data;
   }
 
@@ -99,28 +98,27 @@ export class UserInteractionsAPI {
 
   // ========== КОММЕНТАРИИ ==========
 
-  // Получить комментарии к фильму
-  static async getFilmComments(filmId: number): Promise<Comment[]> {
-    const response = await apiClient.get(API_ENDPOINTS.COMMENTS.LIST(filmId));
+  // Получить комментарии к контенту
+  static async getComments(type: string, id: number): Promise<Comment[]> {
+    const response = await apiClient.get(API_ENDPOINTS.COMMENTS.LIST(type, id));
     return response.data;
   }
 
-  // Добавить комментарий к фильму
-  static async addComment(filmId: number, commentData: CommentCreate): Promise<CommentOperationResponse> {
-    const response = await apiClient.post(API_ENDPOINTS.COMMENTS.ADD(filmId), commentData);
+  // Добавить комментарий к контенту
+  static async addComment(type: string, id: number, commentData: CommentCreate): Promise<CommentOperationResponse> {
+    const response = await apiClient.post(API_ENDPOINTS.COMMENTS.ADD(type, id), commentData);
     return response.data;
   }
 
-  // Обновить комментарий
+  // Обновить комментарий (по ID комментария)
   static async updateComment(commentId: number, commentData: CommentUpdate): Promise<CommentOperationResponse> {
     const response = await apiClient.put(API_ENDPOINTS.COMMENTS.UPDATE(commentId), commentData);
     return response.data;
   }
 
-  // Удалить комментарий
+  // Удалить комментарий (по ID комментария)
   static async deleteComment(commentId: number): Promise<CommentOperationResponse> {
     const response = await apiClient.delete(API_ENDPOINTS.COMMENTS.DELETE(commentId));
     return response.data;
   }
-
 }

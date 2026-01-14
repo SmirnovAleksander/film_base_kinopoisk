@@ -1,23 +1,23 @@
 // Типы для медиа контента
 
 export interface Media {
+  id: number;
   url?: string | null;
   title?: string | null;
-  image?: string | null;
+  image_url?: string | null;
   category?: string | null;
-  date?: string | null;
+  publish_date?: string | null;
   card_type?: string | null;
   type?: string | null;
-  id: number;
   parsed_at: string;
 }
 
 export interface MediaCreate {
   url?: string | null;
   title?: string | null;
-  image?: string | null;
+  image_url?: string | null;
   category?: string | null;
-  date?: string | null;
+  publish_date?: string | null;
   card_type?: string | null;
   type?: string | null;
 }
@@ -25,9 +25,9 @@ export interface MediaCreate {
 export interface MediaUpdate {
   url?: string | null;
   title?: string | null;
-  image?: string | null;
+  image_url?: string | null;
   category?: string | null;
-  date?: string | null;
+  publish_date?: string | null;
   card_type?: string | null;
   type?: string | null;
 }

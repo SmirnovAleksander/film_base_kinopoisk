@@ -1,42 +1,40 @@
 import { apiClient } from './client.api';
-import {
+import type {
   Media,
   MediaResponse,
+  MediaStatsResponse,
   MediaCategoriesResponse,
   MediaTypesResponse,
-  MediaStatsResponse,
 } from '@/lib/types';
 import { API_ENDPOINTS, PAGINATION } from '@/lib/config';
 import { buildQueryString } from './client.api';
 
 export class MediaAPI {
-  // Получить список медиа контента
+  // Получить список медиа
   static async getMedia(
     page: number = 1,
-    limit: number = PAGINATION.DEFAULT_PAGE_SIZE,
+    pageSize: number = PAGINATION.DEFAULT_PAGE_SIZE,
     category?: string,
-    cardType?: string,
-    contentType?: string
+    type?: string
   ): Promise<MediaResponse> {
     const params = {
       page,
-      limit,
+      page_size: pageSize,
       category,
-      card_type: cardType,
-      content_type: contentType,
+      type,
     };
     const response = await apiClient.get(`${API_ENDPOINTS.MEDIA.LIST}${buildQueryString(params)}`);
     return response.data;
   }
 
-  // Получить медиа по ID
-  static async getMediaById(id: number): Promise<Media> {
+  // Получить детали медиа
+  static async getMediaDetails(id: number): Promise<Media> {
     const response = await apiClient.get(API_ENDPOINTS.MEDIA.DETAILS(id));
     return response.data;
   }
 
-  // Получить список категорий медиа
-  static async getMediaCategories(): Promise<MediaCategoriesResponse> {
+  // Получить список категорий
+  static async getCategories(): Promise<MediaCategoriesResponse> {
     const response = await apiClient.get(API_ENDPOINTS.MEDIA.CATEGORIES);
     return response.data;
   }
@@ -48,7 +46,7 @@ export class MediaAPI {
   }
 
   // Получить статистику медиа
-  static async getMediaStats(): Promise<MediaStatsResponse> {
+  static async getStats(): Promise<MediaStatsResponse> {
     const response = await apiClient.get(API_ENDPOINTS.MEDIA.STATS);
     return response.data;
   }

@@ -1,8 +1,7 @@
-// Типы для комментариев
-
 export interface CommentCreate {
   content: string;
-  film_id: number;
+  content_id: number;
+  content_type: string;
 }
 
 export interface CommentUpdate {
@@ -10,10 +9,11 @@ export interface CommentUpdate {
 }
 
 export interface Comment {
-  content: string;
   id: number;
   user_id: number;
-  film_id: number;
+  content_id: number;
+  content_type: string;
+  content: string;
   is_edited: boolean;
   is_deleted: boolean;
   created_at: string;

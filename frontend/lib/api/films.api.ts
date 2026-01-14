@@ -1,17 +1,17 @@
 import { apiClient } from './client.api';
 import type {
   Film,
-  FilmWithDetails,
+  FilmReadWithDetails,
   Genre,
   Country,
-  FilmWatchProvider,
-  SimilarFilm,
+  ContentWatchProvider,
+  SimilarContent,
   FilmRecommendation,
   FilmSearchResponse,
   FilmRecommendationsResponse,
   FilmFilterParams,
   FilmSearchParams,
-  FilmStills,
+  ContentStills,
 } from '@/lib/types';
 import type { Stuff } from '@/lib/types';
 import { API_ENDPOINTS, PAGINATION } from '@/lib/config';
@@ -46,20 +46,15 @@ export class FilmsAPI {
   // Фильтрация фильмов
   static async filterFilms(params: FilmFilterParams): Promise<FilmSearchResponse> {
     const queryParams = {
-      genre: params.genre,
       genre_id: params.genre_id,
-      country: params.country,
       country_id: params.country_id,
-      year: params.year,
       start_year: params.start_year,
       end_year: params.end_year,
       title: params.title,
-      rating_kp_min: params.rating_kp_min,
-      rating_kp_max: params.rating_kp_max,
-      min_rating: params.min_rating,
-      max_rating: params.max_rating,
       lang: params.lang || 'ru',
       source: params.source || 'kp',
+      min_rating: params.min_rating,
+      max_rating: params.max_rating,
       page: params.page || 1,
       page_size: params.page_size || PAGINATION.DEFAULT_PAGE_SIZE,
     };
@@ -68,7 +63,7 @@ export class FilmsAPI {
   }
 
   // Получить детали фильма
-  static async getFilmDetails(id: number): Promise<FilmWithDetails> {
+  static async getFilmDetails(id: number): Promise<FilmReadWithDetails> {
     const response = await apiClient.get(API_ENDPOINTS.FILMS.DETAILS(id));
     return response.data;
   }
@@ -110,35 +105,26 @@ export class FilmsAPI {
   }
 
   // Получить кадры фильма
-  static async getFilmStills(id: number): Promise<FilmStills> {
+  static async getFilmStills(id: number): Promise<ContentStills> {
     const response = await apiClient.get(API_ENDPOINTS.FILMS.STILL(id));
     return response.data;
   }
 
   // Получить провайдеры для просмотра фильма
-  static async getFilmWatchProviders(id: number): Promise<FilmWatchProvider[]> {
-    const response = await apiClient.get(`${API_ENDPOINTS.FILMS.DETAILS(id)}/watch-providers`);
+  static async getFilmWatchProviders(id: number): Promise<ContentWatchProvider[]> {
+    const response = await apiClient.get(API_ENDPOINTS.FILMS.WATCH_PROVIDERS(id));
     return response.data;
   }
 
   // Получить похожие фильмы
-  static async getSimilarFilms(id: number): Promise<SimilarFilm[]> {
-    const response = await apiClient.get(`${API_ENDPOINTS.FILMS.DETAILS(id)}/similar`);
+  static async getSimilarFilms(id: number): Promise<SimilarContent[]> {
+    const response = await apiClient.get(API_ENDPOINTS.FILMS.SIMILAR(id));
     return response.data;
   }
 
   // Получить фильм по Kinopoisk ID
-  static async getFilmByKinopoiskId(kinopoiskId: string): Promise<FilmWithDetails> {
+  static async getFilmByKinopoiskId(kinopoiskId: string): Promise<FilmReadWithDetails> {
     const response = await apiClient.get(API_ENDPOINTS.FILMS.KINOPOISK_DETAILS(kinopoiskId));
     return response.data;
-  }
-
-  // Получить кадры и постеры фильма (обновленный метод)
-  static async getFilmMedia(id: number): Promise<{ stills: any[]; wall: any[] }> {
-    const response = await apiClient.get(API_ENDPOINTS.FILMS.STILL(id));
-    return {
-      stills: response.data.stills || [],
-      wall: response.data.wall || response.data.posters || [],
-    };
   }
 }

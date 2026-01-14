@@ -1,19 +1,18 @@
-// Типы для закладок
+import type { Film } from './film.types';
+import type { Series } from './series.types';
+import type { PaginatedResponse } from './common.types';
 
 export interface Bookmark {
-  film_id: number;
   id: number;
   user_id: number;
+  content_id: number;
+  content_type: string;
   created_at: string;
   film?: Film | null;
+  series?: Series | null;
 }
 
-export interface BookmarkResponse {
-  items: Bookmark[];
-  page: number;
-  page_size: number;
-  total_count: number;
-}
+export type BookmarkResponse = PaginatedResponse<Bookmark>;
 
 export interface BookmarkOperationResponse {
   status: string;
@@ -26,4 +25,7 @@ export interface BookmarkStatusResponse {
   bookmarked_at?: string | null;
 }
 
-import type { Film } from './film.types';
+export interface BookmarkCreate {
+  content_id: number;
+  content_type: string;
+}

@@ -19,3 +19,10 @@ export interface OperationResponse {
   message?: string | null;
   id?: number | null;
 }
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  page: number;
+  page_size: number;
+  total_count: number;
+}
