@@ -19,8 +19,8 @@ import { API_ENDPOINTS, PAGINATION } from '@/lib/config';
 import { buildQueryString } from './client.api';
 
 export class UserInteractionsAPI {
-  // ========== ЗАКЛАДКИ ==========
-  
+  // закладки
+
   // Получить список закладок пользователя
   static async getBookmarks(
     page: number = 1,
@@ -52,7 +52,7 @@ export class UserInteractionsAPI {
     return response.data;
   }
 
-  // ========== РЕЙТИНГИ ==========
+  // рейтинги
 
   // Получить рейтинг пользователя для фильма
   static async getUserFilmRating(filmId: number): Promise<RatingOperationResponse> {
@@ -97,7 +97,7 @@ export class UserInteractionsAPI {
     return response.data;
   }
 
-  // ========== КОММЕНТАРИИ ==========
+  // комментарии
 
   // Получить комментарии к фильму
   static async getFilmComments(filmId: number): Promise<Comment[]> {
