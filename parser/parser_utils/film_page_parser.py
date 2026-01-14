@@ -9,7 +9,7 @@ import json
 import os
 import re
 import time
-from typing import List, Dict, Optional
+from typing import List, Dict
 from bs4 import BeautifulSoup
 import requests
 
@@ -318,30 +318,7 @@ class FilmPageParser:
                 elif not poster_url.startswith('http'):
                     poster_url = 'https://' + poster_url
                 film_data['poster'] = poster_url
-        
-        # # Извлекаем год производства (data-test-id="year")
-        # year_elem = self.soup.find('div', {'data-test-id': 'year'})
-        # if year_elem:
-        #     year_link = year_elem.find('a')
-        #     if year_link:
-        #         film_data['year'] = year_link.get_text(strip=True)
-        
-        # # Извлекаем страны (data-test-id="countries")
-        # countries_elem = self.soup.find('div', {'data-test-id': 'countries'})
-        # if countries_elem:
-        #     country_links = countries_elem.find_all('a')
-        #     countries = [link.get_text(strip=True) for link in country_links]
-        #     if countries:
-        #         film_data['countries'] = countries
-        
-        # # Извлекаем жанры (data-test-id="genres")
-        # genres_elem = self.soup.find('div', {'data-test-id': 'genres'})
-        # if genres_elem:
-        #     genre_links = genres_elem.find_all('a')
-        #     genres = [link.get_text(strip=True) for link in genre_links if link.get_text(strip=True) != 'слова']
-        #     if genres:
-        #         film_data['genres'] = genres
-        
+               
         # Извлекаем слоган (data-test-id="tagline")
         tagline_elem = self.soup.find('div', {'data-test-id': 'tagline'})
         if tagline_elem:
@@ -366,84 +343,6 @@ class FilmPageParser:
             if directors:
                 film_data['directors'] = directors
         
-        # # Извлекаем сценаристов (data-test-id="writers")
-        # writers_elem = self.soup.find('div', {'data-test-id': 'writers'})
-        # if writers_elem:
-        #     writer_links = writers_elem.find_all('a')
-        #     writers = []
-        #     for link in writer_links:
-        #         if link.get('href') and '/name/' in link.get('href'):
-        #             name = link.get_text(strip=True)
-        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
-        #             writers.append({'name': name, 'id': person_id})
-        #     if writers:
-        #         film_data['writers'] = writers
-        
-        # # Извлекаем продюсеров (data-test-id="producers")
-        # producers_elem = self.soup.find('div', {'data-test-id': 'producers'})
-        # if producers_elem:
-        #     producer_links = producers_elem.find_all('a')
-        #     producers = []
-        #     for link in producer_links:
-        #         if link.get('href') and '/name/' in link.get('href'):
-        #             name = link.get_text(strip=True)
-        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
-        #             producers.append({'name': name, 'id': person_id})
-        #     if producers:
-        #         film_data['producers'] = producers
-        
-        # # Извлекаем операторов (data-test-id="operators")
-        # operators_elem = self.soup.find('div', {'data-test-id': 'operators'})
-        # if operators_elem:
-        #     operator_links = operators_elem.find_all('a')
-        #     operators = []
-        #     for link in operator_links:
-        #         if link.get('href') and '/name/' in link.get('href'):
-        #             name = link.get_text(strip=True)
-        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
-        #             operators.append({'name': name, 'id': person_id})
-        #     if operators:
-        #         film_data['operators'] = operators
-        
-        # # Извлекаем композиторов (data-test-id="composers")
-        # composers_elem = self.soup.find('div', {'data-test-id': 'composers'})
-        # if composers_elem:
-        #     composer_links = composers_elem.find_all('a')
-        #     composers = []
-        #     for link in composer_links:
-        #         if link.get('href') and '/name/' in link.get('href'):
-        #             name = link.get_text(strip=True)
-        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
-        #             composers.append({'name': name, 'id': person_id})
-        #     if composers:
-        #         film_data['composers'] = composers
-        
-        # # Извлекаем художников (data-test-id="designers")
-        # designers_elem = self.soup.find('div', {'data-test-id': 'designers'})
-        # if designers_elem:
-        #     designer_links = designers_elem.find_all('a')
-        #     designers = []
-        #     for link in designer_links:
-        #         if link.get('href') and '/name/' in link.get('href'):
-        #             name = link.get_text(strip=True)
-        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
-        #             designers.append({'name': name, 'id': person_id})
-        #     if designers:
-        #         film_data['designers'] = designers
-        
-        # # Извлекаем монтажеров (data-test-id="filmEditors")
-        # editors_elem = self.soup.find('div', {'data-test-id': 'filmEditors'})
-        # if editors_elem:
-        #     editor_links = editors_elem.find_all('a')
-        #     editors = []
-        #     for link in editor_links:
-        #         if link.get('href') and '/name/' in link.get('href'):
-        #             name = link.get_text(strip=True)
-        #             person_id = link.get('href').split('/name/')[1].rstrip('/')
-        #             editors.append({'name': name, 'id': person_id})
-        #     if editors:
-        #         film_data['editors'] = editors
-        
         # Извлекаем премьеру в России (data-test-id="ruPremiere")
         ru_premiere_elem = self.soup.find('div', {'data-test-id': 'ruPremiere'})
         if ru_premiere_elem:
@@ -457,20 +356,6 @@ class FilmPageParser:
             premiere_link = world_premiere_elem.find('a')
             if premiere_link:
                 film_data['world_premiere'] = premiere_link.get_text(strip=True)
-        
-        # # Извлекаем возрастной рейтинг (data-test-id="ageRestriction")
-        # age_elem = self.soup.find('div', {'data-test-id': 'ageRestriction'})
-        # if age_elem:
-        #     age_span = age_elem.find('span', {'data-tid': '5c1ffa33'})
-        #     if age_span:
-        #         film_data['content_rating'] = age_span.get_text(strip=True)
-        
-        # # Извлекаем продолжительность (data-test-id="duration")
-        # duration_elem = self.soup.find('div', {'data-test-id': 'duration'})
-        # if duration_elem:
-        #     duration_div = duration_elem.find('div', {'data-tid': 'e1e37c21'})
-        #     if duration_div:
-        #         film_data['duration'] = duration_div.get_text(strip=True)
         
         # Извлекаем бюджет фильма (data-test-id="budget" или data-per-id="cfbe5a01")
         budget_elem = self.soup.find('div', {'data-test-id': 'budget'})

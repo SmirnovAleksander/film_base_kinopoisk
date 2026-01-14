@@ -1,6 +1,0 @@
-bs4
-lxml
-requests
-psycopg2
-Pillow
-pillow-avif-plugin

@@ -1,13 +1,10 @@
 import psycopg2
 import time
-import requests
-from bs4 import BeautifulSoup
 from parser_utils.kinopoisk_parser import KinopoiskParser
 from parser_utils.film_page_parser import FilmPageParser
 from parser_utils.actor_page_parser import ActorPageParser
 from parser_utils.stills_page_parser import StillsPageParser
 from config import DATABASE_CONFIG, DELAYS, PARSING_CONFIG, LOGGING_CONFIG
-from image_downloader import ImageDownloader
 
 class MainParser:
     def __init__(self):
@@ -23,9 +20,6 @@ class MainParser:
         self.film_parser = FilmPageParser()
         self.actor_parser = ActorPageParser()
         self.stills_parser = StillsPageParser()
-        
-        # Инициализируем загрузчик изображений
-        self.image_downloader = ImageDownloader()
         
         # Подключаемся к БД
         self.db_connection = self.connect_to_db()
@@ -348,18 +342,7 @@ class MainParser:
         """Сохранение фильма в БД"""
         cursor = self.db_connection.cursor()
         
-        try:
-            # # Скачиваем постер фильма
-            # poster_url = film_data.get('poster')
-            # if poster_url:
-            #     film_id = film_data.get('kinopoisk_id')
-            #     downloaded_poster = self.image_downloader.download_film_poster(poster_url, film_id)
-            #     if downloaded_poster:
-            #         film_data['poster'] = downloaded_poster
-            #         print(f"📸 Постер фильма {film_id} скачан: {downloaded_poster}")
-            #     else:
-            #         print(f"⚠️ Не удалось скачать постер для фильма {film_id}")
-            
+        try:       
             # Вставляем фильм
             insert_film = """
             INSERT INTO film (kinopoisk_id, title, original_title, description, full_description, 
@@ -582,17 +565,6 @@ class MainParser:
         cursor = self.db_connection.cursor()
         
         try:
-            # # Скачиваем фото актера
-            # photo_url = person_data.get('photo')
-            # if photo_url:
-            #     actor_id = person_data.get('kinopoisk_id')
-            #     downloaded_photo = self.image_downloader.download_actor_photo(photo_url, actor_id)
-            #     if downloaded_photo:
-            #         person_data['photo'] = downloaded_photo
-            #         print(f"📸 Фото актера {actor_id} скачано: {downloaded_photo}")
-            #     else:
-            #         print(f"⚠️ Не удалось скачать фото для актера {actor_id}")
-            
             # Вставляем участника
             insert_person = """
             INSERT INTO stuff (kinopoisk_id, name, original_name, career, ganres, height, 

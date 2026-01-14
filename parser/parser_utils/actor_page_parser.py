@@ -7,9 +7,8 @@
 
 import json
 import os
-import re
 import time
-from typing import List, Dict, Optional
+from typing import Dict
 from bs4 import BeautifulSoup
 import requests
 
@@ -262,28 +261,10 @@ class ActorPageParser:
         if birthday_elem:
             birthday_div = birthday_elem.find('div', {'data-tid': '71455188'})
             if birthday_div:
-                # # Извлекаем отдельные компоненты
-                # day_month_link = birthday_div.find('a', href=lambda x: x and 'birthday' in x and 'day' in x and 'month' in x)
-                # if day_month_link:
-                #     actor_data['birthday_day_month'] = day_month_link.get_text(strip=True)
-                
-                # year_link = birthday_div.find('a', href=lambda x: x and 'birthday' in x and 'year' in x)
-                # if year_link:
-                #     actor_data['birthday_year'] = year_link.get_text(strip=True)
                 
                 zodiac_link = birthday_div.find('a', href=lambda x: x and 'zodiac' in x)
                 if zodiac_link:
                     actor_data['zodiac'] = zodiac_link.get_text(strip=True)
-                
-                # # Извлекаем возраст
-                # age_span = birthday_div.find('span', class_='styles_valueDark__jsGKY')
-                # if age_span:
-                #     age_text = age_span.get_text(strip=True)
-                #     # Извлекаем только число из "47 лет"
-                #     import re
-                #     age_match = re.search(r'(\d+)', age_text)
-                #     if age_match:
-                #         actor_data['age'] = age_match.group(1)
         
         # Извлекаем место рождения (data-test-id="placeOfBirthday")
         birthplace_elem = self.soup.find('div', {'data-test-id': 'placeOfBirthday'})

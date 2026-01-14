@@ -9,7 +9,7 @@ import json
 import os
 import time
 import re
-from typing import List, Dict, Optional
+from typing import List, Dict
 from bs4 import BeautifulSoup
 import requests
 
