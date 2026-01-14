@@ -28,7 +28,6 @@ class Film(Base, IntIdPkMixin):
     is_family_friendly: Mapped[bool] = mapped_column(Boolean, default=False)
     duration: Mapped[Optional[str]] = mapped_column(String(50))
     
-    # Рейтинги
     rating_kp: Mapped[Optional[float]] = mapped_column(DECIMAL(3, 1), index=True)
     kp_votes_count: Mapped[Optional[str]] = mapped_column(String(50))
     rating_imdb: Mapped[Optional[float]] = mapped_column(DECIMAL(3, 1), index=True)
@@ -36,7 +35,6 @@ class Film(Base, IntIdPkMixin):
     user_rating: Mapped[Optional[float]] = mapped_column(DECIMAL(3, 1))
     user_rating_count: Mapped[int] = mapped_column(Integer, default=0)
     
-    # Бюджет и сборы
     budget: Mapped[Optional[str]] = mapped_column(String(100))
     usa_box_office: Mapped[Optional[str]] = mapped_column(String(100))
     rus_box_office: Mapped[Optional[str]] = mapped_column(String(100))
@@ -51,12 +49,24 @@ class Film(Base, IntIdPkMixin):
     stuff: Mapped[List["Stuff"]] = relationship(
         "Stuff", secondary="film_stuff", back_populates="films"
     )
-    bookmarks: Mapped[List["Bookmark"]] = relationship("Bookmark", back_populates="film", cascade="all, delete-orphan")
-    comments: Mapped[List["Comment"]] = relationship("Comment", back_populates="film", cascade="all, delete-orphan")
-    ratings: Mapped[List["UserFilmRating"]] = relationship("UserFilmRating", back_populates="film", cascade="all, delete-orphan")
-    stills: Mapped[List["FilmStill"]] = relationship("FilmStill", back_populates="film", cascade="all, delete-orphan")
-    watch_providers: Mapped[List["FilmWatchProvider"]] = relationship("FilmWatchProvider", back_populates="film", cascade="all, delete-orphan")
-    similar_films: Mapped[List["SimilarFilm"]] = relationship("SimilarFilm", back_populates="film", cascade="all, delete-orphan")
+    bookmarks: Mapped[List["Bookmark"]] = relationship(
+        "Bookmark", back_populates="film", cascade="all, delete-orphan"
+    )
+    comments: Mapped[List["Comment"]] = relationship(
+        "Comment", back_populates="film", cascade="all, delete-orphan"
+    )
+    ratings: Mapped[List["UserFilmRating"]] = relationship(
+        "UserFilmRating", back_populates="film", cascade="all, delete-orphan"
+    )
+    stills: Mapped[List["FilmStill"]] = relationship(
+        "FilmStill", back_populates="film", cascade="all, delete-orphan"
+    )
+    watch_providers: Mapped[List["FilmWatchProvider"]] = relationship(
+        "FilmWatchProvider", back_populates="film", cascade="all, delete-orphan"
+    )
+    similar_films: Mapped[List["SimilarFilm"]] = relationship(
+        "SimilarFilm", back_populates="film", cascade="all, delete-orphan"
+    )
 
 
 class Genre(Base, IntIdPkMixin):
@@ -124,7 +134,9 @@ class FilmStill(Base, IntIdPkMixin):
     )
     
     # Связи
-    film: Mapped["Film"] = relationship("Film", back_populates="stills")
+    film: Mapped["Film"] = relationship(
+        "Film", back_populates="stills"
+    )
 
 
 class FilmWatchProvider(Base, IntIdPkMixin):
@@ -141,7 +153,9 @@ class FilmWatchProvider(Base, IntIdPkMixin):
     )
     
     # Связи
-    film: Mapped["Film"] = relationship("Film", back_populates="watch_providers")
+    film: Mapped["Film"] = relationship(
+        "Film", back_populates="watch_providers"
+    )
 
 
 class SimilarFilm(Base, IntIdPkMixin):
@@ -161,4 +175,6 @@ class SimilarFilm(Base, IntIdPkMixin):
     )
     
     # Связи
-    film: Mapped["Film"] = relationship("Film", back_populates="similar_films")
+    film: Mapped["Film"] = relationship(
+        "Film", back_populates="similar_films"
+    )

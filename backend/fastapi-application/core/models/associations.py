@@ -1,7 +1,7 @@
 from sqlalchemy import Table, Column, Integer, String, ForeignKey, UniqueConstraint
 from .base import Base
 
-# Связующие таблицы many-to-many
+# Связи many-to-many
 
 film_genre = Table(
     "film_genre",

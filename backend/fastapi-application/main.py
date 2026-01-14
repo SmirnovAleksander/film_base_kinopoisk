@@ -9,14 +9,12 @@ from api import router as api_router
 from core.models import db_helper
 from core.middleware.cors import setup_cors
 
-# Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # startup
     logger.info("🚀 Запуск FastAPI приложения...")
     try:
         await db_helper.init_db()
@@ -26,14 +24,11 @@ async def lifespan(app: FastAPI):
     
     yield
     
-    # shutdown
     logger.info("🛑 Остановка приложения...")
-    print("Dispose engine")
     await db_helper.dispose()
     logger.info("✅ Движок БД освобожден")
 
 
-# Обработчик глобальных ошибок
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"❌ Необработанная ошибка: {exc}", exc_info=True)
     return JSONResponse(
@@ -49,18 +44,14 @@ main_app = FastAPI(
     version="1.0.0",
 )
 
-# Добавляем middleware
 setup_cors(main_app)
 
-# Глобальный обработчик исключений
 main_app.add_exception_handler(Exception, global_exception_handler)
 
-# Подключаем API роутер
 main_app.include_router(
     api_router,
 )
 
-# Health check endpoint
 @main_app.get("/health")
 async def health_check():
     return {"status": "ok", "message": "API работает корректно"}

@@ -82,22 +82,40 @@ from .film import (
     FilmRecommendationsResponse,
     FilmCreate,
     FilmUpdate,
+)
+
+from .genre import (
     GenreRead,
     GenreCreate,
     GenreUpdate,
+)
+
+from .country import (
     CountryRead,
     CountryCreate,
     CountryUpdate,
+)
+
+from .stuff import (
     StuffRead,
     StuffListResponse,
     StuffCreate,
     StuffUpdate,
+)
+
+from .film_details import (
     FilmStillRead,
     FilmStillCreate,
     FilmStillUpdate,
     FilmWatchProviderRead,
     FilmWatchProviderCreate,
     FilmWatchProviderUpdate,
+    SimilarFilmRead,
+    SimilarFilmCreate,
+    SimilarFilmUpdate,
+)
+
+from .film_relations import (
     FilmGenreRead,
     FilmGenreCreate,
     FilmCountryRead,
@@ -105,9 +123,6 @@ from .film import (
     FilmStuffRead,
     FilmStuffCreate,
     FilmStuffUpdate,
-    SimilarFilmRead,
-    SimilarFilmCreate,
-    SimilarFilmUpdate,
 )
 
 from .user_interactions import (
