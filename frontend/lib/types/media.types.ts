@@ -1,6 +1,6 @@
 // Типы для медиа контента
 
-export interface Media {
+interface BaseMedia {
   url?: string | null;
   title?: string | null;
   image?: string | null;
@@ -8,28 +8,14 @@ export interface Media {
   date?: string | null;
   card_type?: string | null;
   type?: string | null;
+}
+
+export interface MediaUpdate extends BaseMedia { }
+export interface MediaCreate extends BaseMedia { }
+
+export interface Media extends BaseMedia {
   id: number;
   parsed_at: string;
-}
-
-export interface MediaCreate {
-  url?: string | null;
-  title?: string | null;
-  image?: string | null;
-  category?: string | null;
-  date?: string | null;
-  card_type?: string | null;
-  type?: string | null;
-}
-
-export interface MediaUpdate {
-  url?: string | null;
-  title?: string | null;
-  image?: string | null;
-  category?: string | null;
-  date?: string | null;
-  card_type?: string | null;
-  type?: string | null;
 }
 
 export interface MediaResponse {

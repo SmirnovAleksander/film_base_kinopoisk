@@ -1,16 +1,16 @@
 // Типы для комментариев
 
-export interface CommentCreate {
+interface BaseComment {
   content: string;
+}
+
+export interface CommentCreate extends BaseComment {
   film_id: number;
 }
 
-export interface CommentUpdate {
-  content: string;
-}
+export interface CommentUpdate extends BaseComment { }
 
-export interface Comment {
-  content: string;
+export interface Comment extends BaseComment {
   id: number;
   user_id: number;
   film_id: number;

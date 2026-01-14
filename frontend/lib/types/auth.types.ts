@@ -31,39 +31,38 @@ export interface BodyVerifyVerify {
   token: string;
 }
 
-export interface UserCreate {
+interface BaseUser {
+  email?: string | null;
+  username?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+}
+
+export interface UserUpdate extends BaseUser {
+  password?: string | null;
+  is_active?: boolean | null;
+  is_superuser?: boolean | null;
+  is_verified?: boolean | null;
+}
+
+export interface UserCreate extends BaseUser {
   email: string;
+  username: string;
   password: string;
   is_active?: boolean;
   is_superuser?: boolean;
   is_verified?: boolean;
-  username: string;
-  first_name?: string | null;
-  last_name?: string | null;
 }
 
-export interface User {
+export interface User extends BaseUser {
   id: number;
   email: string;
+  username: string;
   is_active: boolean;
   is_superuser: boolean;
   is_verified: boolean;
-  username: string;
-  first_name?: string | null;
-  last_name?: string | null;
   created_at: string;
   updated_at: string;
-}
-
-export interface UserUpdate {
-  password?: string | null;
-  email?: string | null;
-  is_active?: boolean | null;
-  is_superuser?: boolean | null;
-  is_verified?: boolean | null;
-  username?: string | null;
-  first_name?: string | null;
-  last_name?: string | null;
 }
 
 // Типы для форм входа и регистрации

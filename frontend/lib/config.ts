@@ -103,6 +103,7 @@ export const API_ENDPOINTS = {
     DETAILS: (id: number) => `/stuff/${id}`,
     KINOPOISK_DETAILS: (kinopoiskId: string) => `/stuff/kinopoisk/${kinopoiskId}`,
   },
+  // Admin Endpoints
   ADMIN: {
     FILMS: {
       LIST: '/admin/films',
