@@ -2,13 +2,6 @@ import psycopg2
 from config import DATABASE_CONFIG
 
 def clear_database():
-    """
-    Очищает все таблицы в базе данных, описанные в main_parser.py.
-    Использует TRUNCATE ... CASCADE для очистки связанных данных.
-    """
-    
-    # Список таблиц для очистки
-    # Порядок не важен при использовании CASCADE, но для наглядности перечислены все
     tables = [
         "film_watch_provider",
         "film_still",
@@ -16,7 +9,6 @@ def clear_database():
         "film_stuff",
         "film_country",
         "film_genre",
-        "media",
         "stuff",
         "film",
         "genre",
@@ -25,19 +17,13 @@ def clear_database():
     
     connection = None
     try:
-        # Подключение к БД
         print("🔌 Подключение к базе данных...")
         connection = psycopg2.connect(**DATABASE_CONFIG)
         cursor = connection.cursor()
         
         print("🧹 Начало очистки таблиц...")
-        
-        # Формируем список таблиц через запятую
         tables_string = ", ".join(tables)
-        
-        # Выполняем TRUNCATE для всех таблиц сразу с опцией CASCADE
-        # CASCADE удалит данные из зависимых таблиц, если они есть (хотя мы и так перечислили все)
-        # и сбросит счетчики identity (RESTART IDENTITY)
+
         query = f"TRUNCATE TABLE {tables_string} RESTART IDENTITY CASCADE;"
         
         cursor.execute(query)

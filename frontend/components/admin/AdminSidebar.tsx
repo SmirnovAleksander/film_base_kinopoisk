@@ -29,7 +29,6 @@ interface AdminSidebarProps extends React.ComponentProps<typeof Sidebar> {
     stuff?: number
     genres?: number
     countries?: number
-    media?: number
     users?: number
   }
 }
@@ -37,43 +36,37 @@ interface AdminSidebarProps extends React.ComponentProps<typeof Sidebar> {
 export function AdminSidebar({ activeTab, counts, ...props }: AdminSidebarProps) {
 
   const navMain = [
-    {
-      title: "Фильмы",
-      url: "#films",
-      icon: Film,
-      count: counts?.films,
-    },
-    {
-      title: "Участники",
-      url: "#stuff",
-      icon: Users,
-      count: counts?.stuff,
-    },
-    {
-      title: "Жанры",
-      url: "#genres",
-      icon: Tag,
-      count: counts?.genres,
-    },
-    {
-      title: "Страны",
-      url: "#countries",
-      icon: Globe,
-      count: counts?.countries,
-    },
-    {
-      title: "Медиа",
-      url: "#media",
-      icon: Newspaper,
-      count: counts?.media,
-    },
-    {
-      title: "Пользователи",
-      url: "#users",
-      icon: UserCog,
-      count: counts?.users,
-    },
-  ]
+   {
+     title: "Фильмы",
+     url: "#films",
+     icon: Film,
+     count: counts?.films,
+   },
+   {
+     title: "Участники",
+     url: "#stuff",
+     icon: Users,
+     count: counts?.stuff,
+   },
+   {
+     title: "Жанры",
+     url: "#genres",
+     icon: Tag,
+     count: counts?.genres,
+   },
+   {
+     title: "Страны",
+     url: "#countries",
+     icon: Globe,
+     count: counts?.countries,
+   },
+   {
+     title: "Пользователи",
+     url: "#users",
+     icon: UserCog,
+     count: counts?.users,
+   },
+ ]
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>

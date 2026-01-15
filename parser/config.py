@@ -25,10 +25,3 @@ PARSING_CONFIG = {
     'MAX_RETRIES': 3,         # Максимальное количество попыток при ошибках
     'TIMEOUT': 30             # Таймаут для HTTP запросов
 }
-
-# Настройки логирования
-LOGGING_CONFIG = {
-    'SHOW_PROGRESS': True,    # Показывать прогресс парсинга
-    'SHOW_DELAYS': True,      # Показывать информацию о паузах
-    'VERBOSE': True          # Подробные логи
-}

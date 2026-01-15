@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { Heart, Trash2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUserInteractionsStore } from '@/store';
 import { FilmCard } from '@/components/film/FilmCard';
 import { ROUTES } from '@/lib/config';
@@ -58,8 +57,8 @@ export default function BookmarksPage() {
             {bookmarks.map((bookmark) => (
               <div key={bookmark.id} className="group relative">
                 {bookmark.film ? (
-                  <FilmCard 
-                    film={bookmark.film} 
+                  <FilmCard
+                    film={bookmark.film}
                     showActions={true}
                   />
                 ) : (
@@ -67,7 +66,7 @@ export default function BookmarksPage() {
                     <span className="text-muted-foreground">Фильм не найден</span>
                   </div>
                 )}
-                
+
                 {/* Кнопка удаления */}
                 <Button
                   size="icon"
@@ -91,7 +90,7 @@ export default function BookmarksPage() {
               >
                 Предыдущая
               </Button>
-              
+
               <div className="flex items-center gap-1">
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                   let pageNum;
@@ -104,7 +103,7 @@ export default function BookmarksPage() {
                   } else {
                     pageNum = bookmarksPage - 2 + i;
                   }
-                  
+
                   return (
                     <Button
                       key={pageNum}
@@ -117,7 +116,7 @@ export default function BookmarksPage() {
                   );
                 })}
               </div>
-              
+
               <Button
                 variant="outline"
                 onClick={() => handlePageChange(bookmarksPage + 1)}

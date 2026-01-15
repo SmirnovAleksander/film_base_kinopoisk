@@ -22,7 +22,6 @@ class ApiV1Prefix(BaseModel):
     bookmarks: str = "/bookmarks"
     comments: str = "/comments"
     ratings: str = "/ratings"
-    media: str = "/media"
     stuff: str = "/stuff"
 
 class ApiPrefix(BaseModel):

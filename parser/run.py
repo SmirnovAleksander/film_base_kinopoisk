@@ -26,18 +26,15 @@ def print_menu():
     print("  2. Парсер страницы фильма (локальный)")
     print("  3. Парсер страницы актера (локальный)")
     print("  4. Парсер галереи кадров (локальный)")
-    print("  5. Парсер новостей (локальный)")
     
     print("\n🌐 ОНЛАЙН ПАРСЕРЫ (с сайта):")
     print("  6. Парсер всех фильмов (онлайн)")
     print("  7. Парсер страницы фильма (онлайн)")
     print("  8. Парсер страницы актера (онлайн)")
     print("  9. Парсер галереи кадров (онлайн)")
-    print(" 10. Парсер новостей (онлайн)")
     
     print("\n⚙️  СПЕЦИАЛЬНЫЕ ПАРСЕРЫ:")
     print(" 11. Главный парсер фильмов и актеров")
-    print(" 12. Парсер всех типов медиа контента")
     
     print("\n  0. Выход")
     print("=" * 60)
@@ -168,41 +165,6 @@ def run_stills_parser_local():
         print(f"❌ Ошибка: {e}")
         import traceback
         traceback.print_exc()
-
-
-def run_news_parser_local():
-    """Парсер новостей (локальный)"""
-    from parser_utils.news_page_parser import NewsPageParser
-    
-    print("\n=== Парсер новостей (локальный) ===")
-    
-    html_file = "templates/news_page.html"
-    if not os.path.exists(html_file):
-        print(f"❌ HTML файл не найден: {html_file}")
-        return
-    
-    try:
-        parser = NewsPageParser()
-        parser.load_html_from_file(html_file)
-        
-        if parser.soup:
-            news_list = parser.parse_news_list()
-            result = {
-                'news_list': news_list,
-                'parsed_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                'source_file': html_file,
-                'total_news': len(news_list)
-            }
-            filename = "output/news_local.json"
-            parser.save_to_json(result, filename)
-            print(f"✅ Найдено новостей: {len(news_list)}. Файл: {filename}")
-        else:
-            print("❌ Не удалось загрузить HTML файл")
-    except Exception as e:
-        print(f"❌ Ошибка: {e}")
-        import traceback
-        traceback.print_exc()
-
 
 def run_parser_online():
     """Парсер всех фильмов (онлайн)"""
@@ -347,38 +309,6 @@ def run_stills_parser_online():
         import traceback
         traceback.print_exc()
 
-
-def run_news_parser_online():
-    """Парсер новостей (онлайн)"""
-    from parser_utils.news_page_parser import NewsPageParser
-    
-    print("\n=== Парсер новостей (онлайн) ===")
-    
-    news_url = "https://www.kinopoisk.ru/media/"
-    
-    try:
-        parser = NewsPageParser()
-        print("Парсим новости с 5 страниц...")
-        news_list = parser.parse_multiple_pages(5)
-        
-        if news_list:
-            result = {
-                'news_list': news_list,
-                'parsed_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                'source_url': news_url,
-                'total_news': len(news_list)
-            }
-            filename = "output/news_online.json"
-            parser.save_to_json(result, filename)
-            print(f"✅ Найдено новостей: {len(news_list)}. Файл: {filename}")
-        else:
-            print("❌ Не удалось загрузить страницу")
-    except Exception as e:
-        print(f"❌ Ошибка: {e}")
-        import traceback
-        traceback.print_exc()
-
-
 def run_main_parser():
     """Главный парсер фильмов и актеров"""
     from main_parser import MainParser
@@ -399,59 +329,6 @@ def run_main_parser():
     finally:
         print("\n🔚 Парсинг завершен")
 
-
-def run_all_media_parser():
-    """Парсер всех типов медиа контента"""
-    from parser_utils.news_page_parser import NewsPageParser
-    from main_parser import MainParser
-    
-    print("\n🚀 Запуск парсера всех типов медиа контента")
-    
-    os.makedirs("output", exist_ok=True)
-    
-    parser = NewsPageParser()
-    main_parser = MainParser()
-    
-    content_types = ['media', 'news', 'article']
-    all_content = []
-    
-    try:
-        for content_type in content_types:
-            print(f"\n📺 Парсинг {content_type}...")
-            content = parser.parse_multiple_pages(pages_count=2, content_type=content_type)
-            
-            if content:
-                all_content.extend(content)
-                print(f"✅ {content_type}: найдено {len(content)} элементов")
-            else:
-                print(f"❌ {content_type}: не найдено элементов")
-        
-        if all_content:
-            output_file = "output/all_media.json"
-            parser.save_to_json(all_content, output_file)
-            print(f"\n💾 Сохранено в {output_file}")
-            
-            print("💾 Сохранение в базу данных...")
-            main_parser.save_media_to_db(all_content)
-            
-            print(f"\n📊 Итого найдено: {len(all_content)} элементов")
-            
-            type_stats = {}
-            for item in all_content:
-                content_type = item.get('type', 'unknown')
-                type_stats[content_type] = type_stats.get(content_type, 0) + 1
-            
-            print("📈 Статистика по типам:")
-            for content_type, count in type_stats.items():
-                print(f"  - {content_type}: {count} элементов")
-        else:
-            print("❌ Не найдено контента для сохранения")
-    except Exception as e:
-        print(f"❌ Ошибка: {e}")
-        import traceback
-        traceback.print_exc()
-
-
 def main():
     """Главная функция"""
     while True:
@@ -471,8 +348,6 @@ def main():
                 run_actor_parser_local()
             elif choice == '4':
                 run_stills_parser_local()
-            elif choice == '5':
-                run_news_parser_local()
             elif choice == '6':
                 run_parser_online()
             elif choice == '7':
@@ -481,12 +356,8 @@ def main():
                 run_actor_parser_online()
             elif choice == '9':
                 run_stills_parser_online()
-            elif choice == '10':
-                run_news_parser_online()
             elif choice == '11':
                 run_main_parser()
-            elif choice == '12':
-                run_all_media_parser()
             else:
                 print("\n❌ Неверный выбор! Попробуйте снова.")
                 continue

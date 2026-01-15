@@ -1,7 +1,7 @@
 __all__ = (
     # Film schemas
     "FilmRead",
-    "FilmReadWithDetails", 
+    "FilmReadWithDetails",
     "FilmSearchResponse",
     "FilmFilterParams",
     "FilmRecommendationRead",
@@ -48,15 +48,6 @@ __all__ = (
     "UserFilmRatingRead",
     "FilmAverageRatingRead",
     "UserRatingsResponse",
-    
-    # Media schemas
-    "MediaRead",
-    "MediaCreate",
-    "MediaUpdate",
-    "MediaResponse",
-    "MediaCategoriesResponse",
-    "MediaTypesResponse",
-    "MediaStatsResponse",
     
     # User schemas
     "UserRead",
@@ -138,16 +129,6 @@ from .user_interactions import (
     UserFilmRatingRead,
     FilmAverageRatingRead,
     UserRatingsResponse,
-)
-
-from .media import (
-    MediaRead,
-    MediaCreate,
-    MediaUpdate,
-    MediaResponse,
-    MediaCategoriesResponse,
-    MediaTypesResponse,
-    MediaStatsResponse,
 )
 
 from .user import (

@@ -13,7 +13,6 @@ import { ROUTES } from '@/lib/config';
 export default function HomePage() {
   const { isAuthenticated } = useAuth();
   const {
-    films,
     highRatedFilms,
     russianFilms,
     usaFilms,
@@ -21,7 +20,6 @@ export default function HomePage() {
     fetchHighRatedFilms,
     fetchRussianFilms,
     fetchUSAFilms,
-    isLoading,
     isLoadingHighRated,
     isLoadingRussian,
     isLoadingUSA

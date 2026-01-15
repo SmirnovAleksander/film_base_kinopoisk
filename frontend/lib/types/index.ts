@@ -6,5 +6,4 @@ export * from './film_details.types';
 export * from './film_relations.types';
 export * from './bookmarks.types';
 export * from './comments.types';
-export * from './media.types';
 export * from './stuff.types';

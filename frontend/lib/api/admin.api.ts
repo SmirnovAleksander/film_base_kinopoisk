@@ -2,7 +2,6 @@ import { AdminFilmsAPI } from './admin/films';
 import { AdminStuffAPI } from './admin/stuff';
 import { AdminGenresAPI } from './admin/genres';
 import { AdminCountriesAPI } from './admin/countries';
-import { AdminMediaAPI } from './admin/media';
 import { AdminUsersAPI } from './admin/users';
 import { AdminFilmDetailsAPI } from './admin/film-details';
 import { AdminFilmRelationsAPI } from './admin/film-relations';
@@ -36,13 +35,6 @@ export class AdminAPI {
   static getCountryById = AdminCountriesAPI.getCountryById;
   static updateCountry = AdminCountriesAPI.updateCountry;
   static deleteCountry = AdminCountriesAPI.deleteCountry;
-
-  // медиа
-  static createMedia = AdminMediaAPI.createMedia;
-  static getAllMedia = AdminMediaAPI.getAllMedia;
-  static getMediaById = AdminMediaAPI.getMediaById;
-  static updateMedia = AdminMediaAPI.updateMedia;
-  static deleteMedia = AdminMediaAPI.deleteMedia;
 
   // пользователи
   static createUser = AdminUsersAPI.createUser;

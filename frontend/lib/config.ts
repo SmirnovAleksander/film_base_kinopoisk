@@ -12,7 +12,6 @@ export const ROUTES = {
   FILMS: '/films',
   FILM_DETAILS: (id: string | number) => `/films/${id}`,
   STUFF_DETAILS: (id: string | number) => `/stuff/${id}`,
-  MEDIA: '/media',
   PROFILE: '/profile',
   HISTORY: '/history',
   BOOKMARKS: '/bookmarks',
@@ -91,13 +90,6 @@ export const API_ENDPOINTS = {
     UPDATE: (commentId: number) => `/comments/${commentId}`,
     DELETE: (commentId: number) => `/comments/${commentId}`,
   },
-  MEDIA: {
-    LIST: '/media',
-    DETAILS: (id: number) => `/media/${id}`,
-    CATEGORIES: '/media/categories',
-    TYPES: '/media/types',
-    STATS: '/media/stats',
-  },
   STUFF: {
     LIST: '/stuff',
     DETAILS: (id: number) => `/stuff/${id}`,
@@ -132,13 +124,6 @@ export const API_ENDPOINTS = {
       DETAILS: (id: number) => `/admin/countries/${id}`,
       UPDATE: (id: number) => `/admin/countries/${id}`,
       DELETE: (id: number) => `/admin/countries/${id}`,
-    },
-    MEDIA: {
-      LIST: '/admin/media',
-      CREATE: '/admin/media',
-      DETAILS: (id: number) => `/admin/media/${id}`,
-      UPDATE: (id: number) => `/admin/media/${id}`,
-      DELETE: (id: number) => `/admin/media/${id}`,
     },
     USERS: {
       LIST: '/admin/users',

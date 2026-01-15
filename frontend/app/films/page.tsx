@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
 import {
   Pagination,
   PaginationContent,
@@ -76,7 +75,7 @@ export default function FilmsPage() {
       filterFilms(filterParams);
     }
   }, [searchParams]);
-      
+
   // Обработчики для FilmsFilters
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -101,7 +100,7 @@ export default function FilmsPage() {
   const handleFilterRemove = async (key: keyof FilmFilterParams) => {
     const newFilters = { ...filters };
     delete newFilters[key];
-    
+
     // Специальная обработка для поискового запроса
     if (key === 'query' as any) {
       setSearchQuery('');
@@ -185,11 +184,11 @@ export default function FilmsPage() {
                       }}
                     />
                   </PaginationItem>
-                  
+
                   {(() => {
                     const pageNumbers = [];
                     const showPages = Math.min(7, totalPages);
-                    
+
                     if (totalPages <= showPages) {
                       // Показываем все страницы если их мало
                       for (let i = 1; i <= totalPages; i++) {
@@ -212,7 +211,7 @@ export default function FilmsPage() {
                       // Сложная логика для большого количества страниц
                       const startPage = Math.max(1, currentPage - 2);
                       const endPage = Math.min(totalPages, currentPage + 2);
-                      
+
                       // Первая страница
                       if (startPage > 1) {
                         pageNumbers.push(
@@ -229,12 +228,12 @@ export default function FilmsPage() {
                             </PaginationLink>
                           </PaginationItem>
                         );
-                        
+
                         if (startPage > 2) {
                           pageNumbers.push(<PaginationEllipsis key="ellipsis-start" />);
                         }
                       }
-                      
+
                       // Страницы вокруг текущей
                       for (let i = startPage; i <= endPage; i++) {
                         pageNumbers.push(
@@ -252,13 +251,13 @@ export default function FilmsPage() {
                           </PaginationItem>
                         );
                       }
-                      
+
                       // Последняя страница
                       if (endPage < totalPages) {
                         if (endPage < totalPages - 1) {
                           pageNumbers.push(<PaginationEllipsis key="ellipsis-end" />);
                         }
-                        
+
                         pageNumbers.push(
                           <PaginationItem key={totalPages}>
                             <PaginationLink
@@ -275,10 +274,10 @@ export default function FilmsPage() {
                         );
                       }
                     }
-                    
+
                     return pageNumbers;
                   })()}
-                  
+
                   <PaginationItem>
                     <PaginationNext
                       href="#"
