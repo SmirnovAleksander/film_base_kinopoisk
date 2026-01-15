@@ -3,7 +3,6 @@ export * from './bookmarks.types';
 export * from './comments.types';
 export * from './common.types';
 export * from './film.types';
-export * from './media.types';
 export * from './stuff.types';
 export * from './genres.types';
 export * from './countries.types';

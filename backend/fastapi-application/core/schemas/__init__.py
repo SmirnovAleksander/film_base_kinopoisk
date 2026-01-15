@@ -61,15 +61,6 @@ __all__ = (
     "ContentAverageRatingRead",
     "UserRatingsResponse",
     
-    # Media schemas
-    "MediaRead",
-    "MediaCreate",
-    "MediaUpdate",
-    "MediaResponse",
-    "MediaCategoriesResponse",
-    "MediaTypesResponse",
-    "MediaStatsResponse",
-    
     # User schemas
     "UserRead",
     "UserCreate",
@@ -152,16 +143,6 @@ from .user_interactions import (
     UserContentRatingRead,
     ContentAverageRatingRead,
     UserRatingsResponse,
-)
-
-from .media import (
-    MediaRead,
-    MediaCreate,
-    MediaUpdate,
-    MediaResponse,
-    MediaCategoriesResponse,
-    MediaTypesResponse,
-    MediaStatsResponse,
 )
 
 from .user import (

@@ -4,5 +4,4 @@ export * from './films.api';
 export * from './series.api';
 export * from './stuff.api';
 export * from './interactions.api';
-export * from './media.api';
 export * from './admin';

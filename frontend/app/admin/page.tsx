@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { AdminAPI } from '@/lib/api';
-import { FilmWithDetails, Stuff, Genre, Country, Media, User } from '@/lib/types';
+import { FilmWithDetails, Stuff, Genre, Country, User } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import FilmsSection from '@/components/admin/sections/FilmsSection';
 import StuffSection from '@/components/admin/sections/StuffSection';
 import GenresSection from '@/components/admin/sections/GenresSection';
 import CountriesSection from '@/components/admin/sections/CountriesSection';
-import MediaSection from '@/components/admin/sections/MediaSection';
 import UsersSection from '@/components/admin/sections/UsersSection';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 
@@ -26,7 +25,6 @@ export default function AdminPage() {
   const [stuff, setStuff] = useState<StuffResponse | null>(null);
   const [genres, setGenres] = useState<Genre[] | null>(null);
   const [countries, setCountries] = useState<Country[] | null>(null);
-  const [media, setMedia] = useState<Media[] | null>(null);
   const [users, setUsers] = useState<User[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>('#films');
@@ -34,7 +32,6 @@ export default function AdminPage() {
   const [editingStuff, setEditingStuff] = useState<Stuff | null | undefined>(undefined);
   const [editingGenre, setEditingGenre] = useState<Genre | null | undefined>(undefined);
   const [editingCountry, setEditingCountry] = useState<Country | null | undefined>(undefined);
-  const [editingMedia, setEditingMedia] = useState<Media | null | undefined>(undefined);
   const [editingUser, setEditingUser] = useState<User | null | undefined>(undefined);
   const [message, setMessage] = useState('');
 
@@ -61,20 +58,18 @@ export default function AdminPage() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [filmsData, stuffData, genresData, countriesData, mediaData, usersData] = await Promise.all([
+      const [filmsData, stuffData, genresData, countriesData, usersData] = await Promise.all([
         AdminAPI.getAllFilms(1, 100),
         AdminAPI.getAllStuff(1, 100),
         AdminAPI.getAllGenres(),
         AdminAPI.getAllCountries(),
-        AdminAPI.getAllMedia(1, 100),
         AdminAPI.getAllUsers(1, 100)
-      ]) as [FilmsResponse, StuffResponse, Genre[], Country[], Media[], User[]];
+      ]) as [FilmsResponse, StuffResponse, Genre[], Country[], User[]];
       
       setFilms(filmsData);
       setStuff(stuffData);
       setGenres(genresData);
       setCountries(countriesData);
-      setMedia(mediaData);
       setUsers(usersData);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -196,33 +191,6 @@ export default function AdminPage() {
     }
   };
 
-  const handleMediaSubmit = async (mediaData: any) => {
-    try {
-      if (editingMedia) {
-        await AdminAPI.updateMedia(editingMedia.id, mediaData);
-        showMessage('Медиа обновлено');
-      } else {
-        await AdminAPI.createMedia(mediaData);
-        showMessage('Медиа создано');
-      }
-      setEditingMedia(undefined);
-      loadData();
-    } catch (error) {
-      console.error('Error saving media:', error);
-      showMessage('Ошибка сохранения медиа');
-    }
-  };
-
-  const handleDeleteMedia = async (mediaId: number) => {
-    try {
-      await AdminAPI.deleteMedia(mediaId);
-      showMessage('Медиа удалено');
-      loadData();
-    } catch (error) {
-      console.error('Error deleting media:', error);
-      showMessage('Ошибка удаления медиа');
-    }
-  };
 
   const handleUserSubmit = async (userData: any) => {
     try {
@@ -294,16 +262,6 @@ export default function AdminPage() {
             onDelete={handleDeleteCountry}
           />
         );
-      case '#media':
-        return (
-          <MediaSection
-            media={media}
-            editingMedia={editingMedia}
-            setEditingMedia={setEditingMedia}
-            onSubmit={handleMediaSubmit}
-            onDelete={handleDeleteMedia}
-          />
-        );
       case '#users':
         return (
           <UsersSection
@@ -346,14 +304,13 @@ export default function AdminPage() {
   
   return (
     <SidebarProvider>
-      <AdminSidebar 
+      <AdminSidebar
         activeTab={activeTab}
         counts={{
           films: films?.length,
           stuff: stuff?.total_count,
           genres: genres?.length,
           countries: countries?.length,
-          media: media?.length,
           users: users?.length,
         }}
       />

@@ -17,7 +17,6 @@ __all__ = (
     "Comment",
     "UserContentRating",
     "ContentUserRating",
-    "Media",
 )
 
 from .db_helper import db_helper
@@ -35,5 +34,4 @@ from .content_details import (
     SimilarContent
 )
 from .user_interactions import Bookmark, Comment, UserContentRating, ContentUserRating
-from .media import Media
 from .associations import content_genre, content_country, content_stuff

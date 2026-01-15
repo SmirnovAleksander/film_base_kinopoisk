@@ -7,7 +7,7 @@ from parser_utils.stuff_page_parser import ActorPageParser
 from parser_utils.film_series_images_parser import FilmImagesParser
 from parser_utils.stuff_images_parser import StuffImagesParser
 from parser_utils.stuff_filmography_parser import StuffFilmographyParser
-from config import DATABASE_CONFIG, DELAYS, PARSING_CONFIG, LOGGING_CONFIG
+from config import DATABASE_CONFIG, DELAYS, PARSING_CONFIG
 
 
 class MainParser:
@@ -17,7 +17,6 @@ class MainParser:
         self.db_config = DATABASE_CONFIG
         self.delays = DELAYS
         self.parsing_config = PARSING_CONFIG
-        self.logging_config = LOGGING_CONFIG
         
         # Инициализируем парсеры
         self.kinopoisk_parser = KinopoiskParser()
@@ -98,19 +97,6 @@ class MainParser:
                 films_total INTEGER,
                 career_start INTEGER,
                 photo_url VARCHAR(1000)
-            )
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS media (
-                id SERIAL PRIMARY KEY,
-                url VARCHAR(500) UNIQUE,
-                title VARCHAR(1000),
-                image_url VARCHAR(1000),
-                category VARCHAR(100),
-                publish_date VARCHAR(100),
-                card_type VARCHAR(20),
-                type VARCHAR(20) DEFAULT 'news',
-                parsed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """,
             """
@@ -1143,66 +1129,6 @@ class MainParser:
             )
         except Exception as e:
             print(f"❌ Ошибка создания связи похожих контентов: {e}")
-        finally:
-            cursor.close()
-    
-    def save_media_to_db(self, media_list):
-        """Сохраняет медиа контент в БД"""
-        if not self.db_connection or not media_list:
-            return
-        
-        cursor = self.db_connection.cursor()
-        
-        try:
-            for media_item in media_list:
-                # Проверяем, существует ли уже такой медиа контент
-                cursor.execute(
-                    "SELECT id FROM media WHERE url = %s",
-                    (media_item.get('url'),)
-                )
-                
-                if cursor.fetchone():
-                    # Обновляем существующий медиа контент
-                    cursor.execute("""
-                        UPDATE media SET
-                            title = %s,
-                            image_url = %s,
-                            category = %s,
-                            publish_date = %s,
-                            card_type = %s,
-                            type = %s,
-                            parsed_at = CURRENT_TIMESTAMP
-                        WHERE url = %s
-                    """, (
-                        media_item.get('title'),
-                        media_item.get('image_url'),
-                        media_item.get('category'),
-                        media_item.get('publish_date'),
-                        media_item.get('card_type'),
-                        media_item.get('type', 'news'),
-                        media_item.get('url')
-                    ))
-                else:
-                    # Вставляем новый медиа контент
-                    cursor.execute("""
-                        INSERT INTO media (url, title, image_url, category, publish_date, card_type, type)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)
-                    """, (
-                        media_item.get('url'),
-                        media_item.get('title'),
-                        media_item.get('image_url'),
-                        media_item.get('category'),
-                        media_item.get('publish_date'),
-                        media_item.get('card_type'),
-                        media_item.get('type', 'news')
-                    ))
-            
-            self.db_connection.commit()
-            print(f"✅ Сохранено {len(media_list)} медиа элементов в БД")
-            
-        except Exception as e:
-            self.db_connection.rollback()
-            print(f"❌ Ошибка сохранения медиа контента в БД: {e}")
         finally:
             cursor.close()
     

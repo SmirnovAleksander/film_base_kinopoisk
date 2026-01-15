@@ -29,7 +29,6 @@ interface AdminSidebarProps extends React.ComponentProps<typeof Sidebar> {
     stuff?: number
     genres?: number
     countries?: number
-    media?: number
     users?: number
   }
 }
@@ -60,12 +59,6 @@ export function AdminSidebar({ activeTab, counts, ...props }: AdminSidebarProps)
       url: "#countries",
       icon: Globe,
       count: counts?.countries,
-    },
-    {
-      title: "Медиа",
-      url: "#media",
-      icon: Newspaper,
-      count: counts?.media,
     },
     {
       title: "Пользователи",

@@ -3,7 +3,6 @@ import { AdminSeriesAPI } from './series.admin.api';
 import { AdminStuffAPI } from './stuff.admin.api';
 import { AdminGenresAPI } from './genres.admin.api';
 import { AdminCountriesAPI } from './countries.admin.api';
-import { AdminMediaAPI } from './media.admin.api';
 import { AdminUsersAPI } from './users.admin.api';
 import { AdminContentDetailsAPI } from './content-details.admin.api';
 
@@ -12,7 +11,6 @@ export * from './series.admin.api';
 export * from './stuff.admin.api';
 export * from './genres.admin.api';
 export * from './countries.admin.api';
-export * from './media.admin.api';
 export * from './users.admin.api';
 export * from './content-details.admin.api';
 
@@ -51,13 +49,6 @@ export class AdminAPI {
     static getCountryById = AdminCountriesAPI.getCountryById;
     static updateCountry = AdminCountriesAPI.updateCountry;
     static deleteCountry = AdminCountriesAPI.deleteCountry;
-
-    // Media
-    static createMedia = AdminMediaAPI.createMedia;
-    static getAllMedia = AdminMediaAPI.getAllMedia;
-    static getMediaById = AdminMediaAPI.getMediaById;
-    static updateMedia = AdminMediaAPI.updateMedia;
-    static deleteMedia = AdminMediaAPI.deleteMedia;
 
     // Users
     static createUser = AdminUsersAPI.createUser;

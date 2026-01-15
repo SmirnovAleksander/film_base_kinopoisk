@@ -8,7 +8,7 @@
 DATABASE_CONFIG = {
     'host': 'localhost',
     'port': 5432,
-    'database': 'film_base_kinopoisk',
+    'database': 'film_base',
     'user': 'postgres',
     'password': 'admin123'
 }
@@ -27,25 +27,4 @@ PARSING_CONFIG = {
     'START_PAGE': 1,          # Начальная страница
     'MAX_RETRIES': 3,         # Максимальное количество попыток при ошибках
     'TIMEOUT': 30             # Таймаут для HTTP запросов
-}
-
-# Настройки логирования
-LOGGING_CONFIG = {
-    'SHOW_PROGRESS': True,    # Показывать прогресс парсинга
-    'SHOW_DELAYS': True,      # Показывать информацию о паузах
-    'VERBOSE': True          # Подробные логи
-}
-
-# Настройки почты
-MAIL_CONFIG = {
-    "MAIL_USERNAME": "aleksander50.500@gmail.com",  # Твоя почта Gmail
-    "MAIL_PASSWORD": "yujb torm lmeg ywlw",     # Пароль приложения Gmail
-    "MAIL_FROM": "aleksander50.500@gmail.com",      # От кого отправлять
-    "MAIL_PORT": 587,                         # Порт SMTP
-    "MAIL_SERVER": "smtp.gmail.com",          # SMTP сервер Gmail
-    "MAIL_STARTTLS": True,                    # Использовать STARTTLS
-    "MAIL_SSL_TLS": False,                    # Не использовать SSL
-    "USE_CREDENTIALS": True,                 # Использовать аутентификацию
-    "VALIDATE_CERTS": True,                   # Проверять сертификаты
-    "FRONTEND_URL": "http://localhost:3000"   # URL фронтенда для ссылок
 }

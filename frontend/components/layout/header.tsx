@@ -102,7 +102,6 @@ export function Header() {
 
   const navigation = [
     { name: 'Фильмы', href: ROUTES.FILMS, icon: Film },
-    { name: 'Медиа', href: ROUTES.MEDIA, icon: ImageIcon },
     { name: 'Закладки', href: ROUTES.BOOKMARKS, icon: Heart, requireAuth: true },
     { name: 'История', href: ROUTES.HISTORY, icon: History },
   ];
