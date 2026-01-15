@@ -1,10 +1,8 @@
 import { apiClient } from './client.api';
 import {
-  Bookmark,
   BookmarkResponse,
   BookmarkStatusResponse,
   BookmarkOperationResponse,
-  UserFilmRating,
   UserRatingsResponse,
   FilmAverageRating,
   RatingCreate,

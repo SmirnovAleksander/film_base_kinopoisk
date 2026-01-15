@@ -5,8 +5,6 @@ import {
   Bookmark,
   UserFilmRating,
   Comment,
-  BookmarkResponse,
-  UserRatingsResponse,
   UserFilmRatingCreate,
   CommentCreate,
   CommentUpdate,

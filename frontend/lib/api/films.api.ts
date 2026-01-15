@@ -1,12 +1,10 @@
 import { apiClient } from './client.api';
 import type {
-  Film,
   FilmWithDetails,
   Genre,
   Country,
   FilmWatchProvider,
   SimilarFilm,
-  FilmRecommendation,
   FilmSearchResponse,
   FilmRecommendationsResponse,
   FilmFilterParams,
