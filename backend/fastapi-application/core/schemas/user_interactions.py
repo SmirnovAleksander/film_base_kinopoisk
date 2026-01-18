@@ -45,8 +45,9 @@ class CommentCreate(CommentBase):
     film_id: int = Field(..., description="ID фильма")
 
 
-class CommentUpdate(BaseModel):
-    content: str = Field(..., min_length=1, max_length=5000, description="Новое содержание комментария")
+class CommentUpdate(CommentBase):
+    """Схема для обновления комментария"""
+    pass
 
 
 class CommentRead(CommentBase):
@@ -98,5 +99,3 @@ class UserRatingsResponse(BaseModel):
     page: int
     page_size: int
     total_count: int
-
-

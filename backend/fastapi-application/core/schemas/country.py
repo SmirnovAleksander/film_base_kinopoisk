@@ -9,8 +9,8 @@ class CountryCreate(CountryBase):
     pass
 
 
-class CountryUpdate(BaseModel):
-    name: str = Field(..., max_length=100, description="Название страны")
+class CountryUpdate(CountryBase):
+    pass
 
 
 class CountryRead(CountryBase):

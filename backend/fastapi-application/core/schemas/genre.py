@@ -9,8 +9,8 @@ class GenreCreate(GenreBase):
     pass
 
 
-class GenreUpdate(BaseModel):
-    name: str = Field(..., max_length=100, description="Название жанра")
+class GenreUpdate(GenreBase):
+    pass
 
 
 class GenreRead(GenreBase):

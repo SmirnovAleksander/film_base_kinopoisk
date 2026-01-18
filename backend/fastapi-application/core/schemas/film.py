@@ -5,8 +5,7 @@ from .genre import GenreRead
 from .country import CountryRead
 
 
-class FilmBase(BaseModel):
-    kinopoisk_id: str = Field(..., max_length=20, description="ID в Кинопоиске")
+class FilmFieldsBase(BaseModel):
     title: Optional[str] = Field(None, max_length=500, description="Название фильма")
     original_title: Optional[str] = Field(None, max_length=500, description="Оригинальное название")
     description: Optional[str] = Field(None, description="Краткое описание")
@@ -17,17 +16,23 @@ class FilmBase(BaseModel):
     ru_premiere: Optional[str] = Field(None, max_length=100, description="Дата российской премьеры")
     world_premiere: Optional[str] = Field(None, max_length=100, description="Дата мировой премьеры")
     content_rating: Optional[str] = Field(None, max_length=20, description="Возрастной рейтинг")
-    is_family_friendly: bool = Field(False, description="Семейный фильм")
+    is_family_friendly: Optional[bool] = Field(None, description="Семейный фильм")
     duration: Optional[str] = Field(None, max_length=50, description="Продолжительность")
     rating_kp: Optional[float] = Field(None, description="Рейтинг Кинопоиска")
     kp_votes_count: Optional[str] = Field(None, max_length=50, description="Количество голосов КП")
     rating_imdb: Optional[float] = Field(None, description="Рейтинг IMDB")
     imdb_votes_count: Optional[str] = Field(None, max_length=50, description="Количество голосов IMDB")
     user_rating: Optional[float] = Field(None, description="Пользовательский рейтинг")
-    user_rating_count: int = Field(0, description="Количество пользовательских оценок")
+    user_rating_count: Optional[int] = Field(None, description="Количество пользовательских оценок")
     budget: Optional[str] = Field(None, max_length=100, description="Бюджет")
     usa_box_office: Optional[str] = Field(None, max_length=100, description="Сборы в США")
     rus_box_office: Optional[str] = Field(None, max_length=100, description="Сборы в России")
+
+
+class FilmBase(FilmFieldsBase):
+    kinopoisk_id: str = Field(..., max_length=20, description="ID в Кинопоиске")
+    is_family_friendly: bool = Field(False, description="Семейный фильм")
+    user_rating_count: int = Field(0, description="Количество пользовательских оценок")
 
 
 class FilmRead(FilmBase):
@@ -81,26 +86,6 @@ class FilmCreate(FilmBase):
     pass
 
 
-class FilmUpdate(BaseModel):
+class FilmUpdate(FilmFieldsBase):
     """Схема для обновления фильма"""
-    title: Optional[str] = Field(None, max_length=500, description="Название фильма")
-    original_title: Optional[str] = Field(None, max_length=500, description="Оригинальное название")
-    description: Optional[str] = Field(None, description="Краткое описание")
-    full_description: Optional[str] = Field(None, description="Полное описание")
-    poster: Optional[str] = Field(None, max_length=1000, description="URL постера")
-    year: Optional[int] = Field(None, description="Год выпуска")
-    tagline: Optional[str] = Field(None, description="Слоган")
-    ru_premiere: Optional[str] = Field(None, max_length=100, description="Дата российской премьеры")
-    world_premiere: Optional[str] = Field(None, max_length=100, description="Дата мировой премьеры")
-    content_rating: Optional[str] = Field(None, max_length=20, description="Возрастной рейтинг")
-    is_family_friendly: Optional[bool] = Field(None, description="Семейный фильм")
-    duration: Optional[str] = Field(None, max_length=50, description="Продолжительность")
-    rating_kp: Optional[float] = Field(None, description="Рейтинг Кинопоиска")
-    kp_votes_count: Optional[str] = Field(None, max_length=50, description="Количество голосов КП")
-    rating_imdb: Optional[float] = Field(None, description="Рейтинг IMDB")
-    imdb_votes_count: Optional[str] = Field(None, max_length=50, description="Количество голосов IMDB")
-    user_rating: Optional[float] = Field(None, description="Пользовательский рейтинг")
-    user_rating_count: Optional[int] = Field(None, description="Количество пользовательских оценок")
-    budget: Optional[str] = Field(None, max_length=100, description="Бюджет")
-    usa_box_office: Optional[str] = Field(None, max_length=100, description="Сборы в США")
-    rus_box_office: Optional[str] = Field(None, max_length=100, description="Сборы в России")
+    pass
