@@ -14,6 +14,9 @@ __all__ = (
     "SeriesReadWithDetails",
     "SeriesBase",
     "SeriesUpdate",
+    "SeriesSearchResponse",
+    "SeriesRecommendationRead",
+    "SeriesRecommendationsResponse",
     
     # Genre schemas
     "GenreRead",
@@ -92,6 +95,9 @@ from .series import (
     SeriesReadWithDetails,
     SeriesBase,
     SeriesUpdate,
+    SeriesSearchResponse,
+    SeriesRecommendationRead,
+    SeriesRecommendationsResponse,
 )
 
 from .genres import (

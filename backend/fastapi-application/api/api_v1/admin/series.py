@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 
 from core.models import db_helper, Series
 from core.schemas import (
@@ -34,7 +35,10 @@ async def create_series(
     new_series = Series(**series_data.model_dump(exclude_unset=True))
     session.add(new_series)
     await session.commit()
-    await session.refresh(new_series)
+    
+    # Перезагружаем со связями
+    stmt = select(Series).options(selectinload(Series.user_rating)).where(Series.id == new_series.id)
+    new_series = (await session.execute(stmt)).scalar_one()
 
     return SeriesRead.model_validate(new_series)
 
@@ -51,6 +55,7 @@ async def list_series_admin(
 
     stmt = (
         select(Series)
+        .options(selectinload(Series.user_rating))
         .order_by(Series.id)
         .offset(offset)
         .limit(page_size)
@@ -68,7 +73,7 @@ async def get_series_admin(
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     """Получить детали сериала по ID (только для суперпользователя)"""
-    stmt = select(Series).where(Series.id == series_id)
+    stmt = select(Series).options(selectinload(Series.user_rating)).where(Series.id == series_id)
     result = await session.execute(stmt)
     series = result.scalar_one_or_none()
 
@@ -86,7 +91,7 @@ async def update_series_admin(
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     """Обновить сериал (только для суперпользователя)"""
-    stmt = select(Series).where(Series.id == series_id)
+    stmt = select(Series).options(selectinload(Series.user_rating)).where(Series.id == series_id)
     result = await session.execute(stmt)
     series = result.scalar_one_or_none()
 
@@ -98,7 +103,10 @@ async def update_series_admin(
         setattr(series, field, value)
 
     await session.commit()
-    await session.refresh(series)
+    
+    # Перезагружаем со связями
+    stmt = select(Series).options(selectinload(Series.user_rating)).where(Series.id == series_id)
+    series = (await session.execute(stmt)).scalar_one()
 
     return SeriesRead.model_validate(series)
 

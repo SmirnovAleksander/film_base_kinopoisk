@@ -301,7 +301,10 @@ async def get_user_ratings(
     # Получаем рейтинги с информацией о контенте
     ratings_stmt = (
         select(UserContentRating)
-        .options(selectinload(UserContentRating.film), selectinload(UserContentRating.series))
+        .options(
+            selectinload(UserContentRating.film).selectinload(Film.user_rating),
+            selectinload(UserContentRating.series).selectinload(Series.user_rating)
+        )
         .where(UserContentRating.user_id == user_id)
         .order_by(UserContentRating.updated_at.desc())
         .offset(offset)

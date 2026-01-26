@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, TYPE_CHECKING
-from sqlalchemy import Integer, Text, Float, Boolean, DateTime, ForeignKey, UniqueConstraint, String
+from sqlalchemy import Integer, Text, Float, Boolean, DateTime, ForeignKey, UniqueConstraint, String, DECIMAL
 from sqlalchemy.orm import Mapped, mapped_column, relationship, foreign
 from sqlalchemy.sql import func
 
@@ -109,7 +109,7 @@ class ContentUserRating(Base, IntIdPkMixin):
     
     content_id: Mapped[int] = mapped_column(Integer, nullable=False)
     content_type: Mapped[str] = mapped_column(String(20), nullable=False)
-    rating_user: Mapped[float] = mapped_column(Float, default=0)
+    rating_user: Mapped[float] = mapped_column(DECIMAL(3, 1), default=0)
     votes_user: Mapped[int] = mapped_column(Integer, default=0)
     
     __table_args__ = (

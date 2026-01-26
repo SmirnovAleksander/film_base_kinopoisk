@@ -53,6 +53,7 @@ async def list_films(
     # Получаем фильмы для текущей страницы
     stmt = (
         select(Film)
+        .options(selectinload(Film.user_rating))
         .order_by(Film.id)
         .offset(offset)
         .limit(page_size)
@@ -95,6 +96,7 @@ async def search_films(
     # Получаем фильмы
     stmt = (
         select(Film)
+        .options(selectinload(Film.user_rating))
         .where(search_column.ilike(pattern))
         .order_by(Film.rating_kp.desc().nullslast(), Film.id)
         .offset(offset)
@@ -109,28 +111,6 @@ async def search_films(
         page_size=page_size,
         total_count=total_count or 0,
     )
-
-
-# GET /api/v1/films/genres - Получить список всех доступных жанров для фильтрации
-@router.get("/genres", response_model=List[GenreRead], summary="Все жанры")
-async def list_genres(session: AsyncSession = Depends(db_helper.session_getter)):
-    """Получить список всех жанров"""
-    stmt = select(Genre).order_by(Genre.name)
-    result = await session.execute(stmt)
-    genres = result.scalars().all()
-    
-    return [GenreRead.model_validate(genre) for genre in genres]
-
-
-# GET /api/v1/films/countries - Получить список всех доступных стран для фильтрации
-@router.get("/countries", response_model=List[CountryRead], summary="Все страны")
-async def list_countries(session: AsyncSession = Depends(db_helper.session_getter)):
-    """Получить список всех стран"""
-    stmt = select(Country).order_by(Country.name)
-    result = await session.execute(stmt)
-    countries = result.scalars().all()
-    
-    return [CountryRead.model_validate(country) for country in countries]
 
 
 # GET /api/v1/films/filter?genre_id=1&start_year=2020 - Расширенный поиск фильмов по нескольким критериям
@@ -208,7 +188,13 @@ async def films_filter(
     total_count = total_count_result.scalar()
     
     # Получаем фильмы
-    stmt = stmt.order_by(Film.id).offset(offset).limit(page_size)
+    stmt = (
+        stmt
+        .options(selectinload(Film.user_rating))
+        .order_by(Film.id)
+        .offset(offset)
+        .limit(page_size)
+    )
     result = await session.execute(stmt)
     films = result.scalars().all()
     
@@ -218,34 +204,6 @@ async def films_filter(
         page_size=page_size,
         total_count=total_count or 0,
     )
-
-
-# GET /api/v1/films/1 - Получить полную информацию о фильме по его внутреннему ID
-@router.get("/{film_id}", response_model=FilmReadWithDetails, summary="Детали фильма")
-async def get_film(
-    film_id: int,
-    session: AsyncSession = Depends(db_helper.session_getter),
-):
-    """Получить детали фильма по ID"""
-    stmt = (
-        select(Film)
-        .options(
-            selectinload(Film.genres),
-            selectinload(Film.countries),
-            selectinload(Film.stuff),
-            selectinload(Film.images),
-            selectinload(Film.watch_providers),
-            selectinload(Film.similar_content),
-        )
-        .where(Film.id == film_id)
-    )
-    result = await session.execute(stmt)
-    film = result.scalar_one_or_none()
-    
-    if not film:
-        raise HTTPException(status_code=404, detail="Film not found")
-    
-    return FilmReadWithDetails.model_validate(film)
 
 
 # GET /api/v1/films/kinopoisk/258687 - Найти фильм в базе по его оригинальному ID Кинопоиска
@@ -264,8 +222,38 @@ async def get_film_by_kinopoisk_id(
             selectinload(Film.images),
             selectinload(Film.watch_providers),
             selectinload(Film.similar_content),
+            selectinload(Film.user_rating),
         )
         .where(Film.kinopoisk_id == kinopoisk_id)
+    )
+    result = await session.execute(stmt)
+    film = result.scalar_one_or_none()
+    
+    if not film:
+        raise HTTPException(status_code=404, detail="Film not found")
+    
+    return FilmReadWithDetails.model_validate(film)
+
+
+# GET /api/v1/films/1 - Получить полную информацию о фильме по его внутреннему ID
+@router.get("/{film_id}", response_model=FilmReadWithDetails, summary="Детали фильма")
+async def get_film(
+    film_id: int,
+    session: AsyncSession = Depends(db_helper.session_getter),
+):
+    """Получить детали фильма по ID"""
+    stmt = (
+        select(Film)
+        .options(
+            selectinload(Film.genres),
+            selectinload(Film.countries),
+            selectinload(Film.stuff),
+            selectinload(Film.images),
+            selectinload(Film.watch_providers),
+            selectinload(Film.similar_content),
+            selectinload(Film.user_rating),
+        )
+        .where(Film.id == film_id)
     )
     result = await session.execute(stmt)
     film = result.scalar_one_or_none()
@@ -435,7 +423,8 @@ async def get_film_recommendations(
         select(Film)
         .options(
             selectinload(Film.genres),
-            selectinload(Film.stuff)
+            selectinload(Film.stuff),
+            selectinload(Film.user_rating)
         )
         .where(Film.id != film_id)
         .where(Film.title_ru.isnot(None))

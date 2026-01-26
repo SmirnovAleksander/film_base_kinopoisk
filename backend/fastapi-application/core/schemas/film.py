@@ -16,7 +16,7 @@ class FilmBase(BaseModel):
     title_ru: Optional[str] = Field(None, max_length=500, description="Название фильма")
     title_en: Optional[str] = Field(None, max_length=500, description="Оригинальное название")
     description_short: Optional[str] = Field(None, description="Краткое описание")
-    description_full: Optional[Optional[str]] = Field(None, description="Полное описание")
+    description_full: Optional[str] = Field(None, description="Полное описание")
     poster_url: Optional[str] = Field(None, max_length=1000, description="URL постера")
     release_year: Optional[int] = Field(None, description="Год выпуска")
     tagline: Optional[str] = Field(None, description="Слоган")
@@ -29,8 +29,6 @@ class FilmBase(BaseModel):
     votes_kp: Optional[int] = Field(None, description="Количество голосов КП")
     rating_imdb: Optional[float] = Field(None, description="Рейтинг IMDB")
     votes_imdb: Optional[int] = Field(None, description="Количество голосов IMDB")
-    rating_user: Optional[float] = Field(None, description="Пользовательский рейтинг")
-    votes_user: int = Field(0, description="Количество пользовательских оценок")
     budget: Optional[str] = Field(None, max_length=100, description="Бюджет")
     box_office_usa: Optional[str] = Field(None, max_length=100, description="Сборы в США")
     box_office_rus: Optional[str] = Field(None, max_length=100, description="Сборы в России")
@@ -40,6 +38,8 @@ class FilmRead(FilmBase):
     model_config = ConfigDict(from_attributes=True)
     
     id: int
+    rating_user: Optional[float] = Field(None, description="Пользовательский рейтинг")
+    votes_user: int = Field(0, description="Количество пользовательских оценок")
 
 
 class FilmReadWithDetails(FilmRead):
@@ -108,5 +108,6 @@ class FilmUpdate(BaseModel):
     votes_kp: Optional[int] = None
     rating_imdb: Optional[float] = None
     votes_imdb: Optional[int] = None
-    rating_user: Optional[float] = None
-    votes_user: Optional[int] = None
+    budget: Optional[str] = Field(None, max_length=100)
+    box_office_usa: Optional[str] = Field(None, max_length=100)
+    box_office_rus: Optional[str] = Field(None, max_length=100)

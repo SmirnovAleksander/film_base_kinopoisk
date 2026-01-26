@@ -47,7 +47,10 @@ async def list_bookmarks(
     
     stmt = (
         select(Bookmark)
-        .options(selectinload(Bookmark.film), selectinload(Bookmark.series))
+        .options(
+            selectinload(Bookmark.film).selectinload(Film.user_rating),
+            selectinload(Bookmark.series).selectinload(Series.user_rating)
+        )
         .where(Bookmark.user_id == user.id)
         .order_by(Bookmark.created_at.desc())
         .offset(offset)

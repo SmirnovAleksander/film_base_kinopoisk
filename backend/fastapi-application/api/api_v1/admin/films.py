@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 
 from core.models import db_helper, Film
 from core.schemas import (
@@ -36,7 +37,10 @@ async def create_film(
     new_film = Film(**film_data.model_dump(exclude_unset=True))
     session.add(new_film)
     await session.commit()
-    await session.refresh(new_film)
+    
+    # Перезагружаем со связями для валидации схемы
+    stmt = select(Film).options(selectinload(Film.user_rating)).where(Film.id == new_film.id)
+    new_film = (await session.execute(stmt)).scalar_one()
 
     return FilmRead.model_validate(new_film)
 
@@ -59,6 +63,7 @@ async def list_films_admin(
     # Получаем фильмы для текущей страницы
     stmt = (
         select(Film)
+        .options(selectinload(Film.user_rating))
         .order_by(Film.id)
         .offset(offset)
         .limit(page_size)
@@ -76,7 +81,7 @@ async def get_film_admin(
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     """Получить детали фильма по ID (только для суперпользователя)"""
-    stmt = select(Film).where(Film.id == film_id)
+    stmt = select(Film).options(selectinload(Film.user_rating)).where(Film.id == film_id)
     result = await session.execute(stmt)
     film = result.scalar_one_or_none()
 
@@ -94,7 +99,7 @@ async def update_film_admin(
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     """Обновить фильм (только для суперпользователя)"""
-    stmt = select(Film).where(Film.id == film_id)
+    stmt = select(Film).options(selectinload(Film.user_rating)).where(Film.id == film_id)
     result = await session.execute(stmt)
     film = result.scalar_one_or_none()
 
@@ -107,7 +112,10 @@ async def update_film_admin(
         setattr(film, field, value)
 
     await session.commit()
-    await session.refresh(film)
+    
+    # Перезагружаем со связями для валидации схемы
+    stmt = select(Film).options(selectinload(Film.user_rating)).where(Film.id == film_id)
+    film = (await session.execute(stmt)).scalar_one()
 
     return FilmRead.model_validate(film)
 

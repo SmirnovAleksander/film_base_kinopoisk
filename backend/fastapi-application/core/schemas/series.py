@@ -28,8 +28,6 @@ class SeriesBase(BaseModel):
     votes_kp: Optional[int] = Field(None, description="Количество голосов КП")
     rating_imdb: Optional[float] = Field(None, description="Рейтинг IMDB")
     votes_imdb: Optional[int] = Field(None, description="Количество голосов IMDB")
-    rating_user: Optional[float] = Field(None, description="Пользовательский рейтинг")
-    votes_user: int = Field(0, description="Количество пользовательских оценок")
     platform: Optional[str] = Field(None, max_length=200, description="Платформа")
     episodes_count: Optional[int] = Field(None, description="Количество эпизодов")
 
@@ -38,6 +36,17 @@ class SeriesRead(SeriesBase):
     model_config = ConfigDict(from_attributes=True)
     
     id: int
+    rating_user: Optional[float] = Field(None, description="Пользовательский рейтинг")
+    votes_user: int = Field(0, description="Количество пользовательских оценок")
+
+
+class SeriesSearchResponse(BaseModel):
+    """Ответ для поиска сериалов"""
+    items: List[SeriesRead]
+    page: int
+    page_size: int
+    total_count: int
+
 
 
 class SeriesReadWithDetails(SeriesRead):
@@ -66,7 +75,17 @@ class SeriesUpdate(BaseModel):
     votes_kp: Optional[int] = None
     rating_imdb: Optional[float] = None
     votes_imdb: Optional[int] = None
-    rating_user: Optional[float] = None
-    votes_user: Optional[int] = None
     platform: Optional[str] = Field(None, max_length=200)
     episodes_count: Optional[int] = None
+
+class SeriesRecommendationRead(SeriesRead):
+    """Рекомендация сериала"""
+    relevance_score: float = Field(..., description="Оценка релевантности")
+    genre_matches: int = Field(..., description="Совпадения по жанрам")
+    stuff_matches: int = Field(..., description="Совпадения по участникам")
+
+
+class SeriesRecommendationsResponse(BaseModel):
+    """Ответ для рекомендаций сериалов"""
+    items: List[SeriesRecommendationRead]
+    total_count: int

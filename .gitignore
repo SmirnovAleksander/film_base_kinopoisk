@@ -187,3 +187,4 @@ parser/parser_utils/output/
 
 parser/output
 parser/images
+poetry.lock
