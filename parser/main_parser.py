@@ -541,7 +541,7 @@ class MainParser:
             print(f"❌ Общая ошибка сохранения кадров: {e}")
             try:
                 self.db_connection.rollback()
-            except:
+            except Exception:
                 pass
         finally:
             cursor.close()

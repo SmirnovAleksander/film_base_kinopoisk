@@ -654,7 +654,7 @@ class FilmPageParser:
                                             'url': url,
                                             'logo': logo_url
                                         })
-            except Exception as e:
+            except Exception:
                 # print(f"Ошибка при разборе JSON __NEXT_DATA__: {e}")
                 pass
                         

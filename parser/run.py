@@ -8,7 +8,6 @@
 import sys
 import os
 import json
-from datetime import datetime
 
 # Добавляем путь к модулям парсера
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -194,7 +193,7 @@ def run_parser_online():
             parser.save_to_json(films, output_file)
             print(f"✓ Данные сохранены в {output_file}")
             
-            print(f"\n=== Статистика ===")
+            print("\n=== Статистика ===")
             print(f"Всего фильмов: {len(films)}")
             films_with_rating = [f for f in films if f.get('rating') and f['rating'] != 'Неизвестно']
             print(f"Фильмов с рейтингом: {len(films_with_rating)}")
