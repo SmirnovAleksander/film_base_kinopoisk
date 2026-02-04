@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   Pagination,
@@ -43,6 +43,16 @@ export default function FilmsPage() {
     fetchCountries();
   }, [fetchGenres, fetchCountries]);
 
+  // Обработчики для FilmsFilters
+  const handleSearch = useCallback(async (query: string) => {
+    setSearchQuery(query);
+    await searchFilms({
+      query: query.trim(),
+      page: 1,
+      page_size: pageSize,
+    });
+  }, [pageSize, searchFilms, setSearchQuery]);
+
   // Обработка URL параметров при загрузке
   useEffect(() => {
     const search = searchParams.get('search');
@@ -74,17 +84,7 @@ export default function FilmsPage() {
       };
       filterFilms(filterParams);
     }
-  }, [searchParams]);
-
-  // Обработчики для FilmsFilters
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    await searchFilms({
-      query: query.trim(),
-      page: 1,
-      page_size: pageSize,
-    });
-  };
+  }, [searchParams, filterFilms, handleSearch, pageSize]);
 
   const handleFilterApply = async (filterParams: FilmFilterParams) => {
     setFilters(filterParams);
@@ -139,6 +139,7 @@ export default function FilmsPage() {
       </div>
 
       <FilmsFilters
+        key={`${searchQuery}-${JSON.stringify(filters)}`}
         genres={genres}
         countries={countries}
         searchQuery={searchQuery}

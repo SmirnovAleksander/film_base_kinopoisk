@@ -22,7 +22,7 @@ interface BaseFilmStuff {
     role?: string | null;
 }
 
-export interface FilmStuffUpdate extends BaseFilmStuff { }
+export type FilmStuffUpdate = BaseFilmStuff;
 
 export interface FilmStuffCreate extends BaseFilmStuff {
     film_id: number;

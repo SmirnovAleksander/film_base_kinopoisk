@@ -21,4 +21,3 @@ from .user import User
 from .access_token import AccessToken
 from .film import Film, Genre, Country, Stuff, FilmStill, FilmWatchProvider, SimilarFilm
 from .user_interactions import Bookmark, Comment, UserFilmRating
-from .associations import film_genre, film_country, film_stuff

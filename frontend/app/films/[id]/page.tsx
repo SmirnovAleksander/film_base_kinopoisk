@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import {
@@ -79,32 +79,7 @@ export default function FilmDetailsPage() {
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingContent, setEditingContent] = useState('');
 
-  useEffect(() => {
-    if (filmId) {
-      fetchFilmDetails(filmId);
-      fetchFilmComments(filmId);
-      loadFilmStuff();
-      loadFilmStills();
-      loadRecommendedFilms();
-      loadSimilarFilms();
-      loadWatchProviders();
-    }
-  }, [filmId]);
-
-  // Добавляем в историю просмотров
-  useEffect(() => {
-    if (currentFilm) {
-      addToHistory({
-        id: currentFilm.id,
-        type: 'film',
-        title: currentFilm.title || currentFilm.original_title || 'Фильм',
-        image: currentFilm.poster,
-        description: currentFilm.year ? String(currentFilm.year) : undefined,
-      });
-    }
-  }, [currentFilm, addToHistory]);
-
-  const loadFilmStuff = async () => {
+  const loadFilmStuff = useCallback(async () => {
     try {
       setIsLoadingStuff(true);
       const stuff = await FilmsAPI.getFilmStuff(filmId);
@@ -114,9 +89,9 @@ export default function FilmDetailsPage() {
     } finally {
       setIsLoadingStuff(false);
     }
-  };
+  }, [filmId]);
 
-  const loadFilmStills = async () => {
+  const loadFilmStills = useCallback(async () => {
     try {
       setIsLoadingStills(true);
       const stills = await FilmsAPI.getFilmStills(filmId);
@@ -126,9 +101,9 @@ export default function FilmDetailsPage() {
     } finally {
       setIsLoadingStills(false);
     }
-  };
+  }, [filmId]);
 
-  const loadRecommendedFilms = async () => {
+  const loadRecommendedFilms = useCallback(async () => {
     try {
       setIsLoadingRecommendations(true);
       const recommendations = await FilmsAPI.getFilmRecommendations(filmId, 10);
@@ -138,9 +113,9 @@ export default function FilmDetailsPage() {
     } finally {
       setIsLoadingRecommendations(false);
     }
-  };
+  }, [filmId]);
 
-  const loadSimilarFilms = async () => {
+  const loadSimilarFilms = useCallback(async () => {
     try {
       setIsLoadingSimilar(true);
       const similar = await FilmsAPI.getSimilarFilms(filmId);
@@ -153,7 +128,7 @@ export default function FilmDetailsPage() {
         try {
           const filmData = await FilmsAPI.getFilmByKinopoiskId(kinopoiskId);
           filmStatuses[kinopoiskId] = { existsInDb: true, filmData };
-        } catch (error) {
+        } catch {
           // Фильм не найден в базе
           filmStatuses[kinopoiskId] = { existsInDb: false };
         }
@@ -166,9 +141,9 @@ export default function FilmDetailsPage() {
     } finally {
       setIsLoadingSimilar(false);
     }
-  };
+  }, [filmId]);
 
-  const loadWatchProviders = async () => {
+  const loadWatchProviders = useCallback(async () => {
     try {
       setIsLoadingWatchProviders(true);
       const providers = await FilmsAPI.getFilmWatchProviders(filmId);
@@ -178,7 +153,31 @@ export default function FilmDetailsPage() {
     } finally {
       setIsLoadingWatchProviders(false);
     }
-  };
+  }, [filmId]);
+
+  useEffect(() => {
+    if (filmId) {
+      fetchFilmDetails(filmId);
+      fetchFilmComments(filmId);
+      loadFilmStuff();
+      loadFilmStills();
+      loadRecommendedFilms();
+      loadSimilarFilms();
+      loadWatchProviders();
+    }
+  }, [filmId, fetchFilmDetails, fetchFilmComments, loadFilmStuff, loadFilmStills, loadRecommendedFilms, loadSimilarFilms, loadWatchProviders]);
+
+  useEffect(() => {
+    if (currentFilm) {
+      addToHistory({
+        id: currentFilm.id,
+        type: 'film',
+        title: currentFilm.title || currentFilm.original_title || 'Фильм',
+        image: currentFilm.poster,
+        description: currentFilm.year ? String(currentFilm.year) : undefined,
+      });
+    }
+  }, [currentFilm, addToHistory]);
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -303,8 +302,8 @@ export default function FilmDetailsPage() {
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg" />
                     <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Button 
-                        className="w-full" 
+                      <Button
+                        className="w-full"
                         size="lg"
                         onClick={(e) => {
                           e.preventDefault();
@@ -342,7 +341,7 @@ export default function FilmDetailsPage() {
               )}
               {currentFilm.tagline && (
                 <p className="text-lg italic text-muted-foreground border-l-4 border-primary pl-4">
-                  "{currentFilm.tagline}"
+                  &quot;{currentFilm.tagline}&quot;
                 </p>
               )}
             </div>
@@ -544,8 +543,8 @@ export default function FilmDetailsPage() {
           </section>
         )}
 
-         {/* Провайдеры для просмотра */}
-         {allWatchProviders.length > 0 && (
+        {/* Провайдеры для просмотра */}
+        {allWatchProviders.length > 0 && (
           <section className="space-y-6">
             <Card className="border-0 shadow-xl">
               <CardHeader>
@@ -555,66 +554,66 @@ export default function FilmDetailsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                 {isLoadingWatchProviders ? (
-                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
-                     {Array.from({ length: 8 }).map((_, i) => (
-                       <div key={i} className="space-y-2">
-                         <Skeleton className="h-12 w-full rounded-lg" />
-                         <Skeleton className="h-3 w-3/4 mx-auto" />
-                       </div>
-                     ))}
-                   </div>
-                 ) : (
-                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
-                     {allWatchProviders.map((provider, index) => {
-                       const isReyohoho = provider.name === 'reyohoho';
-                       const providerCard = (
-                         <a
-                           key={provider.id || `reyohoho-${index}`}
-                           href={provider.url}
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           className="group flex flex-col items-center gap-2 p-3 rounded-lg border border-border hover:border-primary hover:bg-accent transition-all duration-200"
-                         >
-                           {provider.logo ? (
-                             <div className="relative w-12 h-12 flex items-center justify-center">
-                               <Image
-                                 src={provider.logo}
-                                 alt={provider.name}
-                                 fill
-                                 className="object-contain"
-                                 unoptimized
-                               />
-                             </div>
-                           ) : (
-                             <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                               <Play className="h-6 w-6 text-muted-foreground" />
-                             </div>
-                           )}
-                           <span className="text-xs font-medium text-center group-hover:text-primary transition-colors line-clamp-2 leading-tight">
-                             {provider.name}
-                           </span>
-                           <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-0.5" />
-                         </a>
-                       );
+                {isLoadingWatchProviders ? (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="space-y-2">
+                        <Skeleton className="h-12 w-full rounded-lg" />
+                        <Skeleton className="h-3 w-3/4 mx-auto" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+                    {allWatchProviders.map((provider, index) => {
+                      const isReyohoho = provider.name === 'reyohoho';
+                      const providerCard = (
+                        <a
+                          key={provider.id || `reyohoho-${index}`}
+                          href={provider.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group flex flex-col items-center gap-2 p-3 rounded-lg border border-border hover:border-primary hover:bg-accent transition-all duration-200"
+                        >
+                          {provider.logo ? (
+                            <div className="relative w-12 h-12 flex items-center justify-center">
+                              <Image
+                                src={provider.logo}
+                                alt={provider.name}
+                                fill
+                                className="object-contain"
+                                unoptimized
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                              <Play className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                          )}
+                          <span className="text-xs font-medium text-center group-hover:text-primary transition-colors line-clamp-2 leading-tight">
+                            {provider.name}
+                          </span>
+                          <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-0.5" />
+                        </a>
+                      );
 
-                       if (isReyohoho) {
-                         return (
-                           <Tooltip key={provider.id || `reyohoho-${index}`}>
-                             <TooltipTrigger asChild>
-                               {providerCard}
-                             </TooltipTrigger>
-                             <TooltipContent>
-                               <p>Бесплатно</p>
-                             </TooltipContent>
-                           </Tooltip>
-                         );
-                       }
+                      if (isReyohoho) {
+                        return (
+                          <Tooltip key={provider.id || `reyohoho-${index}`}>
+                            <TooltipTrigger asChild>
+                              {providerCard}
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Бесплатно</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      }
 
-                       return providerCard;
-                     })}
-                   </div>
-                 )}
+                      return providerCard;
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </section>

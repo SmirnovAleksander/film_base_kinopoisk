@@ -19,7 +19,8 @@ interface NavMainProps {
 
 export function NavMain({ items, activeTab }: NavMainProps) {
   const handleClick = (url: string) => {
-    window.location.hash = url
+    window.history.pushState(null, '', url)
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
   }
 
   return (

@@ -52,6 +52,7 @@ export default function FilmsSection({
         <CardContent>
           <ScrollArea>
             <FilmForm
+              key={isCreating ? 'new' : editingFilm?.id}
               film={isCreating ? null : editingFilm}
               onSubmit={onSubmit}
               onCancel={() => setEditingFilm(undefined)}

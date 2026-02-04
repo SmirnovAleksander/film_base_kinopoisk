@@ -78,17 +78,7 @@ export function FilmCard({ film, showActions = true, isExternal = false, externa
     return 'text-red-500';
   };
 
-  const LinkWrapper = isExternal && externalUrl
-    ? ({ children }: { children: React.ReactNode }) => (
-      <a href={externalUrl} target="_blank" rel="noopener noreferrer" className="block">
-        {children}
-      </a>
-    )
-    : ({ children }: { children: React.ReactNode }) => (
-      <Link href={ROUTES.FILM_DETAILS(film.id)} className="block">
-        {children}
-      </Link>
-    );
+
 
   const cardContent = (
     <>
@@ -225,9 +215,15 @@ export function FilmCard({ film, showActions = true, isExternal = false, externa
 
   return (
     <Card className={`group overflow-hidden transition-all duration-200 pt-0 hover:shadow-lg ${className}`}>
-      <LinkWrapper>
-        {cardContent}
-      </LinkWrapper>
+      {isExternal && externalUrl ? (
+        <a href={externalUrl} target="_blank" rel="noopener noreferrer" className="block">
+          {cardContent}
+        </a>
+      ) : (
+        <Link href={ROUTES.FILM_DETAILS(film.id)} className="block">
+          {cardContent}
+        </Link>
+      )}
     </Card>
   );
 }

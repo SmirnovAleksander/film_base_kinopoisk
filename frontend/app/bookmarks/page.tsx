@@ -11,7 +11,6 @@ import { ROUTES } from '@/lib/config';
 export default function BookmarksPage() {
   const {
     bookmarks,
-    isLoadingBookmarks,
     fetchBookmarks,
     removeBookmark,
     bookmarksPage,

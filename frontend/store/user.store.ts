@@ -179,7 +179,7 @@ export const useUserInteractionsStore = create<UserInteractionsState>((set, get)
     try {
       const status = await UserInteractionsAPI.getBookmarkStatus(filmId);
       return status.is_bookmarked;
-    } catch (error) {
+    } catch {
       return false;
     }
   },

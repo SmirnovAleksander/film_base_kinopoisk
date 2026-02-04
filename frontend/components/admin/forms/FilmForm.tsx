@@ -1,27 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { 
-  FilmWithDetails, 
-  FilmCreate, 
+import {
+  FilmWithDetails,
+  FilmCreate,
   FilmUpdate,
   SimilarFilmRead,
   SimilarFilmCreate,
-  SimilarFilmUpdate,
   FilmStill,
   FilmStillCreate,
-  FilmStillUpdate,
   FilmWatchProviderRead,
   FilmWatchProviderCreate,
-  FilmWatchProviderUpdate,
   FilmGenreRead,
   FilmGenreCreate,
   FilmCountryRead,
   FilmCountryCreate,
   FilmStuffRead,
   FilmStuffCreate,
-  FilmStuffUpdate,
   Genre,
   Country,
   Stuff,
@@ -115,7 +111,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
   const [filmGenres, setFilmGenres] = useState<FilmGenreRead[]>([]);
   const [filmCountries, setFilmCountries] = useState<FilmCountryRead[]>([]);
   const [filmStuff, setFilmStuff] = useState<FilmStuffRead[]>([]);
-  
+
   // Справочники
   const [genres, setGenres] = useState<Genre[]>([]);
   const [countries, setCountries] = useState<Country[]>([]);
@@ -168,26 +164,19 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
     role: null,
   });
 
-  useEffect(() => {
-    if (film?.id) {
-      loadRelatedData();
-      loadReferenceData();
-    }
-  }, [film?.id]);
-
-  const loadRelatedData = async () => {
+  const loadRelatedData = useCallback(async () => {
     if (!film?.id) return;
-    
+
     try {
       const [similar, stills, providers, genres, countries, stuff] = await Promise.all([
-        AdminAPI.getAllSimilarFilms(1, 100).then(data => data.filter(item => item.film_id === film.id)),
-        AdminAPI.getAllFilmStills(1, 100).then(data => data.filter(item => item.film_id === film.id)),
-        AdminAPI.getAllFilmWatchProviders(1, 100).then(data => data.filter(item => item.film_id === film.id)),
-        AdminAPI.getAllFilmGenres(1, 100).then(data => data.filter(item => item.film_id === film.id)),
-        AdminAPI.getAllFilmCountries(1, 100).then(data => data.filter(item => item.film_id === film.id)),
-        AdminAPI.getAllFilmStuff(1, 100).then(data => data.filter(item => item.film_id === film.id)),
+        AdminAPI.getAllSimilarFilms(1, 100).then(data => data.filter(item => item.film_id === (film?.id as number))),
+        AdminAPI.getAllFilmStills(1, 100).then(data => data.filter(item => item.film_id === (film?.id as number))),
+        AdminAPI.getAllFilmWatchProviders(1, 100).then(data => data.filter(item => item.film_id === (film?.id as number))),
+        AdminAPI.getAllFilmGenres(1, 100).then(data => data.filter(item => item.film_id === (film?.id as number))),
+        AdminAPI.getAllFilmCountries(1, 100).then(data => data.filter(item => item.film_id === (film?.id as number))),
+        AdminAPI.getAllFilmStuff(1, 100).then(data => data.filter(item => item.film_id === (film?.id as number))),
       ]);
-      
+
       setSimilarFilms(similar);
       setFilmStills(stills);
       setFilmWatchProviders(providers);
@@ -197,23 +186,34 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
     } catch (error) {
       console.error('Error loading related data:', error);
     }
-  };
+  }, [film?.id]);
 
-  const loadReferenceData = async () => {
+  const loadReferenceData = useCallback(async () => {
     try {
       const [genresData, countriesData, stuffData] = await Promise.all([
         AdminAPI.getAllGenres(),
         AdminAPI.getAllCountries(),
         AdminAPI.getAllStuffAll(),
       ]);
-      
+
       setGenres(genresData);
       setCountries(countriesData);
       setStuff(Array.isArray(stuffData) ? stuffData : []);
     } catch (error) {
       console.error('Error loading reference data:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const initData = async () => {
+      if (film?.id) {
+        await loadRelatedData();
+        await loadReferenceData();
+      }
+    };
+
+    initData();
+  }, [film?.id, loadRelatedData, loadReferenceData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -248,7 +248,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
   const handleSimilarFilmSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!film?.id) return;
-    
+
     try {
       if (editingSimilarFilm) {
         await AdminAPI.updateSimilarFilm(editingSimilarFilm.id, similarFilmForm);
@@ -285,7 +285,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
   const handleFilmStillSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!film?.id) return;
-    
+
     try {
       if (editingFilmStill) {
         await AdminAPI.updateFilmStill(editingFilmStill.id, filmStillForm);
@@ -319,7 +319,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
   const handleFilmWatchProviderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!film?.id) return;
-    
+
     try {
       if (editingFilmWatchProvider) {
         await AdminAPI.updateFilmWatchProvider(editingFilmWatchProvider.id, filmWatchProviderForm);
@@ -353,7 +353,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
   const handleFilmGenreSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!film?.id || !filmGenreForm.genre_id) return;
-    
+
     try {
       await AdminAPI.createFilmGenre({ ...filmGenreForm, film_id: film.id });
       setFilmGenreForm({ film_id: film.id, genre_id: 0 });
@@ -377,7 +377,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
   const handleFilmCountrySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!film?.id || !filmCountryForm.country_id) return;
-    
+
     try {
       await AdminAPI.createFilmCountry({ ...filmCountryForm, film_id: film.id });
       setFilmCountryForm({ film_id: film.id, country_id: 0 });
@@ -401,7 +401,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
   const handleFilmStuffSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!film?.id || !filmStuffForm.stuff_id) return;
-    
+
     try {
       if (editingFilmStuff) {
         await AdminAPI.updateFilmStuff(editingFilmStuff.id, { role: filmStuffForm.role });
@@ -574,7 +574,7 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
         <Checkbox
           id="is_family_friendly"
           checked={formData.is_family_friendly}
-          onCheckedChange={(checked) => 
+          onCheckedChange={(checked) =>
             setFormData({ ...formData, is_family_friendly: checked as boolean })
           }
         />
@@ -784,9 +784,9 @@ export default function FilmForm({ film, onSubmit, onCancel }: FilmFormProps) {
                 <Label>Жанры (через запятую)</Label>
                 <Input
                   value={similarFilmForm.similar_film_genres?.join(', ') || ''}
-                  onChange={(e) => setSimilarFilmForm({ 
-                    ...similarFilmForm, 
-                    similar_film_genres: e.target.value ? e.target.value.split(',').map(s => s.trim()) : null 
+                  onChange={(e) => setSimilarFilmForm({
+                    ...similarFilmForm,
+                    similar_film_genres: e.target.value ? e.target.value.split(',').map(s => s.trim()) : null
                   })}
                 />
               </div>

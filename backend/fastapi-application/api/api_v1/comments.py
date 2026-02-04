@@ -34,7 +34,7 @@ async def list_comments(
         .where(
             and_(
                 Comment.film_id == film_id,
-                Comment.is_deleted == False
+                Comment.is_deleted.is_(False)
             )
         )
         .order_by(Comment.created_at.desc())

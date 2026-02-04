@@ -4,8 +4,8 @@ interface BaseCountry {
     name: string;
 }
 
-export interface CountryCreate extends BaseCountry { }
-export interface CountryUpdate extends BaseCountry { }
+export type CountryCreate = BaseCountry;
+export type CountryUpdate = BaseCountry;
 
 export interface Country extends BaseCountry {
     id: number;

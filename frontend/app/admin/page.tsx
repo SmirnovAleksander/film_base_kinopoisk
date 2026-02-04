@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AdminAPI } from '@/lib/api';
 import { FilmWithDetails, Stuff, Genre, Country, User } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,7 +12,7 @@ import CountriesSection from '@/components/admin/sections/CountriesSection';
 import UsersSection from '@/components/admin/sections/UsersSection';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 
-interface FilmsResponse extends Array<FilmWithDetails> {}
+type FilmsResponse = FilmWithDetails[];
 interface StuffResponse {
   items: Stuff[];
   page: number;
@@ -40,22 +40,13 @@ export default function AdminPage() {
       const hash = window.location.hash || '#films';
       setActiveTab(hash);
     };
-    
+
     handleHashChange();
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const showMessage = (msg: string) => {
-    setMessage(msg);
-    setTimeout(() => setMessage(''), 3000);
-  };
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const [filmsData, stuffData, genresData, countriesData, usersData] = await Promise.all([
@@ -65,7 +56,7 @@ export default function AdminPage() {
         AdminAPI.getAllCountries(),
         AdminAPI.getAllUsers(1, 100)
       ]) as [FilmsResponse, StuffResponse, Genre[], Country[], User[]];
-      
+
       setFilms(filmsData);
       setStuff(stuffData);
       setGenres(genresData);
@@ -77,6 +68,15 @@ export default function AdminPage() {
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const showMessage = (msg: string) => {
+    setMessage(msg);
+    setTimeout(() => setMessage(''), 3000);
   };
 
   const handleFilmSubmit = async (filmData: any) => {
@@ -291,17 +291,17 @@ export default function AdminPage() {
         <AdminSidebar activeTab={activeTab} />
         <SidebarInset>
           <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Загрузка данных...</p>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Загрузка данных...</p>
+            </div>
           </div>
-        </div>
         </SidebarInset>
       </SidebarProvider>
     );
   }
 
-  
+
   return (
     <SidebarProvider>
       <AdminSidebar
@@ -330,7 +330,7 @@ export default function AdminPage() {
             </Card>
           )}
           {renderContent()}
-    </div>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );

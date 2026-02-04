@@ -24,7 +24,6 @@ from core.schemas import (
     GenreRead,
     CountryRead,
     StuffRead,
-    FilmStillRead,
     FilmWatchProviderRead,
     SimilarFilmRead,
 )

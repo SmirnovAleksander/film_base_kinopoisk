@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select
 
 from core.models import db_helper, Film
 from core.schemas import (
@@ -48,11 +48,6 @@ async def list_films_admin(
 ):
     """Получить список всех фильмов с пагинацией (только для суперпользователя)"""
     offset = (page - 1) * page_size
-
-    # Получаем общее количество фильмов
-    total_count_stmt = select(func.count(Film.id))
-    total_count_result = await session.execute(total_count_stmt)
-    total_count = total_count_result.scalar()
 
     # Получаем фильмы для текущей страницы
     stmt = (

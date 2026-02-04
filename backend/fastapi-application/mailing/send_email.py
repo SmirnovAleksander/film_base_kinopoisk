@@ -1,7 +1,6 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-import aiosmtplib
 
 
 async def send_email(
@@ -38,7 +37,7 @@ async def send_email(
     # )
 
     # Временное решение: логируем email вместо отправки
-    print(f"\n📧 EMAIL WOULD BE SENT:")
+    print("\n📧 EMAIL WOULD BE SENT:")
     print(f"To: {recipient}")
     print(f"Subject: {subject}")
     print(f"Content: {plain_content}")

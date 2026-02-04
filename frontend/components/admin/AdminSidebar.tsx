@@ -6,9 +6,7 @@ import {
   Users,
   Tag,
   Globe,
-  Newspaper,
   UserCog,
-  Home,
 } from "lucide-react"
 import {
   Sidebar,

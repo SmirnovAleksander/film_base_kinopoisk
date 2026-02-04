@@ -8,7 +8,7 @@ export interface CommentCreate extends BaseComment {
   film_id: number;
 }
 
-export interface CommentUpdate extends BaseComment { }
+export type CommentUpdate = BaseComment;
 
 export interface Comment extends BaseComment {
   id: number;

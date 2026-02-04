@@ -1,16 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { 
-  ArrowLeft, 
+import {
+  ArrowLeft,
   Image as ImageIcon,
-  Maximize2,
   Grid3X3,
   List
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -36,29 +35,18 @@ const getCategoryLabel = (type: FilmStillType): string => {
 export default function PostersPage() {
   const params = useParams();
   const filmId = parseInt(params.id as string);
-  
+
   const { currentFilm } = useFilmsStore();
   const [filmStills, setFilmStills] = useState<FilmStills>({});
   const [isLoadingStills, setIsLoadingStills] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Получаем доступные типы (только те, которые есть в данных)
-  const availableTypes = Object.keys(filmStills).filter(key => 
+  const availableTypes = Object.keys(filmStills).filter(key =>
     filmStills[key as keyof FilmStills] && filmStills[key as keyof FilmStills]!.length > 0
   ) as Array<keyof FilmStills>;
-  
-  // Получаем общее количество всех изображений
-  const totalCount = availableTypes.reduce((sum, type) => 
-    sum + (filmStills[type]?.length || 0), 0
-  );
 
-  useEffect(() => {
-    if (filmId) {
-      loadFilmStills();
-    }
-  }, [filmId]);
-
-  const loadFilmStills = async () => {
+  const loadFilmStills = useCallback(async () => {
     try {
       setIsLoadingStills(true);
       const stills = await FilmsAPI.getFilmStills(filmId);
@@ -68,7 +56,13 @@ export default function PostersPage() {
     } finally {
       setIsLoadingStills(false);
     }
-  };
+  }, [filmId]);
+
+  useEffect(() => {
+    if (filmId) {
+      loadFilmStills();
+    }
+  }, [filmId, loadFilmStills]);
 
   if (isLoadingStills) {
     return (
@@ -142,7 +136,7 @@ export default function PostersPage() {
               Список
             </Button>
           </div>
-          
+
           {/* Статистика */}
           {availableTypes.length > 0 && (
             <div className="flex gap-2 flex-wrap">
@@ -173,14 +167,14 @@ export default function PostersPage() {
               <TabsContent key={type} value={type} className="space-y-6">
                 {filmStills[type] && filmStills[type]!.length > 0 ? (
                   <div className={
-                    viewMode === 'grid' 
+                    viewMode === 'grid'
                       ? 'grid grid-cols-1 sm:grid-cols-3 gap-4'
                       : 'space-y-4'
                   }>
                     {filmStills[type]!.map((still) => (
                       <div key={still.id}>
-                        <StillCard 
-                          still={still} 
+                        <StillCard
+                          still={still}
                           className={viewMode === 'list' ? 'w-full max-w-4xl mx-auto' : ''}
                           unoptimized={viewMode === 'list'}
                         />

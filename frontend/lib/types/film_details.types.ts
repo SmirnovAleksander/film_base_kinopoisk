@@ -21,7 +21,7 @@ interface BaseFilmStill {
     source?: string | null;
 }
 
-export interface FilmStillUpdate extends BaseFilmStill { }
+export type FilmStillUpdate = BaseFilmStill;
 
 export interface FilmStillCreate extends BaseFilmStill {
     film_id: number;
@@ -81,8 +81,7 @@ interface BaseSimilarFilm {
     similar_film_poster?: string | null;
     similar_film_rating?: string | null;
 }
-
-export interface SimilarFilmUpdate extends BaseSimilarFilm { }
+export type SimilarFilmUpdate = BaseSimilarFilm;
 
 export interface SimilarFilmCreate extends BaseSimilarFilm {
     film_id: number;

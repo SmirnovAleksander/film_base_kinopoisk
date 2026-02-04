@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ArrowLeft, Calendar, MapPin, Award, Film } from 'lucide-react';
@@ -25,26 +25,7 @@ export default function StuffDetailsPage() {
   const [error, setError] = useState('');
   const { addToHistory } = useHistoryStore();
 
-  useEffect(() => {
-    if (stuffId) {
-      loadStuffDetails();
-    }
-  }, [stuffId]);
-
-  // Добавляем в историю просмотров
-  useEffect(() => {
-    if (stuff) {
-      addToHistory({
-        id: stuff.id,
-        type: 'person',
-        title: stuff.name || stuff.original_name || 'Персона',
-        image: stuff.image,
-        description: stuff.career ? stuff.career.join(', ') : undefined,
-      });
-    }
-  }, [stuff, addToHistory]);
-
-  const loadStuffDetails = async () => {
+  const loadStuffDetails = useCallback(async () => {
     try {
       setIsLoading(true);
       setError('');
@@ -56,7 +37,25 @@ export default function StuffDetailsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [stuffId]);
+
+  useEffect(() => {
+    if (stuffId) {
+      loadStuffDetails();
+    }
+  }, [stuffId, loadStuffDetails]);
+
+  useEffect(() => {
+    if (stuff) {
+      addToHistory({
+        id: stuff.id,
+        type: 'person',
+        title: stuff.name || stuff.original_name || 'Персона',
+        image: stuff.image,
+        description: stuff.career ? stuff.career.join(', ') : undefined,
+      });
+    }
+  }, [stuff, addToHistory]);
 
   if (isLoading) {
     return (

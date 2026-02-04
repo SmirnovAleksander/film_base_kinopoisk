@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Filter, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,15 +17,15 @@ interface FilmsFiltersProps {
   searchQuery: string;
   filters: FilmFilterParams;
   totalCount: number;
-  
+
   isLoading: boolean;
   isSearching: boolean;
-  
+
   onSearch: (query: string) => Promise<void>;
   onFilterApply: (filters: FilmFilterParams) => Promise<void>;
   onFilterReset: () => void;
   onFilterRemove: (key: keyof FilmFilterParams) => void;
-  
+
   pageSize: number;
 }
 
@@ -34,40 +34,26 @@ export function FilmsFilters({
   countries,
   searchQuery,
   filters,
-  totalCount,
   isLoading,
-  isSearching,
   onSearch,
   onFilterApply,
   onFilterReset,
   onFilterRemove,
   pageSize,
 }: FilmsFiltersProps) {
-  const [localSearchQuery, setLocalSearchQuery] = useState('');
-  const [localFilters, setLocalFilters] = useState<FilmFilterParams>({});
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
+  const [localFilters, setLocalFilters] = useState<FilmFilterParams>(filters);
   const [showFilters, setShowFilters] = useState(false);
-  
-  const currentYear = new Date().getFullYear();
-  const [yearRange, setYearRange] = useState<[number, number]>([1890, currentYear]);
-  const [ratingRange, setRatingRange] = useState<[number, number]>([1, 10]);
 
-  useEffect(() => {
-    setLocalSearchQuery(searchQuery);
-    setLocalFilters(filters);
-    
-    if (filters.start_year || filters.end_year) {
-      setYearRange([
-        filters.start_year || 1890,
-        filters.end_year || currentYear
-      ]);
-    }
-    if (filters.min_rating || filters.max_rating) {
-      setRatingRange([
-        filters.min_rating || 1,
-        filters.max_rating || 10
-      ]);
-    }
-  }, [searchQuery, filters, currentYear]);
+  const currentYear = new Date().getFullYear();
+  const [yearRange, setYearRange] = useState<[number, number]>([
+    filters.start_year || 1890,
+    filters.end_year || currentYear
+  ]);
+  const [ratingRange, setRatingRange] = useState<[number, number]>([
+    filters.min_rating || 1,
+    filters.max_rating || 10
+  ]);
 
   const handleSearch = async () => {
     if (!localSearchQuery.trim()) return;
@@ -114,13 +100,13 @@ export function FilmsFilters({
   };
 
   const isDefaultYearRange = () => {
-    return (filters.start_year === 1890 || !filters.start_year) && 
-           (filters.end_year === currentYear || !filters.end_year);
+    return (filters.start_year === 1890 || !filters.start_year) &&
+      (filters.end_year === currentYear || !filters.end_year);
   };
 
   const isDefaultRatingRange = () => {
-    return (filters.min_rating === 1 || !filters.min_rating) && 
-           (filters.max_rating === 10 || !filters.max_rating);
+    return (filters.min_rating === 1 || !filters.min_rating) &&
+      (filters.max_rating === 10 || !filters.max_rating);
   };
 
   return (
@@ -140,8 +126,8 @@ export function FilmsFilters({
           <Search className="h-4 w-4 mr-2" />
           Поиск
         </Button>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => setShowFilters(!showFilters)}
           className={showFilters ? 'bg-accent' : ''}
         >
@@ -321,7 +307,7 @@ export function FilmsFilters({
       {(searchQuery || Object.keys(filters).length > 0) && (
         <div className="flex flex-wrap gap-2 items-center">
           <span className="text-sm text-muted-foreground">Активные фильтры:</span>
-          
+
           {searchQuery && (
             <Badge variant="secondary" className="flex items-center gap-1">
               Поиск: {searchQuery}
@@ -335,7 +321,7 @@ export function FilmsFilters({
               </Button>
             </Badge>
           )}
-          
+
           {filters.genre_id && (
             <Badge variant="secondary" className="flex items-center gap-1">
               Жанр: {getGenreName(filters.genre_id)}
@@ -378,7 +364,7 @@ export function FilmsFilters({
               </Button>
             </Badge>
           )}
-          
+
           {/* Рейтинг (скрываем если дефолтные значения) */}
           {!isDefaultRatingRange() && (
             <Badge variant="secondary" className="flex items-center gap-1">

@@ -14,8 +14,7 @@ import {
   History,
   Moon,
   Monitor,
-  Settings,
-  Image as ImageIcon
+  Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,7 +45,7 @@ export function Header() {
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { user, logout, isAuthenticated } = useAuth();
-  const { theme, setTheme } = useNextTheme();
+  const { setTheme } = useNextTheme();
   const router = useRouter();
 
   // Эффект для живого поиска с debounce

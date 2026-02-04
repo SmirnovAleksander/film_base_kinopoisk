@@ -67,7 +67,7 @@ apiClient.interceptors.response.use(
               detail: { message: 'Сессия истекла. Пожалуйста, войдите снова.' }
             }));
           }
-        } catch (refreshError) {
+        } catch {
           // Если произошла ошибка при очистке
           AuthAPI.clearAuthData();
         }

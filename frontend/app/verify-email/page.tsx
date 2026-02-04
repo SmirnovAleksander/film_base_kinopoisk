@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AuthAPI } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,16 +17,7 @@ export default function VerifyEmailPage() {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const tokenFromUrl = urlParams.get('token');
-    if (tokenFromUrl) {
-      setToken(tokenFromUrl);
-      handleVerify(tokenFromUrl);
-    }
-  }, []);
-
-  const handleVerify = async (verificationToken?: string) => {
+  const handleVerify = useCallback(async (verificationToken?: string) => {
     const tokenToUse = verificationToken || token;
     if (!tokenToUse) {
       setError('Токен верификации обязателен');
@@ -48,7 +39,16 @@ export default function VerifyEmailPage() {
     } finally {
       setIsVerifying(false);
     }
-  };
+  }, [token, router]);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    if (tokenFromUrl) {
+      setToken(tokenFromUrl);
+      handleVerify(tokenFromUrl);
+    }
+  }, [handleVerify]);
 
   const handleRequestNewToken = async () => {
     setIsLoading(true);
@@ -79,7 +79,7 @@ export default function VerifyEmailPage() {
               {message}
             </div>
           )}
-          
+
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
               {error}
@@ -123,8 +123,8 @@ export default function VerifyEmailPage() {
               </div>
 
               <div className="text-center">
-                <Link 
-                  href="/login" 
+                <Link
+                  href="/login"
                   className="text-sm text-blue-600 hover:text-blue-500"
                 >
                   Вернуться ко входу

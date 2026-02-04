@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Image from 'next/image';
 import { useAuth } from '@/hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,7 +11,7 @@ import { useUserInteractionsStore } from '@/store';
 import { Calendar, Mail, User } from 'lucide-react';
 
 export default function ProfilePage() {
-  const { user, updateUser, isLoading } = useAuth();
+  const { user } = useAuth();
   const {
     bookmarks,
     userRatings,
@@ -23,7 +24,7 @@ export default function ProfilePage() {
       fetchBookmarks();
       fetchUserRatings();
     }
-  }, [user]);
+  }, [user, fetchBookmarks, fetchUserRatings]);
 
   if (!user) {
     return (
@@ -156,11 +157,14 @@ export default function ProfilePage() {
                     {/* Миниатюра фильма */}
                     <div className="w-16 h-20 bg-muted rounded-md overflow-hidden shrink-0">
                       {rating.film?.poster ? (
-                        <img
+                        <Image
                           src={rating.film.poster}
                           alt={rating.film.title || 'Постер фильма'}
+                          width={64}
+                          height={80}
                           className="w-full h-full object-cover"
                           loading="lazy"
+                          unoptimized
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">

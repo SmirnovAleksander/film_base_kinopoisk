@@ -61,7 +61,9 @@ export function FilmStillsCarousel({
   useEffect(() => {
     if (!emblaApi) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     onInit(emblaApi);
+     
     onSelect(emblaApi);
 
     emblaApi.on('reInit', onInit);
@@ -122,7 +124,7 @@ export function FilmStillsCarousel({
       .on('reInit', tweenOpacity)
       .on('scroll', tweenOpacity)
       .on('slideFocus', tweenOpacity);
-  }, [emblaApi, tweenOpacity]);
+  }, [emblaApi, tweenOpacity, setTweenFactor]);
 
   if (stills.length === 0) {
     return (

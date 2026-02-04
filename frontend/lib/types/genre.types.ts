@@ -4,8 +4,8 @@ interface BaseGenre {
     name: string;
 }
 
-export interface GenreCreate extends BaseGenre { }
-export interface GenreUpdate extends BaseGenre { }
+export type GenreCreate = BaseGenre;
+export type GenreUpdate = BaseGenre;
 
 export interface Genre extends BaseGenre {
     id: number;

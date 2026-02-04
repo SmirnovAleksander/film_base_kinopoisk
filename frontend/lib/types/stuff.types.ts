@@ -18,7 +18,7 @@ interface BaseStuff {
   image?: string | null;
 }
 
-export interface StuffUpdate extends BaseStuff { }
+export type StuffUpdate = BaseStuff;
 
 export interface StuffCreate extends BaseStuff {
   kinopoisk_id: string;

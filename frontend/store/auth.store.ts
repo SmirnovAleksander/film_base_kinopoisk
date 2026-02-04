@@ -33,7 +33,7 @@ export const useAuthStore = create<AuthState>()(
       set({ isLoading: true });
       try {
         // OAuth2 вход - получаем только access_token
-        const { access_token, token_type } = await AuthAPI.login(data);
+        const { access_token } = await AuthAPI.login(data);
 
         // Сохраняем токен в localStorage через AuthAPI
         AuthAPI.setAuthData(access_token, {} as User);
