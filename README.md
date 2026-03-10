@@ -39,14 +39,20 @@ Film Base Kinopoisk — сервис для просмотра фильмов с
 
 <img src="docs/screenshots/start_page.png" alt="Главный экран" />
 
-### Страница регистрации
-
-<img src="docs/screenshots/reg_page.png" alt="Страница регистрации" />
-
 ### Страница фильма
 
-<img src="docs/screenshots/films_page.png" alt="Страница фильма" />
+<img src="docs/screenshots/film_page.png" alt="Страница фильма" />
+<img src="docs/screenshots/film_page2.png" alt="Страница фильма" />
+<img src="docs/screenshots/film_page3.png" alt="Страница фильма" />
+
+### Страница актера
+
+<img src="docs/screenshots/actor_page.png" alt="Страница фильма" />
 
 ### Страница профиля пользователя
 
 <img src="docs/screenshots/user_profile.png" alt="Страница профиля пользователя" />
+
+### Страница регистрации
+
+<img src="docs/screenshots/reg_page.png" alt="Страница регистрации" />
