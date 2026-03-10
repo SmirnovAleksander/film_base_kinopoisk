@@ -3,7 +3,8 @@
 ## Кратко о проекте
 
 Film Base Kinopoisk — сервис для просмотра фильмов с встроенным плеером и собственной базой данных, похожей на Кинопоиск.  
-Вот сам сайт, можно посмотреть: `https://filmbasekinopoisk.vercel.app/` (ветка `stable_version`).
+Вот сам сайт, можно посмотреть: https://filmbasekinopoisk.vercel.app/ 
+(ветка `stable_version`).
 
 ## Из каких частей состоит проект
 
@@ -20,7 +21,7 @@ Film Base Kinopoisk — сервис для просмотра фильмов с
 
 ### Бэкенд (`backend/`)
 
-- **Технологии**: Python, FastAPI, SQLAlchemy, Alembic, PostgreSQL, Docker Compose (PostgreSQL + MailDev).
+- **Технологии**: Python, FastAPI, SQLAlchemy, Alembic, PostgreSQL, Docker Compose.
 - **Как работает**: поднимает REST API поверх данных в PostgreSQL, обрабатывает авторизацию, работу с фильмами/участниками/закладками/комментариями/оценками и отдаёт данные фронтенду.
 
 ### Фронтенд (`frontend/`)
@@ -31,3 +32,21 @@ Film Base Kinopoisk — сервис для просмотра фильмов с
 ## Почему первый запуск может быть медленным
 
 Бэкенд крутится на бесплатном тарифе Render, который «усыпляет» сервис примерно через 15 минут простоя. Первый запрос после простоя может долго открываться — просто подождите и при необходимости обновите страницу.
+
+## Скриншоты
+
+### Главный экран
+
+<img src="docs/screenshots/start_page.png" alt="Главный экран" />
+
+### Страница регистрации
+
+<img src="docs/screenshots/reg_page.png" alt="Страница регистрации" />
+
+### Страница фильма
+
+<img src="docs/screenshots/films_page.png" alt="Страница фильма" />
+
+### Страница профиля пользователя
+
+<img src="docs/screenshots/user_profile.png" alt="Страница профиля пользователя" />
